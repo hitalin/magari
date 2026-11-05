@@ -1,0 +1,7 @@
+PUBLIC_ORIGIN=http://localhost:5173
+BETTER_AUTH_SECRET=change-me-32-chars-minimum-please
+# X Developer Portal の OAuth 2.0 クライアント
+X_CLIENT_ID=
+X_CLIENT_SECRET=
+# 取り込みを手で走らせるときのトークン（POST /api/admin/import）
+IMPORT_TOKEN=

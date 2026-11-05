@@ -1,0 +1,29 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "magari",
+	"main": "worker.ts",
+	"compatibility_date": "2026-11-01",
+	"compatibility_flags": ["nodejs_compat"],
+	"assets": {
+		"binding": "ASSETS",
+		"directory": ".svelte-kit/cloudflare"
+	},
+	"observability": { "enabled": true },
+	// 本番ドメイン。Workers のカスタムドメインとして割り当てる（DNS も自動）
+	"routes": [{ "pattern": "magari.cc", "custom_domain": true }],
+	// 毎時、各団体の Google カレンダー（公開 iCal）を取り込む
+	"triggers": { "crons": ["15 * * * *"] },
+	// 読み取りが東京 PoP に近くなるよう primary は apac に置く（wrangler d1 create --location apac）
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "magari",
+			"database_id": "367b5814-180f-4608-8412-c7fe6f3af213",
+			"migrations_dir": "drizzle"
+		}
+	],
+	"r2_buckets": [{ "binding": "MEDIA", "bucket_name": "magari-media" }],
+	"vars": {
+		"PUBLIC_ORIGIN": "https://magari.cc"
+	}
+}
