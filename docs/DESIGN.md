@@ -8,7 +8,7 @@
 
 - **場所を持たない人と、場所を貸す人をつなぐ。** 既存のイベントサービスにない「枠を借りてその日だけ店をやる」を一級市民にする。
 - **閲覧はログイン不要。** ログインするのは主催者・場の運営者・フォローしたい人だけ。
-- **脱 Google、脱メール。** ログインは X と Misskey（MiAuth、任意のサーバー）だけ。メールは確認メールの配送が要るので使わない。パスキーは初回ログイン後に作れる。カレンダーは iCal で出す側に回る。地図は OSM、計測は Cloudflare Web Analytics、フォントはシステムフォント。
+- **脱 Google、脱メール。** ログインは X と Misskey（MiAuth、任意のサーバー）だけ。メールは確認メールの配送が要るので使わない。パスキーは初回ログイン後に作れる。カレンダーは iCal で出す側に回る。地図は OSM（ハコの口コミだけ Google マップへのリンクを置く。API は使わない）、計測は Cloudflare Web Analytics、フォントはシステムフォント。
 - **参加者のプライバシーが既定。** 自助会・オフ会の参加記録は公開プロフィールに残さない。参加表明は非公開・匿名可が既定。
 - **出口を持つ。** 全データは iCal / JSON で出せる。将来 ActivityPub で配信する。
 - **無料枠で永続運用。** Workers Free の 10ms CPU / 100k req/day の中で動かす。
@@ -109,7 +109,9 @@
 - 起動: Cron（`worker.ts` の `scheduled`、毎時 15 分）と、手動の `POST /api/admin/import`（`IMPORT_TOKEN`）。
   - adapter-cloudflare は wrangler 設定の `main` の場所を毎回消して生成物を書くので、adapter には `wrangler.adapter.jsonc` を渡し、`wrangler.jsonc` の `main` は手書きの `worker.ts` にする。`worker.ts` は生成物の `fetch` をそのまま出し、`scheduled` で自分の `/api/admin/import` を叩く。
   - adapter は `pnpm dev` の bindings もこの設定から読む。`wrangler.adapter.jsonc` には D1・R2 が無いので、`platformProxy.configPath` で `wrangler.jsonc` を読ませる。
-- 取り込んだ会は `events.source` / `source_uid` を持ち、会ページに「公開カレンダーから取り込み」と出す。
+- 取り込んだ会は `events.source` / `source_uid` を持つ。取り込み方法（Google カレンダーなど）は画面に出さない。
+- 取り込み元のハコは、`sources.ts` の `area` を `actors.region` に写す。画像は R2 に写す: `photo`（ハコ一覧のバナー。公式ページの og:image など）は `header_key`、`icon`（X のアイコン）は `avatar_url`（人のアイコンと同じ列）。R2 のキーは画像 URL のハッシュで決めるので、同じ画像は二度取らない。画像が取れなくても会の取り込みは続ける。
+- 取り込みのハコのページは、人のプロフィールと同じく名前の左に丸いアイコンを出し、上部のバナー（`header_key`）は出さない（`ActorProfile.imported`）。
 - 現在の取り込み元: イベントバーエデン 9 店舗（本店・神田・日暮里・横浜・名古屋・京都・難波・神戸・福岡。Fu は予定なし）、京橋URA、発達障害2.0 イベントまとめの 7 地域カレンダー。
 - フリカレ（freecalend.com、エデン神戸）は iCal を出さないので `freecalend.ts` で読む。公開ページの JS が叩く `POST /open/data` を同じ形で呼ぶ。
   - 本文の `keys` は `{"data":[[キー, 版, 版, [["ok-{mem}-all-r-cald",true]], []], …]}` を 2 重に URL エンコードしたもの。キーは月 `cald-{mem}-{y}-{m}` と日 `cald-{mem}-{y}-{m}-{d}`。版に古い値を送ると、中身のある日だけ `set` で返る。
@@ -132,6 +134,7 @@
 | `/me` | 自分の会（これから・下書き・過去）、まがりする（会を立てる）、自分のページ、パスキー登録、ログアウト |
 | `/new` | まがりする（会を立てる）。`?from=ID` で複製。保存と同時に公開か下書き |
 | `/e/{id}/edit` | 編集、中止、中止の取り消し、削除。作成者か主催者だけ。取り込んだ会は編集不可 |
+| `/spaces` | ハコ一覧。段ボールの看板を並べたグリッドで、テープにエリアを書く。エリア順（主要都市 → 北から）、同じエリアでは今から先の間が多い順 |
 | `/spaces/new` | ハコ（場）か団体を登録する。作った人が `actor_members` の owner になる |
 | `/@{handle}/edit` | ページの編集。本人の person か、管理している場・団体だけ。紹介・アクセス・リンク、写真（R2）、出店プラン、お知らせ、問い合わせの受信箱 |
 | `/i/{key}` | R2（MEDIA）の画像。キーは乱数なので immutable でキャッシュ |

@@ -75,3 +75,16 @@ export const PRIMARY_AREAS = [
 	"福岡",
 	ONLINE,
 ];
+
+// 並び順: 主要都市 → 残りの都道府県を北から → 分からないもの
+const areaRank = (area: string | null): number => {
+	if (area === null) return Number.POSITIVE_INFINITY;
+	const primary = PRIMARY_AREAS.indexOf(area);
+	if (primary >= 0) return primary;
+	return (
+		PRIMARY_AREAS.length + (PREFECTURES as readonly string[]).indexOf(area)
+	);
+};
+
+export const compareArea = (a: string | null, b: string | null): number =>
+	areaRank(a) - areaRank(b);

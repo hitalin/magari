@@ -1,15 +1,22 @@
 // 場（ハコ）・団体のページ: 作成、管理者判定、プロフィール・プラン・お知らせ・問い合わせの読み書き。
-import { and, asc, desc, eq } from "drizzle-orm";
+import { and, asc, count, desc, eq, gte } from "drizzle-orm";
+import { compareArea, detectArea } from "#lib/area.ts";
 import type {
 	ParsedInquiry,
 	ParsedPlan,
 	ParsedSpace,
 } from "#lib/space-form.ts";
-import type { Post, SpacePlan } from "#lib/types.ts";
+import {
+	mediaUrl,
+	type Post,
+	type SpacePlan,
+	type SpaceSummary,
+} from "#lib/types.ts";
 import type { Db } from "./db/index.ts";
 import {
 	actorMembers,
 	actors,
+	events,
 	inquiries,
 	posts,
 	spacePlans,
@@ -54,6 +61,49 @@ export async function listPosts(
 		.orderBy(desc(posts.publishedAt))
 		.limit(limit);
 	return rows.map((r) => ({ ...r, publishedAt: r.publishedAt.toISOString() }));
+}
+
+// ハコ一覧。エリア順（region の都道府県）、同じエリアでは今から先の間が多い順。
+export async function listSpaces(db: Db): Promise<SpaceSummary[]> {
+	const upcoming = db
+		.select({ actorId: events.spaceActorId, n: count().as("n") })
+		.from(events)
+		.where(
+			and(
+				eq(events.status, "published"),
+				eq(events.visibility, "public"),
+				gte(events.startsAt, new Date()),
+			),
+		)
+		.groupBy(events.spaceActorId)
+		.as("upcoming");
+	const rows = await db
+		.select({
+			handle: actors.handle,
+			name: actors.name,
+			catch: actors.catch,
+			summary: actors.summary,
+			region: actors.region,
+			headerKey: actors.headerKey,
+			avatarUrl: actors.avatarUrl,
+			upcoming: upcoming.n,
+		})
+		.from(actors)
+		.leftJoin(upcoming, eq(upcoming.actorId, actors.id))
+		.where(eq(actors.kind, "space"));
+	return rows
+		.map(({ region, headerKey, upcoming, ...r }) => ({
+			...r,
+			area: detectArea(region),
+			headerUrl: mediaUrl(headerKey),
+			upcoming: upcoming ?? 0,
+		}))
+		.sort(
+			(a, b) =>
+				compareArea(a.area, b.area) ||
+				b.upcoming - a.upcoming ||
+				a.name.localeCompare(b.name, "ja"),
+		);
 }
 
 // ユーザーが管理している場・団体（本人の person は含まない）

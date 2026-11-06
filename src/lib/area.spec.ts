@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { detectArea } from "./area";
+import { compareArea, detectArea } from "./area";
 
 describe("detectArea", () => {
 	it("会場文字列から都道府県を返す（接尾辞なし）", () => {
@@ -16,5 +16,19 @@ describe("detectArea", () => {
 	it("分からなければ null", () => {
 		expect(detectArea("どこかの公園")).toBeNull();
 		expect(detectArea(null)).toBeNull();
+	});
+});
+
+describe("compareArea", () => {
+	it("主要都市を先に、残りは北から、分からないものは最後に並べる", () => {
+		const areas = [null, "沖縄", "大阪", "北海道", "東京", "兵庫"];
+		expect(areas.sort(compareArea)).toEqual([
+			"東京",
+			"大阪",
+			"兵庫",
+			"北海道",
+			"沖縄",
+			null,
+		]);
 	});
 });

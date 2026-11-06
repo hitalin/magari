@@ -1,7 +1,10 @@
+import { env } from "cloudflare:workers";
 import { and, eq, gte, inArray, lt } from "drizzle-orm";
 import { detectArea, ONLINE } from "#lib/area.ts";
+import { mediaUrl } from "#lib/types.ts";
 import type { Db } from "../db/index.ts";
 import { actors, eventHosts, events } from "../db/schema.ts";
+import { setHeaderKey } from "../spaces.ts";
 import { fetchFreecalend, freecalendMemNo } from "./freecalend";
 import { type IcsCalendar, parseIcs } from "./ics";
 import {
@@ -42,7 +45,10 @@ async function fetchCalendar(
 	return parseIcs(await res.text());
 }
 
-async function upsertActor(db: Db, src: Source): Promise<string> {
+async function upsertActor(
+	db: Db,
+	src: Source,
+): Promise<{ id: string; headerKey: string | null; avatarUrl: string | null }> {
 	const a = src.actor;
 	const [row] = await db
 		.insert(actors)
@@ -51,21 +57,67 @@ async function upsertActor(db: Db, src: Source): Promise<string> {
 			kind: a.kind,
 			name: a.name,
 			summary: a.summary,
-			url: a.url,
+			url: a.url ?? null,
 			xHandle: a.xHandle ?? null,
+			region: src.area ?? null,
 		})
 		.onConflictDoUpdate({
 			target: actors.handle,
 			set: {
 				name: a.name,
 				summary: a.summary,
-				url: a.url,
+				url: a.url ?? null,
 				xHandle: a.xHandle ?? null,
+				region: src.area ?? null,
 				updatedAt: new Date(),
 			},
 		})
-		.returning({ id: actors.id });
-	return row.id;
+		.returning({
+			id: actors.id,
+			headerKey: actors.headerKey,
+			avatarUrl: actors.avatarUrl,
+		});
+	return row;
+}
+
+// 取り込み元の画像を R2 に写す。キーは画像の URL から決まるので、同じ画像は二度取らない
+const imageKey = async (dir: string, actorId: string, url: string) =>
+	`${dir}/${actorId}/src-${await stableId(url)}`;
+
+async function copyImage(key: string, url: string): Promise<void> {
+	const res = await fetch(url);
+	if (!res.ok) throw new Error(`HTTP ${res.status}`);
+	const type = res.headers.get("content-type")?.split(";")[0] ?? "";
+	if (!type.startsWith("image/")) throw new Error(`画像ではない: ${type}`);
+	await env.MEDIA.put(key, await res.arrayBuffer(), {
+		httpMetadata: { contentType: type },
+	});
+}
+
+// 一覧のバナーは header_key、ページの丸いアイコンは avatar_url（人のアイコンと同じ列）に置く
+async function syncImages(
+	db: Db,
+	src: Source,
+	actor: { id: string; headerKey: string | null; avatarUrl: string | null },
+): Promise<void> {
+	const { photo, icon } = src.actor;
+	if (photo) {
+		const key = await imageKey("headers", actor.id, photo);
+		if (actor.headerKey !== key) {
+			await copyImage(key, photo);
+			await setHeaderKey(db, actor.id, key);
+		}
+	}
+	if (icon) {
+		const key = await imageKey("avatars", actor.id, icon);
+		if (actor.avatarUrl !== mediaUrl(key)) {
+			await copyImage(key, icon);
+			await db
+				.update(actors)
+				.set({ avatarUrl: mediaUrl(key), updatedAt: new Date() })
+				.where(eq(actors.id, actor.id));
+		}
+	}
 }
 
 export type ImportResult = {
@@ -249,7 +301,12 @@ export async function runImports(
 	const to = new Date(now + (opts.futureDays ?? 120) * DAY_MS);
 	const results: ImportResult[] = [];
 	for (const src of SOURCES) {
-		const actorId = await upsertActor(db, src);
+		const actor = await upsertActor(db, src);
+		const actorId = actor.id;
+		// 画像が取れなくても会の取り込みは続ける
+		await syncImages(db, src, actor).catch((e) =>
+			console.error(`images ${src.id}: ${e}`),
+		);
 		for (const cal of src.calendars) {
 			try {
 				results.push(await importCalendar(db, src, cal, actorId, from, to));

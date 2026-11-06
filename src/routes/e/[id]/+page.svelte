@@ -95,7 +95,4 @@ const cardDescription = $derived(
 		</aside>
 	</div>
 
-	{#if event.source}
-		<p class="mt-10 text-center text-xs text-dim">この間は主催者の公開カレンダー（Google カレンダーやフリカレ）から取り込んでいます。内容は元のカレンダーに従います。</p>
-	{/if}
 </article>

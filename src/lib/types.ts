@@ -34,6 +34,8 @@ export type EventDetail = EventSummary & {
 
 export type ActorProfile = ActorRef & {
 	id: string;
+	// 取り込み元（sources.ts）のハコ・団体。header は一覧用のバナーなので、ページの上部には出さない
+	imported: boolean;
 	avatarUrl: string | null;
 	headerUrl: string | null;
 	summary: string | null;
@@ -73,6 +75,19 @@ export type ActorPage = {
 	plans: SpacePlan[];
 	posts: Post[];
 	events: EventSummary[];
+};
+
+// ハコ一覧（/spaces）の 1 行
+export type SpaceSummary = {
+	handle: string;
+	name: string;
+	catch: string | null;
+	summary: string | null;
+	area: string | null;
+	headerUrl: string | null;
+	avatarUrl: string | null;
+	// 今から先の公開の間の数
+	upcoming: number;
 };
 
 // R2 に置いた画像の公開 URL

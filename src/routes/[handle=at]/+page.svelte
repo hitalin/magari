@@ -52,6 +52,12 @@ const mapUrl = $derived(
 		? `https://www.openstreetmap.org/search?query=${encodeURIComponent(actor.address)}`
 		: null,
 );
+// 口コミは Google マップに任せる（API は使わずリンクだけ）
+const reviewsUrl = $derived(
+	`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+		[actor.name, actor.address].filter(Boolean).join(" "),
+	)}`,
+);
 const sections = $derived(
 	[
 		data.posts.length && { id: "news", label: "お知らせ" },
@@ -73,7 +79,7 @@ const description = $derived(actor.catch ?? actor.summary ?? undefined);
 	{#if actor.headerUrl}<meta property="og:image" content="{page.url.origin}{actor.headerUrl}" />{/if}
 </svelte:head>
 
-{#if actor.headerUrl}
+{#if actor.headerUrl && !actor.imported}
 	<img src={actor.headerUrl} alt="" class="mt-4 aspect-[21/9] w-full rounded-lg border border-line object-cover sm:aspect-[3/1]" />
 {/if}
 
@@ -95,6 +101,7 @@ const description = $derived(actor.catch ?? actor.summary ?? undefined);
 		{#if actor.url}<a href={actor.url} class="chip" rel="noopener">{actor.url.replace(/^https?:\/\//, '')}</a>{/if}
 		{#if actor.xHandle}<a href="https://x.com/{actor.xHandle}" class="chip" rel="noopener">X @{actor.xHandle}</a>{/if}
 		{#if actor.instagram}<a href="https://www.instagram.com/{actor.instagram}/" class="chip" rel="noopener">Instagram @{actor.instagram}</a>{/if}
+		{#if actor.kind === 'space'}<a href={reviewsUrl} class="chip" rel="noopener">Google マップの口コミ ›</a>{/if}
 		{#if canEdit}<a href="/@{actor.handle}/edit" class="chip chip-tape">ページを編集</a>{/if}
 	</div>
 	{#if actor.facilities.length}

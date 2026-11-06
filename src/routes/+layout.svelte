@@ -21,6 +21,7 @@ onNavigate((navigation) => {
 const nav = [
 	{ href: "/", label: "これからの間" },
 	{ href: "/calendar", label: "カレンダー" },
+	{ href: "/spaces", label: "ハコ" },
 ];
 const REPO = "https://github.com/hitalin/magari";
 const isActive = (href: string) =>
@@ -41,10 +42,11 @@ const isActive = (href: string) =>
 {#if navigating.to}<div class="progress" role="progressbar" aria-label="読み込み中"></div>{/if}
 
 <header class="fixed inset-x-0 top-0 z-50 h-header border-b bg-bg/75 backdrop-blur-md transition-colors {page.url.pathname === '/' ? 'border-transparent' : 'border-line'}" style="view-transition-name: header">
-	<div class="mx-auto flex h-full max-w-content items-center gap-3 px-3 sm:gap-5 sm:px-4">
-		<a href="/" class="flex shrink-0 items-center gap-2 font-serif text-[1.35rem] font-bold tracking-[0.08em] whitespace-nowrap">
+	<div class="mx-auto flex h-full max-w-content items-center gap-2 px-3 sm:gap-5 sm:px-4">
+		<!-- スマホ幅ではタブを入れるため字を隠し、図像だけにする -->
+		<a href="/" class="flex shrink-0 items-center gap-2 font-serif text-[1.35rem] font-bold tracking-[0.08em] whitespace-nowrap" aria-label="まがり">
 			<img src={logo} alt="" class="h-7 w-7" />
-			まがり
+			<span class="hidden sm:inline">まがり</span>
 		</a>
 		<span class="hidden h-7 w-px bg-line sm:block" aria-hidden="true"></span>
 		<nav class="flex gap-3 text-[0.9rem] font-semibold whitespace-nowrap sm:gap-5 sm:text-[0.95rem]">
@@ -69,13 +71,13 @@ const isActive = (href: string) =>
 				<a href="/new" class="icon-btn sm:hidden" aria-label="まがりする" title="まがりする">
 					<svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M8 2v12M2 8h12" /></svg>
 				</a>
-				<a href="/me" class="btn gap-2 py-1 pr-3 pl-1 text-xs" aria-current={isActive('/me') ? 'page' : undefined}>
+				<a href="/me" class="btn gap-2 py-1 pr-1 pl-1 text-xs sm:pr-3" aria-label={data.me?.name ?? '自分'} aria-current={isActive('/me') ? 'page' : undefined}>
 					{#if data.me?.avatarUrl}
 						<img src={data.me.avatarUrl} alt="" class="h-6 w-6 rounded-full object-cover" />
 					{:else}
 						<span class="inline-block h-6 w-6 rounded-full bg-accent-soft"></span>
 					{/if}
-					{data.me?.name ?? '自分'}
+					<span class="hidden sm:inline">{data.me?.name ?? '自分'}</span>
 				</a>
 			{:else}
 				<a href="/login" class="btn px-3 py-1.5 text-xs">ログイン</a>
@@ -98,6 +100,7 @@ const isActive = (href: string) =>
 			<p class="label mb-1">見る</p>
 			<a href="/" class="hover:text-accent-ink">これからの間</a>
 			<a href="/calendar" class="hover:text-accent-ink">カレンダー</a>
+			<a href="/spaces" class="hover:text-accent-ink">ハコ</a>
 		</nav>
 		<nav aria-label="主催者" class="grid gap-1.5">
 			<p class="label mb-1">まがりする</p>
