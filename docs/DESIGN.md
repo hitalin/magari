@@ -108,6 +108,7 @@
 - `run.ts`: 今日の 1 日前から 120 日先までを対象に、ID を「取り込み元 + UID + 回」のハッシュで固定して upsert し、元から消えた会は消す。D1 の bind 変数上限（100）のため 1 行ずつの文を batch で送る。
 - 起動: Cron（`worker.ts` の `scheduled`、毎時 15 分）と、手動の `POST /api/admin/import`（`IMPORT_TOKEN`）。
   - adapter-cloudflare は wrangler 設定の `main` の場所を毎回消して生成物を書くので、adapter には `wrangler.adapter.jsonc` を渡し、`wrangler.jsonc` の `main` は手書きの `worker.ts` にする。`worker.ts` は生成物の `fetch` をそのまま出し、`scheduled` で自分の `/api/admin/import` を叩く。
+  - adapter は `pnpm dev` の bindings もこの設定から読む。`wrangler.adapter.jsonc` には D1・R2 が無いので、`platformProxy.configPath` で `wrangler.jsonc` を読ませる。
 - 取り込んだ会は `events.source` / `source_uid` を持ち、会ページに「公開カレンダーから取り込み」と出す。
 - 現在の取り込み元: イベントバーエデン 9 店舗（本店・神田・日暮里・横浜・名古屋・京都・難波・神戸・福岡。Fu は予定なし）、京橋URA、発達障害2.0 イベントまとめの 7 地域カレンダー。
 - フリカレ（freecalend.com、エデン神戸）は iCal を出さないので `freecalend.ts` で読む。公開ページの JS が叩く `POST /open/data` を同じ形で呼ぶ。
