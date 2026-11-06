@@ -32,22 +32,24 @@ export function expandOccurrences(ev: IcsEvent, from: Date, to: Date): Occurrenc
 	});
 }
 
-// エデンの予定表は終日予定で、題に「13-17」「19:30〜24」「20時-2時」「17:30~」「11-16時」のように時刻が書かれている。
-const T = '(\\d{1,2})(?:[:：](\\d{2}))?';
+// エデンの予定表は終日予定で、題に「13-17」「19:30〜24」「20時-2時」「17:30~」「11-16時」「19-21時半」のように時刻が書かれている。
+// 時刻 1 つは 3 グループ（時、分、「時半」の半）。
+const T = '(\\d{1,2})(?:[:：](\\d{2})|時(半))?';
+const T_HOUR = '(\\d{1,2})(?:[:：](\\d{2}))?時(半)?';
 const SEP = '\\s*[-〜~ー–−]\\s*';
 const PREFIX_RANGE = new RegExp(`^[\\s(（]*${T}時?${SEP}${T}時?\\s*[)）]?\\s*`);
 const PREFIX_OPEN = new RegExp(`^[\\s(（]*${T}時?${SEP}[)）]?\\s*`);
-const SUFFIX_RANGE = new RegExp(`\\s*[(（]?${T}時?${SEP}${T}時\\s*[)）]?\\s*$`);
+const SUFFIX_RANGE = new RegExp(`\\s*[(（]?${T}時?${SEP}${T_HOUR}\\s*[)）]?\\s*$`);
 
 export function parseEdenTitle(
 	summary: string,
 	dayStartJst: Date
 ): { title: string; start: Date | null; end: Date | null } {
-	const at = (h: string, mi: string | undefined) =>
-		new Date(dayStartJst.getTime() + (+h * 60 + +(mi ?? 0)) * 60_000);
+	const at = (h: string, mi: string | undefined, half: string | undefined) =>
+		new Date(dayStartJst.getTime() + (+h * 60 + (mi ? +mi : half ? 30 : 0)) * 60_000);
 	const range = (m: RegExpExecArray, title: string) => {
-		const start = at(m[1], m[2]);
-		let end = at(m[3], m[4]);
+		const start = at(m[1], m[2], m[3]);
+		let end = at(m[4], m[5], m[6]);
 		if (end <= start) end = new Date(end.getTime() + DAY_MS);
 		return { title: title.trim() || summary, start, end };
 	};
@@ -59,7 +61,7 @@ export function parseEdenTitle(
 	if (m)
 		return {
 			title: summary.slice(m[0].length).trim() || summary,
-			start: at(m[1], m[2]),
+			start: at(m[1], m[2], m[3]),
 			end: null
 		};
 	return { title: summary, start: null, end: null };

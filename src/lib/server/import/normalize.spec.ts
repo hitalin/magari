@@ -46,6 +46,16 @@ describe('parseEdenTitle', () => {
 		expect(suffix.end?.toISOString()).toBe('2026-11-21T07:00:00.000Z');
 		expect(parseEdenTitle('第88回 オフ会', day).start).toBeNull();
 	});
+	it('「21時半」は 21:30 として読み、「半」を題に残さない', () => {
+		const day = new Date('2026-11-16T15:00:00Z');
+		const r = parseEdenTitle('19-21時半 人生のレールから外れちゃったよバー｜よっこい', day);
+		expect(r.title).toBe('人生のレールから外れちゃったよバー｜よっこい');
+		expect(r.start?.toISOString()).toBe('2026-11-17T10:00:00.000Z');
+		expect(r.end?.toISOString()).toBe('2026-11-17T12:30:00.000Z');
+		const open = parseEdenTitle('18時半〜 友達マッチングBAR', day);
+		expect(open.title).toBe('友達マッチングBAR');
+		expect(open.start?.toISOString()).toBe('2026-11-17T09:30:00.000Z');
+	});
 
 	it('時刻が無ければそのまま', () => {
 		const r = parseEdenTitle('⚠️夜空いてます', new Date('2026-11-20T15:00:00Z'));
