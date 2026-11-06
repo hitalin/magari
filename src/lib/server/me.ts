@@ -1,5 +1,5 @@
 import { redirect } from "@sveltejs/kit";
-import { and, desc, eq, inArray, isNull, or } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNull, or } from "drizzle-orm";
 import { eventArea } from "#lib/area.ts";
 import type { ParsedEvent } from "#lib/event-form.ts";
 import type { Db } from "./db/index.ts";
@@ -278,4 +278,72 @@ export async function setEventStatus(
 
 export async function deleteEvent(db: Db, id: string): Promise<void> {
 	await db.delete(events).where(eq(events.id, id));
+}
+
+// 人の @handle を引く。共同主催・管理者に足せるのは、まがりにログインしたことのある人（ユーザーの付いた person）だけ
+export async function findPersonByHandle(
+	db: Db,
+	handle: string,
+): Promise<{ id: string; userId: string } | null> {
+	const [row] = await db
+		.select({ id: actors.id, userId: actors.userId })
+		.from(actors)
+		.where(and(eq(actors.handle, handle), eq(actors.kind, "person")))
+		.limit(1);
+	return row?.userId ? { id: row.id, userId: row.userId } : null;
+}
+
+export type EventHost = {
+	actorId: string;
+	handle: string;
+	name: string;
+	role: "host" | "cohost";
+};
+
+export async function listEventHosts(
+	db: Db,
+	eventId: string,
+): Promise<EventHost[]> {
+	return db
+		.select({
+			actorId: actors.id,
+			handle: actors.handle,
+			name: actors.name,
+			role: eventHosts.role,
+		})
+		.from(eventHosts)
+		.innerJoin(actors, eq(eventHosts.actorId, actors.id))
+		.where(eq(eventHosts.eventId, eventId))
+		.orderBy(asc(eventHosts.role));
+}
+
+export async function addEventHost(
+	db: Db,
+	eventId: string,
+	actorId: string,
+): Promise<void> {
+	await db
+		.insert(eventHosts)
+		.values({ eventId, actorId, role: "cohost" })
+		.onConflictDoNothing();
+}
+
+// 主催を外す。最後の 1 人は外せない（外せたら true）
+export async function removeEventHost(
+	db: Db,
+	eventId: string,
+	actorId: string,
+): Promise<boolean> {
+	const hosts = await db
+		.select({ actorId: eventHosts.actorId })
+		.from(eventHosts)
+		.where(eq(eventHosts.eventId, eventId));
+	if (hosts.length <= 1 || !hosts.some((h) => h.actorId === actorId))
+		return false;
+	await db
+		.delete(eventHosts)
+		.where(
+			and(eq(eventHosts.eventId, eventId), eq(eventHosts.actorId, actorId)),
+		);
+	return true;
 }

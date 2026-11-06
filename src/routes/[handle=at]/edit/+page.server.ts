@@ -1,8 +1,9 @@
 import { env } from "cloudflare:workers";
 import { error, fail, redirect } from "@sveltejs/kit";
-import { shortId } from "#lib/id.ts";
-import { requireActor } from "#lib/server/me.ts";
+import { parseHandleInput, shortId } from "#lib/id.ts";
+import { findPersonByHandle, requireActor } from "#lib/server/me.ts";
 import {
+	addMember,
 	createPlan,
 	createPost,
 	deleteInquiry,
@@ -10,8 +11,10 @@ import {
 	deletePost,
 	getManagedActor,
 	listInquiries,
+	listMembers,
 	listPlans,
 	listPosts,
+	removeMember,
 	setHeaderKey,
 	updateActorPage,
 	updatePlan,
@@ -37,10 +40,11 @@ const str = (form: FormData, k: string) => String(form.get(k) ?? "");
 
 export const load: PageServerLoad = async ({ locals, params }) => {
 	const actor = await managed(locals, params.handle);
-	const [plans, posts, inquiries] = await Promise.all([
+	const [plans, posts, inquiries, members] = await Promise.all([
 		actor.kind === "space" ? listPlans(locals.db, actor.id) : [],
 		listPosts(locals.db, actor.id, 50),
 		actor.kind === "person" ? [] : listInquiries(locals.db, actor.id),
+		actor.kind === "person" ? [] : listMembers(locals.db, actor.id),
 	]);
 	const values: SpaceFormValues = {
 		name: actor.name,
@@ -66,6 +70,8 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 		values,
 		plans,
 		posts,
+		members,
+		myUserId: locals.session?.user.id ?? null,
 		inquiries: inquiries.map((i) => ({
 			...i,
 			createdAt: i.createdAt.toISOString(),
@@ -81,6 +87,35 @@ const IMAGE_TYPES: Record<string, string> = {
 const MAX_IMAGE = 5 * 1024 * 1024;
 
 export const actions: Actions = {
+	// 管理者を @handle で足す。管理者は全員がページの編集と問い合わせの受信箱を使える
+	addMember: async ({ request, locals, params }) => {
+		const actor = await managed(locals, params.handle);
+		if (actor.kind === "person") error(400, "管理者を足せるのはハコと団体だけ");
+		const form = await request.formData();
+		const handle = parseHandleInput(str(form, "handle"));
+		const person = handle ? await findPersonByHandle(locals.db, handle) : null;
+		if (!person)
+			return fail(400, {
+				section: "members",
+				error:
+					"その @handle の人は見つかりません。まがりにログインしたことのある人だけ足せます",
+			});
+		await addMember(locals.db, actor.id, person.userId);
+		return { section: "members", ok: true };
+	},
+	removeMember: async ({ request, locals, params }) => {
+		const actor = await managed(locals, params.handle);
+		const form = await request.formData();
+		const userId = str(form, "userId");
+		if (!(await removeMember(locals.db, actor.id, userId)))
+			return fail(400, {
+				section: "members",
+				error: "最後の 1 人は外せません",
+			});
+		// 自分を外したら、もう編集できないのでページへ
+		if (userId === locals.session?.user.id) redirect(303, `/@${actor.handle}`);
+		return { section: "members", ok: true };
+	},
 	profile: async ({ request, locals, params }) => {
 		const actor = await managed(locals, params.handle);
 		const form = await request.formData();

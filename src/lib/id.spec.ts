@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isValidHandle, shortId } from "./id";
+import { isValidHandle, parseHandleInput, shortId } from "./id";
 
 describe("shortId", () => {
 	it("既定で 10 文字、許可した文字だけを使う", () => {
@@ -25,5 +25,17 @@ describe("isValidHandle", () => {
 	it("予約語を弾く", () => {
 		expect(isValidHandle("me")).toBe(false);
 		expect(isValidHandle("api")).toBe(false);
+	});
+});
+
+describe("parseHandleInput", () => {
+	it("先頭の @ と前後の空白を外し、小文字にする", () => {
+		expect(parseHandleInput(" @Hitalin ")).toBe("hitalin");
+		expect(parseHandleInput("kyobashi_ura")).toBe("kyobashi_ura");
+	});
+	it("handle として正しくなければ null", () => {
+		expect(parseHandleInput("")).toBeNull();
+		expect(parseHandleInput("@a")).toBeNull();
+		expect(parseHandleInput("@ひたりん")).toBeNull();
 	});
 });

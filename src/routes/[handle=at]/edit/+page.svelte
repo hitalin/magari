@@ -173,6 +173,34 @@ let newPlan = $state(false);
 
 {#if data.kind !== 'person'}
 	<section class="mb-12">
+		<div class="section-head"><h2 class="section-title text-[1.25rem]">管理者</h2></div>
+		<p class="mb-4 text-sm text-muted">管理者は全員、このページの編集と問い合わせの受信箱を使えます。まがりにログインしたことのある人を @handle で足せます。</p>
+		{@render error('members')}
+		<div class="rule-list">
+			{#each data.members as m (m.userId)}
+				<div class="row items-center">
+					<span class="font-mono text-xs text-muted">{m.role === 'owner' ? '作った人' : '管理者'}</span>
+					<span class="flex flex-wrap items-center gap-3">
+						<a href="/@{m.handle}" class="font-serif text-[1.05rem] font-bold hover:text-accent-ink">{m.name}</a>
+						<span class="text-xs text-muted">@{m.handle}</span>
+						{#if data.members.length > 1}
+							{@const self = m.userId === data.myUserId}
+							<form method="POST" action="?/removeMember" onsubmit={(e) => { if (!confirm(self ? '自分を管理者から外しますか？このページを編集できなくなります。' : `${m.name} を管理者から外しますか？`)) e.preventDefault(); }}>
+								<input type="hidden" name="userId" value={m.userId} />
+								<button type="submit" class="text-xs text-muted hover:text-accent-ink">{self ? '自分を外す' : '外す'}</button>
+							</form>
+						{/if}
+					</span>
+				</div>
+			{/each}
+		</div>
+		<form method="POST" action="?/addMember" class="mt-4 flex flex-wrap items-center gap-2">
+			<input name="handle" required class="input max-w-xs" placeholder="@handle" autocomplete="off" />
+			<button type="submit" class="btn">管理者に足す</button>
+		</form>
+	</section>
+
+	<section class="mb-12">
 		<div class="section-head">
 			<h2 class="section-title text-[1.25rem]">問い合わせ</h2>
 			<span class="chip">{data.inquiries.length} 件</span>

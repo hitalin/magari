@@ -32,3 +32,9 @@ const RESERVED = new Set([
 export function isValidHandle(handle: string): boolean {
 	return HANDLE_PATTERN.test(handle) && !RESERVED.has(handle);
 }
+
+// 「@handle」の入力を handle にする。先頭の @ と空白を外して小文字にし、正しくなければ null
+export function parseHandleInput(input: string): string | null {
+	const handle = input.trim().replace(/^@/, "").toLowerCase();
+	return isValidHandle(handle) ? handle : null;
+}

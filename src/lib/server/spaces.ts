@@ -301,3 +301,59 @@ export async function resolveSpace(
 		return { error: `@${handle} というハコは見つかりません` };
 	return { id: row.id, region: row.region };
 }
+
+// ハコ・団体の管理者。全員が同じ権限（ページの編集と問い合わせの受信箱）を持つ
+export type Member = {
+	userId: string;
+	handle: string;
+	name: string;
+	role: "owner" | "editor";
+};
+
+export async function listMembers(db: Db, actorId: string): Promise<Member[]> {
+	return db
+		.select({
+			userId: actorMembers.userId,
+			handle: actors.handle,
+			name: actors.name,
+			role: actorMembers.role,
+		})
+		.from(actorMembers)
+		.innerJoin(
+			actors,
+			and(eq(actors.userId, actorMembers.userId), eq(actors.kind, "person")),
+		)
+		.where(eq(actorMembers.actorId, actorId))
+		.orderBy(asc(actorMembers.createdAt));
+}
+
+export async function addMember(
+	db: Db,
+	actorId: string,
+	userId: string,
+): Promise<void> {
+	await db
+		.insert(actorMembers)
+		.values({ actorId, userId, role: "editor" })
+		.onConflictDoNothing();
+}
+
+// 管理者を外す。最後の 1 人は外せない（外せたら true）
+export async function removeMember(
+	db: Db,
+	actorId: string,
+	userId: string,
+): Promise<boolean> {
+	const members = await db
+		.select({ userId: actorMembers.userId })
+		.from(actorMembers)
+		.where(eq(actorMembers.actorId, actorId));
+	if (members.length <= 1 || !members.some((m) => m.userId === userId))
+		return false;
+	await db
+		.delete(actorMembers)
+		.where(
+			and(eq(actorMembers.actorId, actorId), eq(actorMembers.userId, userId)),
+		);
+	return true;
+}
