@@ -21,27 +21,36 @@ const WORDS = ['間借り店舗', '日替わり店長', 'レンタル○○', '�
 	<meta name="description" content="間借り店舗・日替わり店長・レンタル○○・プロ○○ヤー・自助会・オフ会の間を一箇所で。" />
 </svelte:head>
 
-<section class="dots hero -mx-4 px-4 pt-10 text-center">
-	<img src={logo} alt="まがり" class="mx-auto mb-6 h-32 w-32 drop-shadow-[0_8px_16px_rgba(0,0,0,0.5)] sm:h-40 sm:w-40" />
-	<h1 class="text-[clamp(1.9rem,6vw,3.4rem)] leading-[1.25]">
-		誰でも、<br />その日の<span class="tape mx-1 px-3 leading-[1.15]">主催者</span>に。
-	</h1>
+<section class="dots hero -mx-4 px-4 pt-6">
+	<div class="ticker" aria-hidden="true">
+		<span class="chip chip-tape ticker-label">こんな間</span>
+		<span class="ticker-items">
+			<span class="ticker-track">
+				{#each [...WORDS, ...WORDS] as word, i (i)}<span>{word}</span>{/each}
+			</span>
+		</span>
+	</div>
 	<p class="sr-only">{WORDS.join('、')}。</p>
-	<div class="ticker mt-8" aria-hidden="true">
-		<div class="ticker-track">
-			{#each [...WORDS, ...WORDS] as word, i (i)}<span>{word}</span>{/each}
+	<div class="hero-inner mt-10 sm:mt-14">
+		<div class="hero-copy">
+			<h1 class="text-[clamp(1.9rem,6vw,3.4rem)] leading-[1.25]">
+				誰でも、<br />その日の<span class="tape mx-1 px-3 leading-[1.15]">主催者</span>に。
+			</h1>
+			<p class="mt-6 text-[0.95rem] leading-loose tracking-[0.12em] text-muted">
+				ハコを持たない人の間と、<br class="sm:hidden" />ハコを貸す人の空き枠を、<br />ここに集める。
+			</p>
+			<div class="stats mt-8">
+				<div><span class="stat-num">{data.events.length}</span><span class="label">7日の間</span></div>
+				<div><span class="stat-num">{data.calendar.events.length}</span><span class="label">今月の間</span></div>
+				<div><span class="stat-num">{areaCount}</span><span class="label">エリア</span></div>
+			</div>
+		</div>
+		<div class="hero-visual" aria-hidden="true">
+			<img src={logo} alt="" />
 		</div>
 	</div>
-	<p class="mt-6 text-[0.95rem] leading-loose tracking-[0.12em] text-muted">
-		ハコを持たない人の間と、<br class="sm:hidden" />ハコを貸す人の空き枠を、<br />ここに集める。
-	</p>
-	<div class="stats mt-8">
-		<div><span class="stat-num">{data.events.length}</span><span class="label">7日の間</span></div>
-		<div><span class="stat-num">{data.calendar.events.length}</span><span class="label">今月の間</span></div>
-		<div><span class="stat-num">{areaCount}</span><span class="label">エリア</span></div>
-	</div>
-	<div class="mt-8">
-		<AreaFilter events={data.calendar.events} bind:value={area} center />
+	<div class="mt-10">
+		<AreaFilter events={data.calendar.events} bind:value={area} />
 	</div>
 </section>
 

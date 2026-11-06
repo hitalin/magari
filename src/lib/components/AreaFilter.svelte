@@ -3,11 +3,8 @@ import { onMount } from 'svelte';
 import { PRIMARY_AREAS } from '#lib/area.ts';
 import type { EventSummary } from '#lib/types.ts';
 
-let {
-	events,
-	value = $bindable(null),
-	center = false
-}: { events: EventSummary[]; value: string | null; center?: boolean } = $props();
+let { events, value = $bindable(null) }: { events: EventSummary[]; value: string | null } =
+	$props();
 
 const STORAGE_KEY = 'magari-area';
 
@@ -50,7 +47,7 @@ function choose(area: string | null) {
 </script>
 
 {#if areas.length > 1}
-	<div class="pills {center ? 'pills-center' : ''}" role="group" aria-label="エリアで絞る">
+	<div class="pills" role="group" aria-label="エリアで絞る">
 		<button type="button" class="chip {value === null ? 'chip-tape' : 'chip-plain'}" aria-pressed={value === null} onclick={() => choose(null)}>すべて</button>
 		{#each visible as a (a.area)}
 			<button type="button" class="chip {value === a.area ? 'chip-tape' : 'chip-plain'}" aria-pressed={value === a.area} onclick={() => choose(a.area)}>
