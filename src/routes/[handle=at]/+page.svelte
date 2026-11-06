@@ -1,4 +1,5 @@
 <script lang="ts">
+import { fullAddress } from "#lib/area.ts";
 import Blocks from "#lib/components/Blocks.svelte";
 import DayList from "#lib/components/DayList.svelte";
 import Empty from "#lib/components/Empty.svelte";
@@ -49,15 +50,17 @@ const hasAccess = $derived(
 const canInquire = $derived(actor.kind !== "person" && actor.hasManager);
 // 管理者のいないハコ・団体（取り込み元など）は、店や団体の公式ページではない
 const unofficial = $derived(actor.kind !== "person" && !actor.hasManager);
+// 都道府県から書いた住所。Google マップで場所を特定しやすくする
+const address = $derived(fullAddress(actor.region, actor.address));
 const mapUrl = $derived(
-	actor.address
-		? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(actor.address)}`
+	address
+		? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`
 		: null,
 );
 // 地図と口コミは Google マップに任せる（API は使わずリンクだけ）
 const reviewsUrl = $derived(
 	`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-		[actor.name, actor.address].filter(Boolean).join(" "),
+		[actor.name, address].filter(Boolean).join(" "),
 	)}`,
 );
 const sections = $derived(
@@ -109,7 +112,7 @@ const description = $derived(actor.catch ?? actor.summary ?? undefined);
 		</p>
 	{/if}
 	<div class="pills mt-5">
-		{#if actor.address}<span class="chip chip-plain">{actor.address}</span>{/if}
+		{#if address}<span class="chip chip-plain">{address}</span>{/if}
 		{#if actor.url}<a href={actor.url} class="chip" rel="noopener">{actor.url.replace(/^https?:\/\//, '')}</a>{/if}
 		{#if actor.xHandle}<a href="https://x.com/{actor.xHandle}" class="chip" rel="noopener">X @{actor.xHandle}</a>{/if}
 		{#if actor.instagram}<a href="https://www.instagram.com/{actor.instagram}/" class="chip" rel="noopener">Instagram @{actor.instagram}</a>{/if}
@@ -203,7 +206,7 @@ const description = $derived(actor.catch ?? actor.summary ?? undefined);
 		<dl class="defs">
 			{#if actor.address}
 				<dt>住所</dt>
-				<dd>{actor.address}{#if mapUrl}<a href={mapUrl} class="ml-3 text-sm text-accent-ink hover:underline" rel="noopener">地図 ›</a>{/if}</dd>
+				<dd>{address}{#if mapUrl}<a href={mapUrl} class="ml-3 text-sm text-accent-ink hover:underline" rel="noopener">地図 ›</a>{/if}</dd>
 			{/if}
 			{#if actor.access}<dt>行き方</dt><dd class="whitespace-pre-line">{actor.access}</dd>{/if}
 			{#if actor.hours}<dt>営業時間</dt><dd class="whitespace-pre-line">{actor.hours}</dd>{/if}

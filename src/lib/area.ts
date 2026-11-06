@@ -88,3 +88,13 @@ const areaRank = (area: string | null): number => {
 
 export const compareArea = (a: string | null, b: string | null): number =>
 	areaRank(a) - areaRank(b);
+
+// 表示と地図検索に使う住所。都道府県（region）から書き、住所の頭にすでにあれば重ねない
+export function fullAddress(
+	region: string | null,
+	address: string | null,
+): string | null {
+	if (!address) return null;
+	if (!region || address.startsWith(region)) return address;
+	return region + address;
+}

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { compareArea, detectArea } from "./area";
+import { compareArea, detectArea, fullAddress } from "./area";
 
 describe("detectArea", () => {
 	it("会場文字列から都道府県を返す（接尾辞なし）", () => {
@@ -30,5 +30,22 @@ describe("compareArea", () => {
 			"沖縄",
 			null,
 		]);
+	});
+});
+
+describe("fullAddress", () => {
+	it("住所の頭に都道府県を付ける", () => {
+		expect(fullAddress("大阪府", "大阪市都島区都島本通2-8-10")).toBe(
+			"大阪府大阪市都島区都島本通2-8-10",
+		);
+	});
+	it("住所がすでに都道府県から始まっていれば重ねない", () => {
+		expect(fullAddress("大阪府", "大阪府大阪市都島区")).toBe(
+			"大阪府大阪市都島区",
+		);
+	});
+	it("都道府県が無ければ住所のまま、住所が無ければ null", () => {
+		expect(fullAddress(null, "大阪市都島区")).toBe("大阪市都島区");
+		expect(fullAddress("大阪府", null)).toBeNull();
 	});
 });
