@@ -1,15 +1,20 @@
 <script lang="ts">
 import { formatWhen } from '#lib/date.ts';
+import { eventPlace, eventShareText, xShareUrl } from '#lib/share.ts';
 import { page } from '$app/state';
 import type { PageProps } from './$types';
 
 let { data }: PageProps = $props();
 const event = $derived(data.event);
-const shareUrl = $derived(
-	`https://x.com/intent/post?${new URLSearchParams({
-		text: `${event.title} ${formatWhen(event)}`,
-		url: page.url.href
-	})}`
+const shareUrl = $derived(xShareUrl(eventShareText(event), page.url.href));
+// リンクカードの説明: 日時と場所を先頭に、続けて説明文
+const cardDescription = $derived(
+	[
+		[formatWhen(event), eventPlace(event)].filter(Boolean).join(' · '),
+		event.description?.slice(0, 100)
+	]
+		.filter(Boolean)
+		.join(' — ')
 );
 </script>
 
@@ -17,7 +22,8 @@ const shareUrl = $derived(
 	<title>{event.title} | まがり</title>
 	<meta property="og:title" content={event.title} />
 	<meta property="og:type" content="article" />
-	{#if event.description}<meta property="og:description" content={event.description.slice(0, 120)} />{/if}
+	<meta name="description" content={cardDescription} />
+	<meta property="og:description" content={cardDescription} />
 	<meta name="twitter:card" content="summary_large_image" />
 </svelte:head>
 

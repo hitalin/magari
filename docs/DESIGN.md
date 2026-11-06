@@ -79,7 +79,7 @@
 ## X 連携
 
 - ログイン: better-auth の `twitter` プロバイダ（OAuth 2.0 + PKCE）。
-- 共有: intent URL + OGP 画像。API 不要。
+- 共有: intent URL + OGP 画像。API 不要。共有文は「題 / 日時 / 📍ハコ（無ければ場所の名前かオンライン）」の 3 行（`src/lib/share.ts`）。リンクカードの説明も日時とハコから始める。
 - 自動投稿: 段階4。X API Free 枠の投稿上限を確認してから。
 
 ## UI 言語
