@@ -15,7 +15,7 @@ let allDay = $state(values.allDay);
 	{#if error}<p class="rounded-sm bg-accent-soft px-4 py-2 text-sm text-accent-ink">{error}</p>{/if}
 
 	<Field label="題">
-		<input name="title" value={values.title} required maxlength="200" class="input" placeholder="例: 日替わり店長デー / 月例の当事者会 / 公園でなんもしないオフ会" />
+		<input name="title" value={values.title} required maxlength="200" class="input" placeholder="例: 日替わり店長デー / 弾き語りライブ / 月例の当事者会 / 公園でなんもしないオフ会" />
 	</Field>
 
 	<div class="grid gap-4 sm:grid-cols-[1fr_auto_auto]">
@@ -43,7 +43,7 @@ let allDay = $state(values.allDay);
 	<Field label="説明"><textarea name="description" rows="8" class="input">{values.description}</textarea></Field>
 
 	<div class="grid gap-4 sm:grid-cols-3">
-		<Field label="タグ" hint="カンマ区切り。間借り、自助会、オフ会 など"><input name="tags" value={values.tags} class="input" /></Field>
+		<Field label="タグ" hint="カンマ区切り。間借り、ライブ、自助会、オフ会 など"><input name="tags" value={values.tags} class="input" /></Field>
 		<Field label="定員"><input type="number" name="capacity" value={values.capacity} min="1" class="input" /></Field>
 		<Field label="料金"><input name="feeText" value={values.feeText} class="input" placeholder="無料 / 500円 / 投げ銭" /></Field>
 	</div>

@@ -92,7 +92,7 @@ const isActive = (href: string) =>
 	<div class="mx-auto grid max-w-content gap-8 px-4 py-10 text-sm text-muted sm:grid-cols-[1fr_auto_auto] sm:gap-12">
 		<div>
 			<a href="/" class="inline-flex items-center gap-2 font-serif text-lg font-bold text-text"><img src={logo} alt="" class="h-6 w-6" />まがり</a>
-			<p class="mt-2 max-w-[28em]">場所を持たない人と、場所を貸す人をつなぐ。間借り店舗・日替わり店長・自助会・オフ会の間を一箇所に。</p>
+			<p class="mt-2 max-w-[28em]">場所を持たない人と、場所を貸す人をつなぐ。間借り店舗・日替わり店長・ライブ・自助会・オフ会の間を一箇所に。</p>
 		</div>
 		<nav aria-label="フッター" class="grid gap-1.5">
 			<p class="label mb-1">見る</p>

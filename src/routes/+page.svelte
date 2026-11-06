@@ -13,12 +13,12 @@ const byArea = <T extends { area: string | null }>(list: T[]) =>
 const monthEvents = $derived(byArea(data.calendar.events));
 const weekEvents = $derived(byArea(data.events));
 const areaCount = $derived(new Set(data.calendar.events.map((e) => e.area).filter(Boolean)).size);
-const WORDS = ['間借り店舗', '日替わり店長', 'レンタル○○', 'プロ○○ヤー', '自助会', 'オフ会'];
+const WORDS = ['間借り店舗', '日替わり店長', 'レンタル○○', 'プロ○○ヤー', 'ライブ', '自助会', 'オフ会'];
 </script>
 
 <svelte:head>
 	<title>これからの間 | まがり</title>
-	<meta name="description" content="間借り店舗・日替わり店長・レンタル○○・プロ○○ヤー・自助会・オフ会の間を一箇所で。" />
+	<meta name="description" content="間借り店舗・日替わり店長・レンタル○○・プロ○○ヤー・ライブ・自助会・オフ会の間を一箇所で。" />
 </svelte:head>
 
 <section class="dots hero -mx-4 px-4 pt-6">
