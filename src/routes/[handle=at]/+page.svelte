@@ -51,10 +51,10 @@ const canInquire = $derived(actor.kind !== "person" && actor.hasManager);
 const unofficial = $derived(actor.kind !== "person" && !actor.hasManager);
 const mapUrl = $derived(
 	actor.address
-		? `https://www.openstreetmap.org/search?query=${encodeURIComponent(actor.address)}`
+		? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(actor.address)}`
 		: null,
 );
-// 口コミは Google マップに任せる（API は使わずリンクだけ）
+// 地図と口コミは Google マップに任せる（API は使わずリンクだけ）
 const reviewsUrl = $derived(
 	`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
 		[actor.name, actor.address].filter(Boolean).join(" "),

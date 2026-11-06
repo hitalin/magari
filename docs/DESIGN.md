@@ -8,7 +8,7 @@
 
 - **場所を持たない人と、場所を貸す人をつなぐ。** 既存のイベントサービスにない「枠を借りてその日だけ店をやる」を一級市民にする。
 - **閲覧はログイン不要。** ログインするのは主催者・場の運営者・フォローしたい人だけ。
-- **脱 Google、脱メール。** ログインは X と Misskey（MiAuth、任意のサーバー）だけ。メールは確認メールの配送が要るので使わない。パスキーは初回ログイン後に作れる。カレンダーは iCal で出す側に回る。地図は OSM（ハコの口コミだけ Google マップへのリンクを置く。API は使わない）、計測は Cloudflare Web Analytics、フォントはシステムフォント。
+- **脱 Google、脱メール。** ログインは X と Misskey（MiAuth、任意のサーバー）だけ。メールは確認メールの配送が要るので使わない。パスキーは初回ログイン後に作れる。カレンダーは iCal で出す側に回る。地図と口コミは Google マップへのリンク（API は使わない）、計測は Cloudflare Web Analytics、フォントはシステムフォント。
 - **参加者のプライバシーが既定。** 自助会・オフ会の参加記録は公開プロフィールに残さない。参加表明は非公開・匿名可が既定。
 - **出口を持つ。** 全データは iCal / JSON で出せる。将来 ActivityPub で配信する。
 - **無料枠で永続運用。** Workers Free の 10ms CPU / 100k req/day の中で動かす。
@@ -155,7 +155,7 @@
 | 設備タグ（Wi-Fi、電源、厨房…） | `facilities` |
 | NEWS | `posts`（お知らせ。日付順） |
 | 出店プラン（時間帯別 / 曜日固定 / 貸し切りの料金表） | `space_plans`（`kind` = spot / weekly / exclusive / other、料金は自由テキストで改行可） |
-| ACCESS（住所、駅、営業時間、定休日、運営、地図） | `address` / `access` / `hours` / `closed_days` / `operator`、地図は OSM の検索リンク |
+| ACCESS（住所、駅、営業時間、定休日、運営、地図） | `address` / `access` / `hours` / `closed_days` / `operator`、地図は Google マップの検索リンク |
 | 建物写真 | `header_key`（R2、`/i/{key}`）。OGP 画像にも使う |
 | CONTACT（種別付きフォーム、ハニーポット） | `inquiries`。ログイン不要で送れる。メールは送らず、管理者が `/@handle/edit` の受信箱で見る |
 | SNS（X、Instagram）、会社概要、関連サイト | `x_handle` / `instagram` / `operator` / `links` |
