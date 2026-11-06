@@ -52,7 +52,10 @@ let newPlan = $state(false);
 			<form method="POST" action="?/removeHeader"><button type="submit" class="btn">外す</button></form>
 		{/if}
 	</div>
-	<p class="mt-2 text-xs text-dim">店の外観や中の写真。ページの上と、X で共有したときの画像になります。JPEG / PNG / WebP、5MB まで。</p>
+	<p class="mt-2 text-xs text-dim">
+		{#if data.kind === 'space'}店のロゴや外観の写真。ハコ一覧のバナーと、ページの丸いアイコン（中央を丸く切り抜く）と、X で共有したときの画像になります。{:else}ページの上と、X で共有したときの画像になります。{/if}
+		JPEG / PNG / WebP、5MB まで。
+	</p>
 </section>
 
 <section class="mb-12">

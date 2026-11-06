@@ -50,6 +50,10 @@ const hasAccess = $derived(
 const canInquire = $derived(actor.kind !== "person" && actor.hasManager);
 // 管理者のいないハコ・団体（取り込み元など）は、店や団体の公式ページではない
 const unofficial = $derived(actor.kind !== "person" && !actor.hasManager);
+// ハコはバナーを出さず、人のプロフィールと同じく丸いアイコンにする。X アイコンが無ければ写真を丸く切り抜く
+const icon = $derived(
+	actor.avatarUrl ?? (actor.kind === "space" ? actor.headerUrl : null),
+);
 // 都道府県から書いた住所。Google マップで場所を特定しやすくする
 const address = $derived(fullAddress(actor.region, actor.address));
 const mapUrl = $derived(
@@ -84,22 +88,22 @@ const description = $derived(actor.catch ?? actor.summary ?? undefined);
 	{#if actor.headerUrl}<meta property="og:image" content="{page.url.origin}{actor.headerUrl}" />{/if}
 </svelte:head>
 
-{#if actor.headerUrl && !actor.imported}
+{#if actor.headerUrl && actor.kind !== 'space'}
 	<img src={actor.headerUrl} alt="" class="mt-4 aspect-[21/9] w-full rounded-lg border border-line object-cover sm:aspect-[3/1]" />
 {/if}
 
 <!-- ハコ（箱）のページは段ボールの看板 -->
 <header class="{actor.kind === 'space' ? 'cardboard mt-8' : 'panel mt-4'} mb-8 p-6 sm:p-8">
 	<div class="flex items-start gap-5">
-		{#if actor.avatarUrl}
+		{#if icon}
 			<div class="relative shrink-0">
-				<img src={actor.avatarUrl} alt="" class="h-20 w-20 rounded-full border border-line object-cover sm:h-24 sm:w-24" />
+				<img src={icon} alt="" class="h-20 w-20 rounded-full border border-line object-cover sm:h-24 sm:w-24" />
 				{#if unofficial}<span class="badge-unofficial absolute -bottom-1.5 left-1/2 -translate-x-1/2">非公式</span>{/if}
 			</div>
 		{/if}
 		<div class="min-w-0">
 			<p class="label">
-				{#if unofficial && !actor.avatarUrl}<span class="badge-unofficial mr-2 align-middle">非公式</span>{/if}{KIND_LABEL[actor.kind]} · @{actor.handle}
+				{#if unofficial && !icon}<span class="badge-unofficial mr-2 align-middle">非公式</span>{/if}{KIND_LABEL[actor.kind]} · @{actor.handle}
 			</p>
 			<h1 class="mt-2 text-[clamp(1.8rem,3.5vw,2.6rem)]">{actor.name}</h1>
 			{#if actor.catch}<p class="mt-2 font-serif text-lg text-accent-ink">{actor.catch}</p>{/if}

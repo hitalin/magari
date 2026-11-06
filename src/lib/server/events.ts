@@ -8,7 +8,6 @@ import {
 } from "#lib/types.ts";
 import type { Db } from "./db/index.ts";
 import { actorMembers, actors, eventHosts, events } from "./db/schema.ts";
-import { SOURCES } from "./import/sources.ts";
 
 function selectEvents(db: Db) {
 	return db
@@ -237,7 +236,6 @@ export async function getActorByHandle(
 	const { headerKey, userId, ...rest } = row;
 	return {
 		...rest,
-		imported: SOURCES.some((s) => s.actor.handle === row.handle),
 		hasManager: userId !== null || member !== undefined,
 		headerUrl: mediaUrl(headerKey),
 	};

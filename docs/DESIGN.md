@@ -111,7 +111,7 @@
   - adapter は `pnpm dev` の bindings もこの設定から読む。`wrangler.adapter.jsonc` には D1・R2 が無いので、`platformProxy.configPath` で `wrangler.jsonc` を読ませる。
 - 取り込んだ会は `events.source` / `source_uid` を持つ。取り込み方法（Google カレンダーなど）は画面に出さない。
 - 取り込み元のハコは、`sources.ts` の `area` を `actors.region` に写す。画像は R2 に写す: `photo`（ハコ一覧のバナー。公式ページの og:image など）は `header_key`、`icon`（X のアイコン）は `avatar_url`（人のアイコンと同じ列）。R2 のキーは画像 URL のハッシュで決めるので、同じ画像は二度取らない。画像が取れなくても会の取り込みは続ける。
-- 取り込みのハコのページは、人のプロフィールと同じく名前の左に丸いアイコンを出し、上部のバナー（`header_key`）は出さない（`ActorProfile.imported`）。
+- ハコのページは、人のプロフィールと同じく名前の左に丸いアイコンを出し、上部のバナーは出さない。アイコンは `avatar_url`（取り込み元の X アイコン）、無ければ `header_key` の写真の中央を丸く切り抜く。人と団体のページは今までどおり写真を上部のバナーにする。
 - 現在の取り込み元: イベントバーエデン 9 店舗（本店・神田・日暮里・横浜・名古屋・京都・難波・神戸・福岡。Fu は予定なし）、京橋URA、発達障害2.0 イベントまとめの 7 地域カレンダー。
 - フリカレ（freecalend.com、エデン神戸）は iCal を出さないので `freecalend.ts` で読む。公開ページの JS が叩く `POST /open/data` を同じ形で呼ぶ。
   - 本文の `keys` は `{"data":[[キー, 版, 版, [["ok-{mem}-all-r-cald",true]], []], …]}` を 2 重に URL エンコードしたもの。キーは月 `cald-{mem}-{y}-{m}` と日 `cald-{mem}-{y}-{m}-{d}`。版に古い値を送ると、中身のある日だけ `set` で返る。
@@ -156,7 +156,7 @@
 | NEWS | `posts`（お知らせ。日付順） |
 | 出店プラン（時間帯別 / 曜日固定 / 貸し切りの料金表） | `space_plans`（`kind` = spot / weekly / exclusive / other、料金は自由テキストで改行可） |
 | ACCESS（住所、駅、営業時間、定休日、運営、地図） | `address` / `access` / `hours` / `closed_days` / `operator`、地図は Google マップの検索リンク |
-| 建物写真 | `header_key`（R2、`/i/{key}`）。OGP 画像にも使う |
+| 建物写真 | `header_key`（R2、`/i/{key}`）。ハコ一覧のバナー、ページの丸いアイコン（X アイコンが無いとき）、OGP 画像に使う |
 | CONTACT（種別付きフォーム、ハニーポット） | `inquiries`。ログイン不要で送れる。メールは送らず、管理者が `/@handle/edit` の受信箱で見る |
 | SNS（X、Instagram）、会社概要、関連サイト | `x_handle` / `instagram` / `operator` / `links` |
 | オープンイベントなどの催し | 会（Event）。「ハコ」に自分の場を指定して開く |

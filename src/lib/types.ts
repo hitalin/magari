@@ -34,8 +34,6 @@ export type EventDetail = EventSummary & {
 
 export type ActorProfile = ActorRef & {
 	id: string;
-	// 取り込み元（sources.ts）のハコ・団体。header は一覧用のバナーなので、ページの上部には出さない
-	imported: boolean;
 	// 管理者（人なら本人、ハコ・団体なら actor_members）がいるか。いなければ問い合わせを受けない
 	hasManager: boolean;
 	avatarUrl: string | null;
