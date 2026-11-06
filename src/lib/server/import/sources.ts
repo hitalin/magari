@@ -196,6 +196,23 @@ export const SOURCES: Source[] = [
 		tags: ["間借り"],
 		storeHours: { hours: ["17:00", "23:00"] },
 	},
+	// 京橋URA。サイトは無く、公開 Google カレンダーと X で告知している。
+	{
+		id: "kyobashi-ura",
+		area: "大阪",
+		actor: {
+			handle: "kyobashi_ura",
+			kind: "space",
+			name: "京橋URA",
+			summary:
+				"京橋駅から歩いて行ける多目的オルタナスペース。ボドゲ会、上映会、コワーク、ワークショップなど。予定は店舗の Google カレンダーから取り込んでいます。",
+			url: "https://calendar.google.com/calendar/embed?src=kyobashi.ura%40gmail.com&ctz=Asia%2FTokyo",
+			xHandle: "URA_Kyobashi",
+		},
+		role: "space",
+		calendars: [{ id: "main", url: gcal("kyobashi.ura@gmail.com") }],
+		tags: ["間借り"],
+	},
 	{
 		id: "hattatsu",
 		actor: {

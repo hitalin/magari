@@ -109,7 +109,7 @@
 - 起動: Cron（`worker.ts` の `scheduled`、毎時 15 分）と、手動の `POST /api/admin/import`（`IMPORT_TOKEN`）。
   - adapter-cloudflare は wrangler 設定の `main` の場所を毎回消して生成物を書くので、adapter には `wrangler.adapter.jsonc` を渡し、`wrangler.jsonc` の `main` は手書きの `worker.ts` にする。`worker.ts` は生成物の `fetch` をそのまま出し、`scheduled` で自分の `/api/admin/import` を叩く。
 - 取り込んだ会は `events.source` / `source_uid` を持ち、会ページに「公開カレンダーから取り込み」と出す。
-- 現在の取り込み元: イベントバーエデン 9 店舗（本店・神田・日暮里・横浜・名古屋・京都・難波・神戸・福岡。Fu は予定なし）、発達障害2.0 イベントまとめの 7 地域カレンダー。
+- 現在の取り込み元: イベントバーエデン 9 店舗（本店・神田・日暮里・横浜・名古屋・京都・難波・神戸・福岡。Fu は予定なし）、京橋URA、発達障害2.0 イベントまとめの 7 地域カレンダー。
 - フリカレ（freecalend.com、エデン神戸）は iCal を出さないので `freecalend.ts` で読む。公開ページの JS が叩く `POST /open/data` を同じ形で呼ぶ。
   - 本文の `keys` は `{"data":[[キー, 版, 版, [["ok-{mem}-all-r-cald",true]], []], …]}` を 2 重に URL エンコードしたもの。キーは月 `cald-{mem}-{y}-{m}` と日 `cald-{mem}-{y}-{m}-{d}`。版に古い値を送ると、中身のある日だけ `set` で返る。
   - 1 日 1 枠で題しかないので、JST の終日予定に見立てて返し、エデンの題の時刻（「16-21時」など）は他店と同じく `parseEdenTitle` で読む。空・「休み」・「仮予約」は会にしない。
