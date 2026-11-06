@@ -7,6 +7,10 @@ import type { PageProps } from "./$types";
 let { data }: PageProps = $props();
 const event = $derived(data.event);
 const shareUrl = $derived(xShareUrl(eventShareText(event), page.url.href));
+// 主催（本人か、管理しているハコ・団体）なら編集できる。取り込んだ会は元のカレンダーが正なので編集しない
+const canEdit = $derived(
+	!event.source && event.hosts.some((h) => data.managed.includes(h.handle)),
+);
 // リンクカードの説明: 日時と場所を先頭に、続けて説明文
 const cardDescription = $derived(
 	[
@@ -47,6 +51,9 @@ const cardDescription = $derived(
 					<span class="chip chip-tape">{tag}</span>
 				{/each}
 			</div>
+		{/if}
+		{#if canEdit}
+			<a href="/e/{event.id}/edit" class="btn mt-6 px-4 py-1.5 text-sm">この間を編集</a>
 		{/if}
 	</header>
 
