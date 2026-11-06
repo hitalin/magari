@@ -1,4 +1,5 @@
-// 取り込み元。各団体は Google カレンダーで運用を続け、まがりが公開 iCal を鏡写しにする。
+// 取り込み元。各団体は今のカレンダー（Google カレンダー、フリカレ）で運用を続け、まがりが鏡写しにする。
+// URL が freecalend.com/open/mem… ならフリカレとして読み、それ以外は公開 iCal として読む（run.ts）。
 
 export type SourceActor = {
 	handle: string;
@@ -24,8 +25,8 @@ const gcal = (cid: string) =>
 	`https://calendar.google.com/calendar/ical/${encodeURIComponent(cid)}/public/basic.ics`;
 
 export const SOURCES: Source[] = [
-	// イベントバーエデン各店。店舗ページに埋め込まれた Google カレンダーの公開 iCal。
-	// 神戸は freecalend（iCal なし）、Fu は予定なしのため未登録。
+	// イベントバーエデン各店。店舗ページに埋め込まれた Google カレンダーの公開 iCal（神戸だけフリカレ）。
+	// Fu は予定なしのため未登録。
 	{
 		id: 'eden',
 		area: '東京',
@@ -143,6 +144,22 @@ export const SOURCES: Source[] = [
 		},
 		role: 'space',
 		calendars: [{ id: 'main', url: gcal('baredennamba@gmail.com') }],
+		tags: ['間借り']
+	},
+	{
+		id: 'eden-kobe',
+		area: '兵庫',
+		actor: {
+			handle: 'eden_kobe',
+			kind: 'space',
+			name: 'イベントバーエデン神戸',
+			summary:
+				'誰でも1日店長になれるイベントバー。予定は店舗のフリカレ（freecalend）から取り込んでいます。',
+			url: 'https://eventbareden.com/bar-list/kobe/',
+			xHandle: 'ebe_kobe'
+		},
+		role: 'space',
+		calendars: [{ id: 'main', url: 'https://freecalend.com/open/mem317765' }],
 		tags: ['間借り']
 	},
 	{

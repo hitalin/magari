@@ -90,6 +90,6 @@ const shareUrl = $derived(
 	</div>
 
 	{#if event.source}
-		<p class="mt-10 text-center text-xs text-dim">この間は主催者の Google カレンダー（公開 iCal）から取り込んでいます。内容は元のカレンダーに従います。</p>
+		<p class="mt-10 text-center text-xs text-dim">この間は主催者の公開カレンダー（Google カレンダーやフリカレ）から取り込んでいます。内容は元のカレンダーに従います。</p>
 	{/if}
 </article>

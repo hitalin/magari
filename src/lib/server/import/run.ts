@@ -2,7 +2,8 @@ import { and, eq, gte, inArray, lt } from 'drizzle-orm';
 import { detectArea, ONLINE } from '#lib/area.ts';
 import type { Db } from '../db/index.ts';
 import { actors, eventHosts, events } from '../db/schema.ts';
-import { parseIcs } from './ics';
+import { fetchFreecalend, freecalendMemNo } from './freecalend';
+import { type IcsCalendar, parseIcs } from './ics';
 import { expandOccurrences, parseEdenTitle, unwrapUrl } from './normalize';
 import { SOURCES, type Source } from './sources';
 
@@ -18,6 +19,14 @@ async function stableId(key: string): Promise<string> {
 }
 
 type Row = typeof events.$inferInsert;
+
+// 公開 iCal か、フリカレ（freecalend.com）か
+async function fetchCalendar(url: string, from: Date, to: Date): Promise<IcsCalendar> {
+	if (freecalendMemNo(url)) return fetchFreecalend(url, from, to);
+	const res = await fetch(url, { headers: { 'user-agent': 'magari.cc importer' } });
+	if (!res.ok) throw new Error(`HTTP ${res.status}`);
+	return parseIcs(await res.text());
+}
 
 async function upsertActor(db: Db, src: Source): Promise<string> {
 	const a = src.actor;
@@ -63,17 +72,7 @@ async function importCalendar(
 	to: Date
 ): Promise<ImportResult> {
 	const sourceKey = `${src.id}/${cal.id}`;
-	const res = await fetch(cal.url, { headers: { 'user-agent': 'magari.cc importer' } });
-	if (!res.ok)
-		return {
-			source: src.id,
-			calendar: cal.id,
-			fetched: 0,
-			upserted: 0,
-			deleted: 0,
-			error: `HTTP ${res.status}`
-		};
-	const parsed = parseIcs(await res.text());
+	const parsed = await fetchCalendar(cal.url, from, to);
 
 	// RECURRENCE-ID 付きは個別回の上書き。生成した回と衝突したら上書き側を採用する。
 	const overridden = new Set(
