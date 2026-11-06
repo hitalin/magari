@@ -2,6 +2,7 @@
 import { monthKey } from '#lib/calendar.ts';
 import AreaFilter from '#lib/components/AreaFilter.svelte';
 import DayList from '#lib/components/DayList.svelte';
+import Empty from '#lib/components/Empty.svelte';
 import MonthGrid from '#lib/components/MonthGrid.svelte';
 import { dayKey } from '#lib/date.ts';
 import type { PageProps } from './$types';
@@ -29,7 +30,7 @@ const monthEvents = $derived(
 <section class="mt-10 sm:hidden">
 	<h2 class="section-title text-[1.2rem]">この月の間</h2>
 	{#if monthEvents.length === 0}
-		<p class="mt-4 text-muted">この月の間はまだありません。</p>
+		<div class="mt-6"><Empty title="この月の間はまだありません。" hint="前後の月を見てみてください。" /></div>
 	{/if}
 	<div class="mt-6">
 		<DayList events={monthEvents} />

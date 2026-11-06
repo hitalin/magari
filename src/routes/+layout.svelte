@@ -1,11 +1,23 @@
 <script lang="ts">
 import favicon from '#lib/assets/favicon.svg';
 import logo from '#lib/assets/logo.svg';
-import { page } from '$app/state';
+import { onNavigate } from '$app/navigation';
+import { navigating, page } from '$app/state';
 import type { LayoutProps } from './$types';
 import './layout.css';
 
 let { children, data }: LayoutProps = $props();
+const year = new Date().getFullYear();
+// ページ遷移を短いクロスフェードに。対応していないブラウザでは何もしない
+onNavigate((navigation) => {
+	if (!document.startViewTransition) return;
+	return new Promise((resolve) => {
+		document.startViewTransition(async () => {
+			resolve();
+			await navigation.complete;
+		});
+	});
+});
 const nav = [
 	{ href: '/', label: 'これからの間' },
 	{ href: '/calendar', label: 'カレンダー' }
@@ -25,7 +37,10 @@ const isActive = (href: string) =>
 	<meta name="twitter:card" content="summary_large_image" />
 </svelte:head>
 
-<header class="fixed inset-x-0 top-0 z-50 h-header border-b border-line bg-bg/75 backdrop-blur-md">
+<a href="#main" class="skip-link btn btn-primary">本文へ</a>
+{#if navigating.to}<div class="progress" role="progressbar" aria-label="読み込み中"></div>{/if}
+
+<header class="fixed inset-x-0 top-0 z-50 h-header border-b bg-bg/75 backdrop-blur-md transition-colors {page.url.pathname === '/' ? 'border-transparent' : 'border-line'}" style="view-transition-name: header">
 	<div class="mx-auto flex h-full max-w-content items-center gap-3 px-3 sm:gap-5 sm:px-4">
 		<a href="/" class="flex shrink-0 items-center gap-2 font-serif text-[1.35rem] font-bold tracking-[0.08em] whitespace-nowrap">
 			<img src={logo} alt="" class="h-7 w-7" />
@@ -51,6 +66,9 @@ const isActive = (href: string) =>
 			</a>
 			{#if data.loggedIn}
 				<a href="/new" class="btn btn-primary hidden px-3 py-1.5 text-xs sm:inline-flex">まがりする</a>
+				<a href="/new" class="icon-btn sm:hidden" aria-label="まがりする" title="まがりする">
+					<svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M8 2v12M2 8h12" /></svg>
+				</a>
 				<a href="/me" class="btn gap-2 py-1 pr-3 pl-1 text-xs" aria-current={isActive('/me') ? 'page' : undefined}>
 					{#if data.me?.avatarUrl}
 						<img src={data.me.avatarUrl} alt="" class="h-6 w-6 rounded-full object-cover" />
@@ -66,18 +84,31 @@ const isActive = (href: string) =>
 	</div>
 </header>
 
-<main class="mx-auto max-w-content px-4 pt-6 pb-20">
+<main id="main" class="mx-auto max-w-content px-4 pt-6 pb-20">
 	{@render children()}
 </main>
 
 <footer class="border-t border-line">
-	<div class="mx-auto flex max-w-content flex-wrap items-end justify-between gap-4 px-4 py-10 text-sm text-muted">
+	<div class="mx-auto grid max-w-content gap-8 px-4 py-10 text-sm text-muted sm:grid-cols-[1fr_auto_auto] sm:gap-12">
 		<div>
-			<p class="font-serif text-lg font-bold text-text">まがり</p>
-			<p class="mt-1">場所を持たない人と、場所を貸す人をつなぐ。</p>
+			<a href="/" class="inline-flex items-center gap-2 font-serif text-lg font-bold text-text"><img src={logo} alt="" class="h-6 w-6" />まがり</a>
+			<p class="mt-2 max-w-[28em]">場所を持たない人と、場所を貸す人をつなぐ。間借り店舗・日替わり店長・自助会・オフ会の間を一箇所に。</p>
 		</div>
-		<p class="text-xs text-dim">
-			まがりはオープンソースです。<a href={REPO} class="text-muted hover:text-accent-ink" rel="noopener">GitHub ›</a>
-		</p>
+		<nav aria-label="フッター" class="grid gap-1.5">
+			<p class="label mb-1">見る</p>
+			<a href="/" class="hover:text-accent-ink">これからの間</a>
+			<a href="/calendar" class="hover:text-accent-ink">カレンダー</a>
+		</nav>
+		<nav aria-label="主催者" class="grid gap-1.5">
+			<p class="label mb-1">まがりする</p>
+			{#if data.loggedIn}
+				<a href="/new" class="hover:text-accent-ink">間を開く</a>
+				<a href="/me" class="hover:text-accent-ink">自分のページ</a>
+			{:else}
+				<a href="/login" class="hover:text-accent-ink">ログイン</a>
+			{/if}
+			<a href={REPO} class="hover:text-accent-ink" rel="noopener">GitHub ›</a>
+		</nav>
 	</div>
+	<p class="mx-auto max-w-content px-4 pb-8 text-xs text-dim">© {year} まがり · オープンソース（MIT）</p>
 </footer>

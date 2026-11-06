@@ -44,7 +44,7 @@ const next = $derived(shiftMonth(year, month, 1));
 	</nav>
 </div>
 
-<div class="overflow-hidden rounded-md border border-line bg-surface/70">
+<div class="overflow-hidden rounded-md border border-line bg-surface/85 backdrop-blur-md">
 	<div class="grid grid-cols-7 border-b border-line text-center">
 		{#each WEEKDAYS as w, i (w)}
 			<div class="label py-2 {i === 0 ? 'text-accent-ink' : ''}">{w}</div>

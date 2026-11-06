@@ -1,5 +1,6 @@
 <script lang="ts">
 import { authClient, startMiAuth } from '#lib/auth-client.ts';
+import Empty from '#lib/components/Empty.svelte';
 import { formatWhen } from '#lib/date.ts';
 import { invalidateAll } from '$app/navigation';
 import type { PageProps } from './$types';
@@ -62,7 +63,7 @@ const STATUS: Record<string, string> = { draft: '下書き', published: '公開'
 	<section class="mb-10">
 		<div class="section-head"><h2 class="section-title text-[1.25rem]">{title}</h2><span class="chip">{items.length} 間</span></div>
 		{#if items.length === 0}
-			<p class="text-sm text-muted">{empty}</p>
+			<Empty title={empty} />
 		{:else}
 			<div class="rule-list">
 				{#each items as e (e.id)}

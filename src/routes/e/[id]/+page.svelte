@@ -40,50 +40,52 @@ const shareUrl = $derived(
 		{/if}
 	</header>
 
-	<dl class="defs mt-2">
-		{#if event.hosts.length}
-			<dt>主催</dt>
-			<dd>{#each event.hosts as h, i (h.handle)}{#if i > 0}、{/if}<a href="/@{h.handle}" class="font-serif font-bold hover:text-accent-ink">{h.name}</a>{/each}</dd>
+	<div class={event.description ? 'detail-cols mt-2' : 'mt-2'}>
+		{#if event.description}
+			<div class="order-1 whitespace-pre-line text-[1.05rem] leading-[2] md:order-0">{event.description}</div>
 		{/if}
-		{#if event.space}
-			<dt>ハコ</dt>
-			<dd><a href="/@{event.space.handle}" class="font-serif font-bold hover:text-accent-ink">{event.space.name}</a></dd>
-		{/if}
-		{#if event.locationVisibility === 'attendees'}
-			<dt>場所</dt>
-			<dd>{event.locationName ?? ''}<span class="ml-2 text-sm text-muted">詳しい場所は参加者にお知らせします</span></dd>
-		{:else if event.locationName || event.locationAddress}
-			<dt>場所</dt>
-			<dd>{event.locationName}{#if event.locationAddress}<span class="ml-2 text-sm text-muted">{event.locationAddress}</span>{/if}</dd>
-		{/if}
-		{#if event.url}
-			<dt>告知</dt>
-			<dd><a href={event.url} class="text-accent-ink hover:underline" rel="noopener">{event.url.replace(/^https?:\/\//, '').slice(0, 60)}</a></dd>
-		{/if}
-		{#if event.onlineUrl}
-			<dt>URL</dt>
-			<dd><a href={event.onlineUrl} class="text-accent-ink hover:underline" rel="noopener">{event.onlineUrl}</a></dd>
-		{/if}
-		{#if event.feeText}
-			<dt>料金</dt>
-			<dd>{event.feeText}</dd>
-		{/if}
-		{#if event.capacity}
-			<dt>定員</dt>
-			<dd>{event.capacity}人</dd>
-		{/if}
-	</dl>
-
-	{#if event.description}
-		<div class="mx-auto mt-10 max-w-[44rem] whitespace-pre-line text-[1.05rem] leading-[2]">{event.description}</div>
-	{/if}
+		<aside class="detail-side">
+			<dl class="defs">
+				{#if event.hosts.length}
+					<dt>主催</dt>
+					<dd>{#each event.hosts as h, i (h.handle)}{#if i > 0}、{/if}<a href="/@{h.handle}" class="font-serif font-bold hover:text-accent-ink">{h.name}</a>{/each}</dd>
+				{/if}
+				{#if event.space}
+					<dt>ハコ</dt>
+					<dd><a href="/@{event.space.handle}" class="font-serif font-bold hover:text-accent-ink">{event.space.name}</a></dd>
+				{/if}
+				{#if event.locationVisibility === 'attendees'}
+					<dt>場所</dt>
+					<dd>{event.locationName ?? ''}<span class="ml-2 text-sm text-muted">詳しい場所は参加者にお知らせします</span></dd>
+				{:else if event.locationName || event.locationAddress}
+					<dt>場所</dt>
+					<dd>{event.locationName}{#if event.locationAddress}<span class="ml-2 text-sm text-muted">{event.locationAddress}</span>{/if}</dd>
+				{/if}
+				{#if event.url}
+					<dt>告知</dt>
+					<dd class="break-all"><a href={event.url} class="text-accent-ink hover:underline" rel="noopener">{event.url.replace(/^https?:\/\//, '').slice(0, 60)}</a></dd>
+				{/if}
+				{#if event.onlineUrl}
+					<dt>URL</dt>
+					<dd class="break-all"><a href={event.onlineUrl} class="text-accent-ink hover:underline" rel="noopener">{event.onlineUrl}</a></dd>
+				{/if}
+				{#if event.feeText}
+					<dt>料金</dt>
+					<dd>{event.feeText}</dd>
+				{/if}
+				{#if event.capacity}
+					<dt>定員</dt>
+					<dd>{event.capacity}人</dd>
+				{/if}
+			</dl>
+			<div class="mt-6 flex flex-wrap justify-center gap-3 {event.description ? 'md:justify-start' : ''}">
+				<a href={shareUrl} class="btn btn-primary" rel="noopener">X で共有</a>
+				{#if event.hosts[0]}<a href="/@{event.hosts[0].handle}" class="btn">{event.hosts[0].name} のページ ›</a>{/if}
+			</div>
+		</aside>
+	</div>
 
 	{#if event.source}
-		<p class="mt-8 text-center text-xs text-dim">この間は主催者の Google カレンダー（公開 iCal）から取り込んでいます。内容は元のカレンダーに従います。</p>
+		<p class="mt-10 text-center text-xs text-dim">この間は主催者の Google カレンダー（公開 iCal）から取り込んでいます。内容は元のカレンダーに従います。</p>
 	{/if}
-
-	<div class="mt-12 flex flex-wrap justify-center gap-3">
-		<a href={shareUrl} class="btn btn-primary" rel="noopener">X で共有</a>
-		{#if event.hosts[0]}<a href="/@{event.hosts[0].handle}" class="btn">{event.hosts[0].name} のページ ›</a>{/if}
-	</div>
 </article>

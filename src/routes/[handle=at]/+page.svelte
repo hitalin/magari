@@ -1,5 +1,6 @@
 <script lang="ts">
 import DayList from '#lib/components/DayList.svelte';
+import Empty from '#lib/components/Empty.svelte';
 import MonthGrid from '#lib/components/MonthGrid.svelte';
 import { filterTags } from '#lib/group.ts';
 import { KIND_LABEL } from '#lib/types.ts';
@@ -34,7 +35,7 @@ const upcoming = $derived.by(() => {
 		</div>
 	</div>
 	{#if actor.summary}<p class="mt-3 max-w-[34em] text-muted">{actor.summary}</p>{/if}
-	<div class="mt-5 flex flex-wrap gap-2">
+	<div class="pills mt-5">
 		{#if actor.address}<span class="chip chip-plain">{actor.address}</span>{/if}
 		{#if actor.url}<a href={actor.url} class="chip" rel="noopener">{actor.url.replace(/^https?:\/\//, '')}</a>{/if}
 		{#if actor.xHandle}<a href="https://x.com/{actor.xHandle}" class="chip" rel="noopener">X @{actor.xHandle}</a>{/if}
@@ -51,10 +52,10 @@ const upcoming = $derived.by(() => {
 </div>
 
 {#if tags.length}
-	<div class="mb-6 flex flex-wrap gap-2">
-		<button type="button" class="chip {activeTag === null ? 'chip-tape' : 'chip-plain'}" onclick={() => (activeTag = null)}>すべて</button>
+	<div class="pills mb-6" role="group" aria-label="タグで絞る">
+		<button type="button" class="chip {activeTag === null ? 'chip-tape' : 'chip-plain'}" aria-pressed={activeTag === null} onclick={() => (activeTag = null)}>すべて</button>
 		{#each tags as t (t.tag)}
-			<button type="button" class="chip {activeTag === t.tag ? 'chip-tape' : 'chip-plain'}" onclick={() => (activeTag = t.tag)}>
+			<button type="button" class="chip {activeTag === t.tag ? 'chip-tape' : 'chip-plain'}" aria-pressed={activeTag === t.tag} onclick={() => (activeTag = t.tag)}>
 				{t.tag} <span class="ml-1 opacity-70">{t.count}</span>
 			</button>
 		{/each}
@@ -62,6 +63,6 @@ const upcoming = $derived.by(() => {
 {/if}
 
 {#if upcoming.length === 0}
-	<p class="text-muted">これからの間はまだありません。くねくねし始めたらここに出ます。</p>
+	<Empty title="これからの間はまだありません。" hint="くねくねし始めたらここに出ます。" />
 {/if}
 <DayList events={upcoming} collapse={false} />

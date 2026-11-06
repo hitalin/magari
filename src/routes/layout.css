@@ -42,6 +42,30 @@ html {
 	font-family: var(--font-sans);
 	line-height: 1.75;
 	scroll-padding-top: calc(var(--spacing-header) + 1rem);
+	overflow-x: clip;
+	-webkit-tap-highlight-color: transparent;
+	scrollbar-color: var(--color-surface-2) var(--color-bg);
+}
+
+/* 選択範囲もテープ */
+::selection {
+	background: var(--color-accent);
+	color: #1b1510;
+}
+
+/* スクロールバーのつまみは背景色の枠で細く見せる（yamidao） */
+::-webkit-scrollbar {
+	width: 10px;
+	height: 10px;
+}
+::-webkit-scrollbar-thumb {
+	background: var(--color-surface-2);
+	border: 2px solid var(--color-bg);
+	border-radius: 9999px;
+}
+
+button:not(:disabled) {
+	cursor: pointer;
 }
 
 /* くしゃくしゃの黒い紙やすり。画像ではなく SVG フィルタで作る（転送量ゼロ）
@@ -224,6 +248,10 @@ h4 {
 	.btn:active {
 		transform: translateY(1px);
 	}
+	.btn:disabled {
+		opacity: 0.55;
+		pointer-events: none;
+	}
 	/* primary はテープを一枚貼ったボタン。文字は黒マジック */
 	.btn-primary {
 		border: none;
@@ -318,6 +346,12 @@ h4 {
 		background-clip: text;
 		color: transparent;
 	}
+	@media (forced-colors: active) {
+		.gradient-text {
+			color: CanvasText;
+			-webkit-text-fill-color: CanvasText;
+		}
+	}
 
 	.panel {
 		background: color-mix(in srgb, var(--color-surface) 85%, transparent);
@@ -337,6 +371,187 @@ h4 {
 }
 
 @layer components {
+	/* 読み上げ専用 */
+	.sr-only {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		padding: 0;
+		margin: -1px;
+		overflow: hidden;
+		clip-path: inset(50%);
+		white-space: nowrap;
+		border: 0;
+	}
+	/* 本文へ飛ぶリンク。フォーカスしたときだけテープで現れる */
+	.skip-link {
+		position: fixed;
+		top: 0.5rem;
+		left: 0.5rem;
+		z-index: 100;
+		transform: translateY(-200%);
+	}
+	.skip-link:focus-visible {
+		transform: rotate(-1deg);
+	}
+
+	/* ピルの列: スマホでは横スクロール（両端フェード）、広い画面では折り返す */
+	.pills {
+		display: flex;
+		gap: 0.5rem;
+		overflow-x: auto;
+		scrollbar-width: none;
+		padding: 3px 1rem;
+		margin-inline: -1rem;
+		scroll-padding-inline: 1rem;
+		mask-image: linear-gradient(to right, transparent, #000 1rem, #000 calc(100% - 1.5rem), transparent);
+	}
+	.pills::-webkit-scrollbar {
+		display: none;
+	}
+	.pills > * {
+		flex-shrink: 0;
+	}
+	.pills-center {
+		justify-content: safe center;
+	}
+	@media (min-width: 40rem) {
+		.pills {
+			flex-wrap: wrap;
+			overflow: visible;
+			padding-inline: 0;
+			margin-inline: 0;
+			mask-image: none;
+		}
+	}
+
+	/* 空状態: 薄いロゴ + 明朝の一言 + 補足（misstore） */
+	.empty {
+		display: grid;
+		justify-items: center;
+		gap: 0.5rem;
+		padding: 2.5rem 1rem;
+		text-align: center;
+		border: 1px dashed var(--color-line);
+		border-radius: var(--radius-md);
+	}
+	.empty > img {
+		width: 3.5rem;
+		height: 3.5rem;
+		opacity: 0.25;
+		margin-bottom: 0.5rem;
+	}
+	.empty-title {
+		font-family: var(--font-serif);
+		font-weight: 700;
+		font-size: 1.1rem;
+	}
+
+	/* ヒーロー: 下に余白を取り、次の面を食い込ませる（yamidao / notedeck） */
+	.hero {
+		padding-bottom: 6.5rem;
+		margin-bottom: -4rem;
+	}
+	.lift {
+		position: relative;
+		z-index: 1;
+	}
+
+	/* 数字: 明朝で大きく、桁をそろえる（liblib の統計行） */
+	.stats {
+		display: flex;
+		justify-content: center;
+		gap: 1.75rem 2.5rem;
+		flex-wrap: wrap;
+	}
+	.stats > div {
+		display: flex;
+		align-items: baseline;
+		gap: 0.4rem;
+	}
+	.stat-num {
+		font-family: var(--font-serif);
+		font-weight: 700;
+		font-size: 1.8rem;
+		line-height: 1;
+		font-variant-numeric: tabular-nums;
+	}
+
+	/* 流れるテープ: キーワードを貼ったガムテープがゆっくり流れる（notedeck の ticker）。装飾なので aria-hidden */
+	.ticker {
+		position: relative;
+		width: 108%;
+		margin-inline: -4%;
+		overflow: hidden;
+		color: #1b1510;
+		background-color: var(--color-accent);
+		background-image:
+			repeating-linear-gradient(0deg, rgb(0 0 0 / 0.09) 0 1px, transparent 1px 3px),
+			repeating-linear-gradient(90deg, rgb(255 255 255 / 0.1) 0 1px, transparent 1px 4px),
+			linear-gradient(100deg, rgb(255 255 255 / 0.14), transparent 45%, rgb(0 0 0 / 0.1));
+		clip-path: polygon(
+			0.3% 0, 99.6% 0, 100% 30%, 99.5% 60%, 100% 100%, 0.4% 100%, 0 65%, 0.3% 35%
+		);
+		filter: drop-shadow(0 2px 2px rgb(0 0 0 / 0.5));
+		transform: rotate(-0.8deg);
+		mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
+	}
+	.ticker-track {
+		display: flex;
+		width: max-content;
+		gap: 2.2em;
+		padding: 0.35em 1.1em;
+		font-weight: 800;
+		font-size: 0.9rem;
+		letter-spacing: 0.14em;
+		white-space: nowrap;
+		animation: ticker 48s linear infinite;
+	}
+	.ticker:hover .ticker-track {
+		animation-play-state: paused;
+	}
+	@keyframes ticker {
+		to {
+			transform: translateX(-50%);
+		}
+	}
+
+	/* ページ遷移中の細い線。テープの色 */
+	.progress {
+		position: fixed;
+		top: 0;
+		left: 0;
+		z-index: 60;
+		height: 3px;
+		width: 0;
+		background: var(--color-accent);
+		animation: progress 1.6s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+	}
+	@keyframes progress {
+		to {
+			width: 92%;
+		}
+	}
+
+	/* 詳細: 説明が本文、情報は右で追従（misstore）。狭い画面では情報が先、説明が後 */
+	.detail-cols {
+		display: grid;
+		gap: 2.5rem;
+		align-items: start;
+	}
+	@media (min-width: 48rem) {
+		.detail-cols {
+			grid-template-columns: minmax(0, 1fr) 19rem;
+		}
+		.detail-side {
+			position: sticky;
+			top: calc(var(--spacing-header) + 1.5rem);
+		}
+		.detail-cols .defs {
+			grid-template-columns: 4.5rem 1fr;
+		}
+	}
+
 	/* フォーム部品 */
 	.input {
 		width: 100%;
@@ -357,5 +572,21 @@ h4 {
 	}
 	select.input {
 		appearance: auto;
+	}
+	textarea.input {
+		resize: vertical;
+	}
+}
+
+/* ページ遷移: 短いクロスフェード。ヘッダーは動かさない */
+::view-transition-old(root),
+::view-transition-new(root) {
+	animation-duration: 0.18s;
+}
+@media (prefers-reduced-motion: reduce) {
+	::view-transition-group(*),
+	::view-transition-old(*),
+	::view-transition-new(*) {
+		animation: none !important;
 	}
 }
