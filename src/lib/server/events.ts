@@ -7,7 +7,7 @@ import {
 	mediaUrl,
 } from "#lib/types.ts";
 import type { Db } from "./db/index.ts";
-import { actors, eventHosts, events } from "./db/schema.ts";
+import { actorMembers, actors, eventHosts, events } from "./db/schema.ts";
 import { SOURCES } from "./import/sources.ts";
 
 function selectEvents(db: Db) {
@@ -206,6 +206,7 @@ export async function getActorByHandle(
 			id: actors.id,
 			handle: actors.handle,
 			kind: actors.kind,
+			userId: actors.userId,
 			name: actors.name,
 			avatarUrl: actors.avatarUrl,
 			headerKey: actors.headerKey,
@@ -228,10 +229,16 @@ export async function getActorByHandle(
 		.where(eq(actors.handle, handle))
 		.limit(1);
 	if (!row) return null;
-	const { headerKey, ...rest } = row;
+	const [member] = await db
+		.select({ userId: actorMembers.userId })
+		.from(actorMembers)
+		.where(eq(actorMembers.actorId, row.id))
+		.limit(1);
+	const { headerKey, userId, ...rest } = row;
 	return {
 		...rest,
 		imported: SOURCES.some((s) => s.actor.handle === row.handle),
+		hasManager: userId !== null || member !== undefined,
 		headerUrl: mediaUrl(headerKey),
 	};
 }

@@ -46,7 +46,7 @@ const hasAccess = $derived(
 		actor.operator
 	),
 );
-const canInquire = $derived(actor.kind !== "person");
+const canInquire = $derived(actor.kind !== "person" && actor.hasManager);
 const mapUrl = $derived(
 	actor.address
 		? `https://www.openstreetmap.org/search?query=${encodeURIComponent(actor.address)}`
@@ -96,6 +96,11 @@ const description = $derived(actor.catch ?? actor.summary ?? undefined);
 		</div>
 	</div>
 	{#if actor.summary}<p class="mt-3 max-w-[34em] text-muted">{actor.summary}</p>{/if}
+	{#if actor.kind !== 'person' && !actor.hasManager}
+		<p class="mt-3 max-w-[34em] text-xs text-muted">
+			まがりが公開情報からまとめた非公式のページです。運営者の方で、掲載の取り下げや管理をご希望の場合は<a href="https://github.com/hitalin/magari/issues" class="underline underline-offset-2 hover:text-accent-ink" rel="noopener">こちら</a>へご連絡ください。
+		</p>
+	{/if}
 	<div class="pills mt-5">
 		{#if actor.address}<span class="chip chip-plain">{actor.address}</span>{/if}
 		{#if actor.url}<a href={actor.url} class="chip" rel="noopener">{actor.url.replace(/^https?:\/\//, '')}</a>{/if}

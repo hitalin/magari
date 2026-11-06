@@ -9,6 +9,9 @@ export const actions: Actions = {
 	inquire: async ({ request, locals, params }) => {
 		const actor = await getActorByHandle(locals.db, params.handle);
 		if (!actor || actor.kind === "person") error(404, "見つかりません");
+		// 管理者のいないページ（取り込み元など）は、受け取っても読む人がいない
+		if (!actor.hasManager)
+			error(403, "このページは問い合わせを受け付けていません");
 		const form = await request.formData();
 		const values = {
 			kind: String(form.get("kind") ?? ""),
