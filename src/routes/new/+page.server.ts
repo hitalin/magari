@@ -10,7 +10,8 @@ import {
 	createEvent,
 	getEditableEvent,
 	listManagedActorIds,
-	requireActor
+	requireActor,
+	toEventValues
 } from '#lib/server/me.ts';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -33,7 +34,9 @@ export const actions: Actions = {
 		const values = readEventForm((k) => (form.get(k) as string | null) ?? null);
 		const parsed = parseEventForm(values);
 		if (!parsed.ok) return fail(400, { error: parsed.error, values });
-		const id = await createEvent(locals.db, parsed.event, actor.id, session.user.id);
+		const ev = await toEventValues(locals.db, parsed.event);
+		if ('error' in ev) return fail(400, { error: ev.error, values });
+		const id = await createEvent(locals.db, ev, actor.id, session.user.id);
 		redirect(303, parsed.event.status === 'draft' ? '/me' : `/e/${id}`);
 	}
 };

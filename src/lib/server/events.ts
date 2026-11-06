@@ -1,5 +1,11 @@
 import { and, asc, eq, gte, inArray, lt, or } from 'drizzle-orm';
-import type { ActorProfile, ActorRef, EventDetail, EventSummary } from '#lib/types.ts';
+import {
+	type ActorProfile,
+	type ActorRef,
+	type EventDetail,
+	type EventSummary,
+	mediaUrl
+} from '#lib/types.ts';
 import type { Db } from './db/index.ts';
 import { actors, eventHosts, events } from './db/schema.ts';
 
@@ -151,8 +157,7 @@ export async function getEventForUser(
 		.select({ actorId: eventHosts.actorId })
 		.from(eventHosts)
 		.where(eq(eventHosts.eventId, id));
-	const mine =
-		row.createdByUserId === userId || hostRows.some((h) => actorIds.includes(h.actorId));
+	const mine = row.createdByUserId === userId || hostRows.some((h) => actorIds.includes(h.actorId));
 	if (!mine) return null;
 	const hosts = await hostsByEvent(db, [row.id]);
 	return toDetail(row, hosts.get(row.id) ?? []);
@@ -166,14 +171,26 @@ export async function getActorByHandle(db: Db, handle: string): Promise<ActorPro
 			kind: actors.kind,
 			name: actors.name,
 			avatarUrl: actors.avatarUrl,
+			headerKey: actors.headerKey,
 			summary: actors.summary,
 			url: actors.url,
 			xHandle: actors.xHandle,
+			instagram: actors.instagram,
 			address: actors.address,
-			region: actors.region
+			region: actors.region,
+			catch: actors.catch,
+			body: actors.body,
+			facilities: actors.facilities,
+			hours: actors.hours,
+			closedDays: actors.closedDays,
+			access: actors.access,
+			operator: actors.operator,
+			links: actors.links
 		})
 		.from(actors)
 		.where(eq(actors.handle, handle))
 		.limit(1);
-	return row ?? null;
+	if (!row) return null;
+	const { headerKey, ...rest } = row;
+	return { ...rest, headerUrl: mediaUrl(headerKey) };
 }

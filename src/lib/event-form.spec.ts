@@ -23,6 +23,12 @@ describe('parseEventForm', () => {
 		const r = parseEventForm({ ...base, tags: '#間借り, オフ会、オフ会 自助会' });
 		expect(r.ok && r.event.tags).toEqual(['間借り', 'オフ会', '自助会']);
 	});
+	it('ハコは @ を外して小文字にし、形が変ならエラー', () => {
+		const r = parseEventForm({ ...base, space: '@Curry_Shop' });
+		expect(r.ok && r.event.spaceHandle).toBe('curry_shop');
+		expect(parseEventForm({ ...base, space: '' }).ok && null).toBeNull();
+		expect(parseEventForm({ ...base, space: 'a b' }).ok).toBe(false);
+	});
 	it('題が無い・日付が変・URL が変ならエラー', () => {
 		expect(parseEventForm({ ...base, title: '' }).ok).toBe(false);
 		expect(parseEventForm({ ...base, date: '2026-13-01' }).ok).toBe(false);

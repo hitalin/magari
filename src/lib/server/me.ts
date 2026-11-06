@@ -3,6 +3,7 @@ import { and, desc, eq, inArray, isNull, or } from 'drizzle-orm';
 import type { ParsedEvent } from '#lib/event-form.ts';
 import type { Db } from './db/index.ts';
 import { actorMembers, actors, eventHosts, events } from './db/schema.ts';
+import { resolveSpace } from './spaces.ts';
 
 export type MyActor = { id: string; handle: string; name: string; avatarUrl: string | null };
 
@@ -130,7 +131,10 @@ export function requireActor(locals: App.Locals): {
 	return { session, actor: locals.actor };
 }
 
-export type MyEvent = typeof events.$inferSelect & { hostIds: string[] };
+export type MyEvent = typeof events.$inferSelect & {
+	hostIds: string[];
+	spaceHandle: string | null;
+};
 
 export async function listMyEvents(db: Db, userId: string, actorIds: string[]): Promise<MyEvent[]> {
 	const hosted = actorIds.length
@@ -152,7 +156,7 @@ export async function listMyEvents(db: Db, userId: string, actorIds: string[]): 
 		)
 		.orderBy(desc(events.startsAt))
 		.limit(300);
-	return rows.map((r) => ({ ...r, hostIds: [] }));
+	return rows.map((r) => ({ ...r, hostIds: [], spaceHandle: null }));
 }
 
 // 自分が編集できる会（作成者か主催者。取り込んだ会は不可）
@@ -174,12 +178,32 @@ export async function getEditableEvent(
 		.where(eq(eventHosts.eventId, id));
 	const hostIds = hosts.map((h) => h.actorId);
 	const mine = row.createdByUserId === userId || hostIds.some((h) => actorIds.includes(h));
-	return mine ? { ...row, hostIds } : null;
+	if (!mine) return null;
+	const [space] = row.spaceActorId
+		? await db
+				.select({ handle: actors.handle })
+				.from(actors)
+				.where(eq(actors.id, row.spaceActorId))
+				.limit(1)
+		: [];
+	return { ...row, hostIds, spaceHandle: space?.handle ?? null };
 }
+
+// ParsedEvent の spaceHandle を actors.id に解決する。見つからなければ error
+export async function toEventValues(
+	db: Db,
+	input: ParsedEvent
+): Promise<EventValues | { error: string }> {
+	const { spaceHandle, ...rest } = input;
+	const space = await resolveSpace(db, spaceHandle);
+	if ('error' in space) return space;
+	return { ...rest, spaceActorId: space.id };
+}
+export type EventValues = Omit<ParsedEvent, 'spaceHandle'> & { spaceActorId: string | null };
 
 export async function createEvent(
 	db: Db,
-	input: ParsedEvent,
+	input: EventValues,
 	hostActorId: string,
 	userId: string
 ): Promise<string> {
@@ -191,7 +215,7 @@ export async function createEvent(
 	return row.id;
 }
 
-export async function updateEvent(db: Db, id: string, input: ParsedEvent): Promise<void> {
+export async function updateEvent(db: Db, id: string, input: EventValues): Promise<void> {
 	await db
 		.update(events)
 		.set({ ...input, updatedAt: new Date() })

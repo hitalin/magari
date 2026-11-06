@@ -53,6 +53,7 @@ const STATUS: Record<string, string> = { draft: '下書き', published: '公開'
 	<div class="mt-5 flex flex-wrap gap-2">
 		<a href="/new" class="btn btn-primary">まがりする</a>
 		<a href="/@{data.actor.handle}" class="btn">自分のページ ›</a>
+		<a href="/@{data.actor.handle}/edit" class="btn">ページを編集</a>
 		<button type="button" class="btn" onclick={addPasskey}>パスキーを登録</button>
 		<form method="POST" action="/logout"><button type="submit" class="btn">ログアウト</button></form>
 	</div>
@@ -88,6 +89,29 @@ const STATUS: Record<string, string> = { draft: '下書き', published: '公開'
 {@render list('これからの間', data.upcoming, 'まだくねくねしていません。「まがりする」から。')}
 {#if data.drafts.length}{@render list('下書き', data.drafts, '')}{/if}
 {#if data.past.length}{@render list('過去の間', data.past, '')}{/if}
+
+<section class="mb-10">
+	<div class="section-head">
+		<h2 class="section-title text-[1.25rem]">管理しているハコ・団体</h2>
+		<a href="/spaces/new" class="btn">ハコを登録する</a>
+	</div>
+	{#if data.managed.length === 0}
+		<p class="text-sm text-muted">店や会場のページを作ると、紹介・出店プラン・アクセス・お知らせ・問い合わせフォームを載せられます。</p>
+	{:else}
+		<div class="rule-list">
+			{#each data.managed as a (a.id)}
+				<div class="row items-center">
+					<span class="font-mono text-xs text-muted">{a.kind === 'space' ? 'ハコ' : '団体'}</span>
+					<span class="flex flex-wrap items-center gap-3">
+						<a href="/@{a.handle}/edit" class="font-serif text-[1.05rem] font-bold hover:text-accent-ink">{a.name}</a>
+						<span class="text-xs text-muted">@{a.handle}</span>
+						<a href="/@{a.handle}" class="text-xs text-muted hover:text-accent-ink">見る ›</a>
+					</span>
+				</div>
+			{/each}
+		</div>
+	{/if}
+</section>
 
 <section class="mb-10">
 	<div class="section-head"><h2 class="section-title text-[1.25rem]">ログイン方法</h2></div>

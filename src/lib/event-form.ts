@@ -1,5 +1,5 @@
 // 会の作成・編集フォームの検証と変換。サーバー側の form action から使う（純粋関数）。
-import { isValidHandle } from './id';
+import { HANDLE_PATTERN, isValidHandle } from './id';
 
 export type EventFormValues = {
 	title: string;
@@ -7,6 +7,7 @@ export type EventFormValues = {
 	allDay: boolean;
 	startTime: string; // HH:MM
 	endTime: string; // HH:MM or ''
+	space: string; // ハコの handle（@ は省略可）
 	locationName: string;
 	locationAddress: string;
 	locationVisibility: 'public' | 'attendees';
@@ -26,6 +27,7 @@ export const EMPTY_EVENT_FORM: EventFormValues = {
 	allDay: false,
 	startTime: '19:00',
 	endTime: '',
+	space: '',
 	locationName: '',
 	locationAddress: '',
 	locationVisibility: 'public',
@@ -44,6 +46,8 @@ export type ParsedEvent = {
 	startsAt: Date;
 	endsAt: Date | null;
 	allDay: boolean;
+	// ハコの handle。保存時に actors.id に解決する
+	spaceHandle: string | null;
 	locationName: string | null;
 	locationAddress: string | null;
 	locationVisibility: 'public' | 'attendees';
@@ -71,6 +75,7 @@ export function readEventForm(get: (name: string) => string | null): EventFormVa
 		allDay: get('allDay') !== null,
 		startTime: s('startTime'),
 		endTime: s('endTime'),
+		space: s('space'),
 		locationName: s('locationName'),
 		locationAddress: s('locationAddress'),
 		locationVisibility: pick('locationVisibility', ['public', 'attendees'], 'public'),
@@ -119,6 +124,9 @@ export function parseEventForm(
 		if (value && !/^https?:\/\/\S+$/.test(value))
 			return { ok: false, error: `${label} は http(s):// から始めてください` };
 	}
+	const spaceHandle = v.space.replace(/^@/, '').toLowerCase() || null;
+	if (spaceHandle && !HANDLE_PATTERN.test(spaceHandle))
+		return { ok: false, error: 'ハコの ID は @ に続く小文字の英数字と _' };
 	const capacity = v.capacity ? Number(v.capacity) : null;
 	if (capacity !== null && (!Number.isInteger(capacity) || capacity < 1 || capacity > 100000))
 		return { ok: false, error: '定員は 1 以上の整数で' };
@@ -140,6 +148,7 @@ export function parseEventForm(
 			startsAt,
 			endsAt,
 			allDay: v.allDay,
+			spaceHandle,
 			locationName: nullable(v.locationName),
 			locationAddress: nullable(v.locationAddress),
 			locationVisibility: v.locationVisibility,

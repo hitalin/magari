@@ -7,15 +7,17 @@ import {
 	requireActor,
 	requireLogin
 } from '#lib/server/me.ts';
+import { listManagedActors } from '#lib/server/spaces.ts';
 import type { Actions, PageServerLoad } from './$types';
 
 const PROVIDER_LABEL: Record<string, string> = { twitter: 'X', miauth: 'Misskey' };
 
 export const load: PageServerLoad = async ({ locals, request }) => {
 	const { session, actor } = requireActor(locals);
-	const [actorIds, accounts] = await Promise.all([
+	const [actorIds, accounts, managed] = await Promise.all([
 		listManagedActorIds(locals.db, session.user.id, actor),
-		locals.auth.api.listUserAccounts({ headers: request.headers })
+		locals.auth.api.listUserAccounts({ headers: request.headers }),
+		listManagedActors(locals.db, session.user.id)
 	]);
 	const all = await listMyEvents(locals.db, session.user.id, actorIds);
 	const now = Date.now();
@@ -30,6 +32,7 @@ export const load: PageServerLoad = async ({ locals, request }) => {
 	});
 	return {
 		actor,
+		managed,
 		xEnabled: !!env.X_CLIENT_ID,
 		accounts: accounts.map((a) => ({
 			providerId: a.providerId,

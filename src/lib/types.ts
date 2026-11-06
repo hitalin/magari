@@ -31,12 +31,44 @@ export type EventDetail = EventSummary & {
 export type ActorProfile = ActorRef & {
 	id: string;
 	avatarUrl: string | null;
+	headerUrl: string | null;
 	summary: string | null;
 	url: string | null;
 	xHandle: string | null;
+	instagram: string | null;
 	address: string | null;
 	region: string | null;
+	// 場のホームページ相当
+	catch: string | null;
+	body: string | null;
+	facilities: string[];
+	hours: string | null;
+	closedDays: string | null;
+	access: string | null;
+	operator: string | null;
+	links: { label: string; url: string }[];
 };
+
+export type SpacePlan = {
+	id: string;
+	name: string;
+	kind: 'spot' | 'weekly' | 'exclusive' | 'other';
+	priceText: string | null;
+	description: string | null;
+};
+
+export type Post = { id: string; title: string; body: string | null; publishedAt: string };
+
+export type ActorPage = {
+	actor: ActorProfile;
+	plans: SpacePlan[];
+	posts: Post[];
+	events: EventSummary[];
+};
+
+// R2 に置いた画像の公開 URL
+export const mediaUrl = (key: string | null | undefined): string | null =>
+	key ? `/i/${key}` : null;
 
 export const KIND_LABEL: Record<ActorRef['kind'], string> = {
 	person: '人',

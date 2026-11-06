@@ -7,6 +7,7 @@ import {
 	listManagedActorIds,
 	requireActor,
 	setEventStatus,
+	toEventValues,
 	updateEvent
 } from '#lib/server/me.ts';
 import type { Actions, PageServerLoad } from './$types';
@@ -31,7 +32,9 @@ export const actions: Actions = {
 		const values = readEventForm((k) => (form.get(k) as string | null) ?? null);
 		const parsed = parseEventForm(values);
 		if (!parsed.ok) return fail(400, { error: parsed.error, values });
-		await updateEvent(locals.db, params.id, parsed.event);
+		const ev = await toEventValues(locals.db, parsed.event);
+		if ('error' in ev) return fail(400, { error: ev.error, values });
+		await updateEvent(locals.db, params.id, ev);
 		redirect(303, parsed.event.status === 'draft' ? '/me' : `/e/${params.id}`);
 	},
 	cancel: async ({ locals, params }) => {

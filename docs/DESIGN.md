@@ -125,11 +125,34 @@
 | `/me` | 自分の会（これから・下書き・過去）、まがりする（会を立てる）、自分のページ、パスキー登録、ログアウト |
 | `/new` | まがりする（会を立てる）。`?from=ID` で複製。保存と同時に公開か下書き |
 | `/e/{id}/edit` | 編集、中止、中止の取り消し、削除。作成者か主催者だけ。取り込んだ会は編集不可 |
+| `/spaces/new` | ハコ（場）か団体を登録する。作った人が `actor_members` の owner になる |
+| `/@{handle}/edit` | ページの編集。本人の person か、管理している場・団体だけ。紹介・アクセス・リンク、写真（R2）、出店プラン、お知らせ、問い合わせの受信箱 |
+| `/i/{key}` | R2（MEDIA）の画像。キーは乱数なので immutable でキャッシュ |
 
 - フォームの検証と JST → UTC 変換は `src/lib/event-form.ts`（純粋関数、テストあり）。終了が開始以前なら翌日扱い（深夜営業）。
 - 書き込みは SvelteKit の form action。`hooks.server.ts` が `locals.actor`（本人のアクター）を載せる。
 - ヘッダーのログイン状態は今は `+layout.server.ts` で出している。公開ページを CDN に載せる段階で、ここだけクライアント取得に切り替える（HTML を Cookie に依存させないため）。
-- 未実装: 場・団体の作成と管理者、共同主催の指定、フォローとマイ予定、公開ページのキャッシュ purge。
+- 会は「ハコ」欄に場の handle を書くと `space_actor_id` に紐づき、その場のページとカレンダーに載る（`resolveSpace`）。
+- 未実装: 管理者（メンバー）の追加、共同主催の指定、フォローとマイ予定、公開ページのキャッシュ purge。
+
+## 場のページ（saki-stand.com の上位互換）
+
+間借りを受け入れる店（カレー屋など）が、自前のホームページの代わりに `/@handle` を使えるようにする。参照元は saki-stand.com（コミュニティスタンド咲）。あちらにあってこちらに無いものが無いように揃え、加えて「その場で開かれる間のカレンダー」が自動で付く。
+
+| saki-stand.com | まがり |
+|---|---|
+| 店名・キャッチコピー・コンセプト・使い方・利用の流れ | `name` / `catch` / `summary` / `body`（簡易記法、`Blocks`） |
+| 設備タグ（Wi-Fi、電源、厨房…） | `facilities` |
+| NEWS | `posts`（お知らせ。日付順） |
+| 出店プラン（時間帯別 / 曜日固定 / 貸し切りの料金表） | `space_plans`（`kind` = spot / weekly / exclusive / other、料金は自由テキストで改行可） |
+| ACCESS（住所、駅、営業時間、定休日、運営、地図） | `address` / `access` / `hours` / `closed_days` / `operator`、地図は OSM の検索リンク |
+| 建物写真 | `header_key`（R2、`/i/{key}`）。OGP 画像にも使う |
+| CONTACT（種別付きフォーム、ハニーポット） | `inquiries`。ログイン不要で送れる。メールは送らず、管理者が `/@handle/edit` の受信箱で見る |
+| SNS（X、Instagram）、会社概要、関連サイト | `x_handle` / `instagram` / `operator` / `links` |
+| オープンイベントなどの催し | 会（Event）。「ハコ」に自分の場を指定して開く |
+
+- 問い合わせは脱メールの原則どおり通知しない。受信箱の件数を `/@handle/edit` に出すだけ。将来 Web Push で知らせる。
+- 画像は R2 に生のまま置く（変換なし）。JPEG / PNG / WebP、5MB まで。
 
 ## ロゴ
 

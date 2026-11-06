@@ -25,6 +25,9 @@ let allDay = $state(values.allDay);
 	</div>
 	<label class="flex items-center gap-2 text-sm"><input type="checkbox" name="allDay" bind:checked={allDay} class="accent-accent" /> 終日（時刻を決めない）</label>
 
+	<Field label="ハコ" hint="まがりに登録された場（@ID）。その場のページとカレンダーに載る">
+		<div class="flex items-center gap-1"><span class="text-muted">@</span><input name="space" value={values.space} class="input" autocapitalize="off" placeholder="curry_shop" /></div>
+	</Field>
 	<div class="grid gap-4 sm:grid-cols-2">
 		<Field label="場所の名前" hint="ハコの名前、公園、店名など"><input name="locationName" value={values.locationName} class="input" /></Field>
 		<Field label="住所"><input name="locationAddress" value={values.locationAddress} class="input" /></Field>
