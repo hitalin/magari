@@ -1,13 +1,25 @@
 <script lang="ts">
+import { onMount } from "svelte";
 import logo from "#lib/assets/logo.svg";
 import AreaFilter from "#lib/components/AreaFilter.svelte";
 import DayList from "#lib/components/DayList.svelte";
 import Empty from "#lib/components/Empty.svelte";
+import FlyerWall from "#lib/components/FlyerWall.svelte";
 import MonthGrid from "#lib/components/MonthGrid.svelte";
 import type { PageProps } from "./$types";
 
 let { data }: PageProps = $props();
 let area = $state<string[]>([]);
+// これからの間の見せ方。一覧（日ごとの行）か壁（フライヤー）か
+const VIEW_KEY = "magari-view";
+let view = $state<"list" | "wall">("list");
+onMount(() => {
+	if (localStorage.getItem(VIEW_KEY) === "wall") view = "wall";
+});
+function setView(v: "list" | "wall") {
+	view = v;
+	localStorage.setItem(VIEW_KEY, v);
+}
 const byArea = <T extends { area: string | null }>(list: T[]) =>
 	area.length
 		? list.filter((e) => e.area !== null && area.includes(e.area))
@@ -69,10 +81,20 @@ const WORDS = [
 
 <div class="section-head">
 	<h2 class="section-title">これから7日の間</h2>
-	<a href="/calendar" class="more">その先はカレンダーで ›</a>
+	<div class="flex flex-wrap items-center gap-4">
+		<div class="pills" role="group" aria-label="見せ方">
+			<button type="button" class="chip {view === 'list' ? 'chip-tape' : 'chip-plain'}" aria-pressed={view === 'list'} onclick={() => setView('list')}>一覧</button>
+			<button type="button" class="chip {view === 'wall' ? 'chip-tape' : 'chip-plain'}" aria-pressed={view === 'wall'} onclick={() => setView('wall')}>壁</button>
+		</div>
+		<a href="/calendar" class="more">その先はカレンダーで ›</a>
+	</div>
 </div>
 
 {#if weekEvents.length === 0}
 	<Empty title={area.length ? `${area.join('・')}では、この7日はまだ誰もくねくねしていません。` : 'まだ誰もくねくねしていません。'} hint="エリアを変えるか、カレンダーで先を見てみてください。" />
 {/if}
-<DayList events={weekEvents} />
+{#if view === 'wall'}
+	<FlyerWall events={weekEvents} />
+{:else}
+	<DayList events={weekEvents} />
+{/if}

@@ -1,4 +1,4 @@
-import { and, asc, eq, gte, inArray, lt, or } from "drizzle-orm";
+import { and, asc, eq, gte, inArray, isNotNull, lt, or } from "drizzle-orm";
 import {
 	type ActorProfile,
 	type ActorRef,
@@ -31,6 +31,7 @@ function selectEvents(db: Db) {
 			capacity: events.capacity,
 			feeText: events.feeText,
 			tags: events.tags,
+			coverKey: events.coverKey,
 			spaceHandle: actors.handle,
 			spaceName: actors.name,
 			spaceKind: actors.kind,
@@ -88,6 +89,7 @@ function toDetail(row: Row, hosts: ActorRef[]): EventDetail {
 		capacity: row.capacity,
 		feeText: row.feeText,
 		tags: row.tags,
+		flyerUrl: mediaUrl(row.coverKey),
 		space:
 			row.spaceHandle && row.spaceName && row.spaceKind
 				? { handle: row.spaceHandle, name: row.spaceName, kind: row.spaceKind }
@@ -109,6 +111,7 @@ function toSummary(detail: EventDetail): EventSummary {
 		tags,
 		space,
 		hosts,
+		flyerUrl,
 	} = detail;
 	return {
 		id,
@@ -122,12 +125,20 @@ function toSummary(detail: EventDetail): EventSummary {
 		tags,
 		space,
 		hosts,
+		flyerUrl,
 	};
 }
 
 export async function listUpcomingEvents(
 	db: Db,
-	opts: { actorId?: string; limit?: number; from?: Date; to?: Date } = {},
+	opts: {
+		actorId?: string;
+		limit?: number;
+		from?: Date;
+		to?: Date;
+		// 主催がフライヤー画像を上げた会だけ（壁）
+		withFlyer?: boolean;
+	} = {},
 ): Promise<EventSummary[]> {
 	const from = opts.from ?? new Date();
 	const upcoming = and(
@@ -135,6 +146,7 @@ export async function listUpcomingEvents(
 		eq(events.visibility, "public"),
 		gte(events.startsAt, from),
 		opts.to ? lt(events.startsAt, opts.to) : undefined,
+		opts.withFlyer ? isNotNull(events.coverKey) : undefined,
 	);
 	// actorId 指定時は、その Actor が場または主催の会に絞る
 	const where = opts.actorId

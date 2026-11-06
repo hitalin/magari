@@ -1,5 +1,7 @@
 <script lang="ts">
+import Flyer from "#lib/components/Flyer.svelte";
 import { formatWhen } from "#lib/date.ts";
+import { flyerStyle } from "#lib/flyer.ts";
 import { eventPlace, eventShareText, xShareUrl } from "#lib/share.ts";
 import { page } from "$app/state";
 import type { PageProps } from "./$types";
@@ -100,6 +102,15 @@ const cardDescription = $derived(
 				{#if event.hosts[0]}<a href="/@{event.hosts[0].handle}" class="btn">{event.hosts[0].name} のページ ›</a>{/if}
 			</div>
 		</aside>
+	</div>
+
+	<!-- ページのいちばん下に、壁に貼ったフライヤー（上げた画像が無ければ自動のビラ） -->
+	<div class="flyer-pin mx-auto mt-16 w-full max-w-[17rem]" style="--tilt: {flyerStyle(event.id).tilt / 2}deg">
+		{#if event.flyerUrl}
+			<img src={event.flyerUrl} alt="{event.title} のフライヤー" />
+		{:else}
+			<Flyer id={event.id} title={event.title} startsAt={event.startsAt} endsAt={event.endsAt} allDay={event.allDay} place={event.space?.name ?? event.locationName} host={event.hosts[0]?.name ?? null} />
+		{/if}
 	</div>
 
 </article>

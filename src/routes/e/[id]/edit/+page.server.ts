@@ -1,6 +1,7 @@
+import { env } from "cloudflare:workers";
 import { error, fail, redirect } from "@sveltejs/kit";
 import { parseEventForm, readEventForm } from "#lib/event-form.ts";
-import { parseHandleInput } from "#lib/id.ts";
+import { parseHandleInput, shortId } from "#lib/id.ts";
 import { toFormValues } from "#lib/server/event-values.ts";
 import {
 	addEventHost,
@@ -11,11 +12,21 @@ import {
 	listManagedActorIds,
 	removeEventHost,
 	requireActor,
+	setEventFlyer,
 	setEventStatus,
 	toEventValues,
 	updateEvent,
 } from "#lib/server/me.ts";
+import { mediaUrl } from "#lib/types.ts";
 import type { Actions, PageServerLoad } from "./$types";
+
+const IMAGE_TYPES: Record<string, string> = {
+	"image/jpeg": "jpg",
+	"image/png": "png",
+	"image/webp": "webp",
+};
+// A4 のスキャンなども上げられるよう、ハコの写真（5MB）より大きめ
+const MAX_FLYER = 10 * 1024 * 1024;
 
 async function editable(locals: App.Locals, id: string) {
 	const { session, actor } = requireActor(locals);
@@ -33,10 +44,47 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 		values: toFormValues(ev),
 		hosts: await listEventHosts(locals.db, ev.id),
 		myActorId: locals.actor?.id ?? null,
+		// フライヤーの見本（上げた画像か、自動のビラの材料）
+		flyer: {
+			url: mediaUrl(ev.coverKey),
+			title: ev.title,
+			startsAt: ev.startsAt.toISOString(),
+			endsAt: ev.endsAt?.toISOString() ?? null,
+			allDay: ev.allDay,
+			place: ev.spaceName ?? ev.locationName,
+		},
 	};
 };
 
 export const actions: Actions = {
+	// フライヤーを上げる。自動のビラと入れ替わり、X で共有したときの画像にもなる
+	flyer: async ({ request, locals, params }) => {
+		const ev = await editable(locals, params.id);
+		const form = await request.formData();
+		const file = form.get("flyer");
+		if (!(file instanceof File) || file.size === 0)
+			return fail(400, { flyerError: "画像を選んでください" });
+		const ext = IMAGE_TYPES[file.type];
+		if (!ext) return fail(400, { flyerError: "JPEG / PNG / WebP だけ" });
+		if (file.size > MAX_FLYER)
+			return fail(400, { flyerError: "10MB までにしてください" });
+		const key = `flyers/${ev.id}/${shortId()}.${ext}`;
+		await env.MEDIA.put(key, await file.arrayBuffer(), {
+			httpMetadata: { contentType: file.type },
+		});
+		await setEventFlyer(locals.db, ev.id, key);
+		if (ev.coverKey) await env.MEDIA.delete(ev.coverKey);
+		return { flyerSaved: true };
+	},
+	// 自動のビラに戻す
+	removeFlyer: async ({ locals, params }) => {
+		const ev = await editable(locals, params.id);
+		if (ev.coverKey) {
+			await setEventFlyer(locals.db, ev.id, null);
+			await env.MEDIA.delete(ev.coverKey);
+		}
+		return { flyerSaved: true };
+	},
 	// 共同主催を @handle で足す。主催は全員がこの間を編集できる
 	addHost: async ({ request, locals, params }) => {
 		await editable(locals, params.id);
@@ -83,8 +131,9 @@ export const actions: Actions = {
 		redirect(303, `/e/${params.id}`);
 	},
 	delete: async ({ locals, params }) => {
-		await editable(locals, params.id);
+		const ev = await editable(locals, params.id);
 		await deleteEvent(locals.db, params.id);
+		if (ev.coverKey) await env.MEDIA.delete(ev.coverKey);
 		redirect(303, "/me");
 	},
 };

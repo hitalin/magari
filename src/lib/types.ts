@@ -18,6 +18,8 @@ export type EventSummary = {
 	tags: string[];
 	space: ActorRef | null;
 	hosts: ActorRef[];
+	// 主催が上げたフライヤー。無ければ自動のビラを描く
+	flyerUrl: string | null;
 };
 
 export type EventDetail = EventSummary & {

@@ -18,6 +18,7 @@ const ev = (
 	tags: [],
 	space: space ? { handle: space, name: space, kind: "space" } : null,
 	hosts: host ? [{ handle: host, name: host, kind: "group" }] : [],
+	flyerUrl: null,
 });
 
 describe("primaryActor", () => {

@@ -158,6 +158,7 @@ export function requireActor(locals: App.Locals): {
 export type MyEvent = typeof events.$inferSelect & {
 	hostIds: string[];
 	spaceHandle: string | null;
+	spaceName: string | null;
 };
 
 export async function listMyEvents(
@@ -184,7 +185,12 @@ export async function listMyEvents(
 		)
 		.orderBy(desc(events.startsAt))
 		.limit(300);
-	return rows.map((r) => ({ ...r, hostIds: [], spaceHandle: null }));
+	return rows.map((r) => ({
+		...r,
+		hostIds: [],
+		spaceHandle: null,
+		spaceName: null,
+	}));
 }
 
 // 自分が編集できる会（作成者か主催者。取り込んだ会は不可）
@@ -210,12 +216,17 @@ export async function getEditableEvent(
 	if (!mine) return null;
 	const [space] = row.spaceActorId
 		? await db
-				.select({ handle: actors.handle })
+				.select({ handle: actors.handle, name: actors.name })
 				.from(actors)
 				.where(eq(actors.id, row.spaceActorId))
 				.limit(1)
 		: [];
-	return { ...row, hostIds, spaceHandle: space?.handle ?? null };
+	return {
+		...row,
+		hostIds,
+		spaceHandle: space?.handle ?? null,
+		spaceName: space?.name ?? null,
+	};
 }
 
 // ParsedEvent の spaceHandle を actors.id に解決する。見つからなければ error
@@ -346,4 +357,16 @@ export async function removeEventHost(
 			and(eq(eventHosts.eventId, eventId), eq(eventHosts.actorId, actorId)),
 		);
 	return true;
+}
+
+// 会のフライヤー（R2 のキー）。null で自動のビラに戻す
+export async function setEventFlyer(
+	db: Db,
+	id: string,
+	coverKey: string | null,
+): Promise<void> {
+	await db
+		.update(events)
+		.set({ coverKey, updatedAt: new Date() })
+		.where(eq(events.id, id));
 }

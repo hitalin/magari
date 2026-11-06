@@ -85,7 +85,6 @@ const description = $derived(actor.catch ?? actor.summary ?? undefined);
 	{#if description}<meta name="description" content={description} />{/if}
 	<meta property="og:title" content={actor.name} />
 	{#if description}<meta property="og:description" content={description} />{/if}
-	{#if actor.headerUrl}<meta property="og:image" content="{page.url.origin}{actor.headerUrl}" />{/if}
 </svelte:head>
 
 {#if actor.headerUrl && actor.kind !== 'space'}

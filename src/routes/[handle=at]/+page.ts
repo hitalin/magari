@@ -8,5 +8,9 @@ export const load: PageLoad = async ({ fetch, params }) => {
 	if (!res.ok) error(res.status, "見つかりません");
 	const page = (await res.json()) as ActorPage;
 	const ym = currentMonth();
-	return { ...page, calendar: { ...ym, grid: monthGrid(ym.year, ym.month) } };
+	return {
+		...page,
+		calendar: { ...ym, grid: monthGrid(ym.year, ym.month) },
+		ogImage: page.actor.headerUrl,
+	};
 };

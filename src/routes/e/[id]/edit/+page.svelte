@@ -1,5 +1,6 @@
 <script lang="ts">
 import EventForm from "#lib/components/EventForm.svelte";
+import Flyer from "#lib/components/Flyer.svelte";
 import type { PageProps } from "./$types";
 
 let { data, form }: PageProps = $props();
@@ -10,6 +11,35 @@ let { data, form }: PageProps = $props();
 <section class="mx-auto mt-4 max-w-2xl">
 	<p class="label">間を編集</p>
 	<h1 class="mt-2 mb-8 text-2xl">{data.values.title}</h1>
+
+	<section class="mb-12">
+		<h2 class="section-title text-[1.25rem]">フライヤー</h2>
+		{#if form && 'flyerError' in form}<p class="mt-4 rounded-sm bg-accent-soft px-4 py-2 text-sm text-accent-ink">{form.flyerError}</p>{/if}
+		<div class="mt-6 grid items-start gap-6 sm:grid-cols-[10rem_1fr]">
+			<div class="flyer-pin mx-auto w-40">
+				{#if data.flyer.url}
+					<img src={data.flyer.url} alt="今のフライヤー" />
+				{:else}
+					<Flyer id={data.id} title={data.flyer.title} startsAt={data.flyer.startsAt} endsAt={data.flyer.endsAt} allDay={data.flyer.allDay} place={data.flyer.place} host={data.hosts[0]?.name ?? null} />
+				{/if}
+			</div>
+			<div>
+				<p class="text-sm text-muted">
+					{#if data.flyer.url}上げた画像を壁と間のページに貼っています。{:else}今は題・日時・場所から作った自動のビラです。好きな画像に差し替えられます。{/if}
+					X で共有したときの画像にもなります。縦横比は自由で、切り抜きません。JPEG / PNG / WebP、10MB まで。
+				</p>
+				<div class="mt-4 flex flex-wrap items-center gap-3">
+					<form method="POST" action="?/flyer" enctype="multipart/form-data" class="flex flex-wrap items-center gap-2">
+						<input type="file" name="flyer" accept="image/jpeg,image/png,image/webp" required class="input max-w-xs" />
+						<button type="submit" class="btn">{data.flyer.url ? '差し替える' : 'アップロード'}</button>
+					</form>
+					{#if data.flyer.url}
+						<form method="POST" action="?/removeFlyer"><button type="submit" class="btn">自動のビラに戻す</button></form>
+					{/if}
+				</div>
+			</div>
+		</div>
+	</section>
 	<EventForm values={form?.values ?? data.values} error={form?.error} submitLabel="保存して公開" />
 
 	<section class="mt-12 border-t border-line pt-6">
