@@ -98,3 +98,18 @@ export function fullAddress(
 	if (!region || address.startsWith(region)) return address;
 	return region + address;
 }
+
+// 手で立てた会のエリア。ハコの都道府県 → 会場の住所 → 会場の名前 → オンラインの URL の順に決める
+export function eventArea(input: {
+	spaceRegion: string | null;
+	locationAddress: string | null;
+	locationName: string | null;
+	onlineUrl: string | null;
+}): string | null {
+	return (
+		detectArea(input.spaceRegion) ??
+		detectArea(input.locationAddress) ??
+		detectArea(input.locationName) ??
+		(input.onlineUrl ? ONLINE : null)
+	);
+}

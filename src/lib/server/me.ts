@@ -1,5 +1,6 @@
 import { redirect } from "@sveltejs/kit";
 import { and, desc, eq, inArray, isNull, or } from "drizzle-orm";
+import { eventArea } from "#lib/area.ts";
 import type { ParsedEvent } from "#lib/event-form.ts";
 import type { Db } from "./db/index.ts";
 import { actorMembers, actors, eventHosts, events } from "./db/schema.ts";
@@ -225,10 +226,16 @@ export async function toEventValues(
 	const { spaceHandle, ...rest } = input;
 	const space = await resolveSpace(db, spaceHandle);
 	if ("error" in space) return space;
-	return { ...rest, spaceActorId: space.id };
+	return {
+		...rest,
+		spaceActorId: space.id,
+		// 一覧とカレンダーのエリア絞り込みに要る
+		area: eventArea({ ...rest, spaceRegion: space.region }),
+	};
 }
 export type EventValues = Omit<ParsedEvent, "spaceHandle"> & {
 	spaceActorId: string | null;
+	area: string | null;
 };
 
 export async function createEvent(

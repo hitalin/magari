@@ -143,6 +143,7 @@
 - 書き込みは SvelteKit の form action。`hooks.server.ts` が `locals.actor`（本人のアクター）を載せる。
 - ヘッダーのログイン状態は今は `+layout.server.ts` で出している。公開ページを CDN に載せる段階で、ここだけクライアント取得に切り替える（HTML を Cookie に依存させないため）。
 - 会は「ハコ」欄に場の handle を書くと `space_actor_id` に紐づき、その場のページとカレンダーに載る（`resolveSpace`）。
+- 手で立てた会のエリア（`events.area`）は保存のたびに決める（`eventArea`）: ハコの都道府県 → 会場の住所 → 会場の名前 → オンラインの URL。エリアが無いと、一覧とカレンダーをエリアで絞ったときに出ない。
 - 未実装: 管理者（メンバー）の追加、共同主催の指定、フォローとマイ予定、公開ページのキャッシュ purge。
 
 ## 場のページ（saki-stand.com の上位互換）

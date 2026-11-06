@@ -290,14 +290,14 @@ export async function deleteInquiry(
 export async function resolveSpace(
 	db: Db,
 	handle: string | null,
-): Promise<{ id: string | null } | { error: string }> {
-	if (!handle) return { id: null };
+): Promise<{ id: string | null; region: string | null } | { error: string }> {
+	if (!handle) return { id: null, region: null };
 	const [row] = await db
-		.select({ id: actors.id, kind: actors.kind })
+		.select({ id: actors.id, kind: actors.kind, region: actors.region })
 		.from(actors)
 		.where(eq(actors.handle, handle))
 		.limit(1);
 	if (row?.kind !== "space")
 		return { error: `@${handle} というハコは見つかりません` };
-	return { id: row.id };
+	return { id: row.id, region: row.region };
 }

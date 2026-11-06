@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { compareArea, detectArea, fullAddress } from "./area";
+import { compareArea, detectArea, eventArea, fullAddress } from "./area";
 
 describe("detectArea", () => {
 	it("会場文字列から都道府県を返す（接尾辞なし）", () => {
@@ -47,5 +47,37 @@ describe("fullAddress", () => {
 	it("都道府県が無ければ住所のまま、住所が無ければ null", () => {
 		expect(fullAddress(null, "大阪市都島区")).toBe("大阪市都島区");
 		expect(fullAddress("大阪府", null)).toBeNull();
+	});
+});
+
+describe("eventArea", () => {
+	const none = { locationName: null, locationAddress: null, onlineUrl: null };
+	it("ハコがあればハコの都道府県", () => {
+		expect(
+			eventArea({ ...none, spaceRegion: "大阪府", locationName: "東京駅" }),
+		).toBe("大阪");
+	});
+	it("ハコが無ければ会場の住所、次に会場の名前", () => {
+		expect(
+			eventArea({
+				...none,
+				spaceRegion: null,
+				locationAddress: "東京都品川区",
+				locationName: "大阪の店",
+			}),
+		).toBe("東京");
+		expect(
+			eventArea({ ...none, spaceRegion: null, locationName: "京都市の公園" }),
+		).toBe("京都");
+	});
+	it("場所が分からずオンラインの URL があればオンライン、何も無ければ null", () => {
+		expect(
+			eventArea({
+				...none,
+				spaceRegion: null,
+				onlineUrl: "https://example.com/live",
+			}),
+		).toBe("オンライン");
+		expect(eventArea({ ...none, spaceRegion: null })).toBeNull();
 	});
 });
