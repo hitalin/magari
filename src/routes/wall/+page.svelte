@@ -20,6 +20,6 @@ let { data }: PageProps = $props();
 	{#if data.events.length === 0}
 		<Empty title="まだ誰もフライヤーを貼っていません。" hint="間の編集画面から画像を上げると、ここに貼られます。" />
 	{:else}
-		<FlyerWall events={data.events} collapse={false} />
+		<FlyerWall events={data.events} collapse={false} large />
 	{/if}
 </section>

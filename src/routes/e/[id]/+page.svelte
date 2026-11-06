@@ -44,27 +44,31 @@ const cardDescription = $derived(
 		<p class="mt-4 rounded-sm bg-accent-soft px-4 py-2 text-sm text-accent-ink">自分だけに見える間です。</p>
 	{/if}
 
-	<header class="dots -mx-4 mt-2 px-4 py-10 text-center">
-		<p class="font-serif text-lg text-muted">{formatWhen(event)}</p>
-		<h1 class="mt-3 text-[clamp(1.8rem,4vw,2.8rem)]">{event.title}</h1>
-		{#if event.tags.length}
-			<div class="mt-5 flex flex-wrap justify-center gap-1.5">
-				{#each event.tags as tag (tag)}
-					<span class="chip chip-tape">{tag}</span>
-				{/each}
+	<!-- 左にフライヤー（上げた画像が無ければ自動のビラ）、右に会の情報 -->
+	<div class="detail-cols mt-8">
+		<div class="detail-flyer">
+			<div class="flyer-pin mx-auto w-full max-w-[20rem] md:max-w-none" style="--tilt: {flyerStyle(event.id).tilt / 2}deg">
+				{#if event.flyerUrl}
+					<img src={event.flyerUrl} alt="{event.title} のフライヤー" />
+				{:else}
+					<Flyer id={event.id} title={event.title} startsAt={event.startsAt} endsAt={event.endsAt} allDay={event.allDay} place={event.space?.name ?? event.locationName} host={event.hosts[0]?.name ?? null} />
+				{/if}
 			</div>
-		{/if}
-		{#if canEdit}
-			<a href="/e/{event.id}/edit" class="btn mt-6 px-4 py-1.5 text-sm">この間を編集</a>
-		{/if}
-	</header>
-
-	<div class={event.description ? 'detail-cols mt-2' : 'mt-2'}>
-		{#if event.description}
-			<div class="order-1 whitespace-pre-line text-[1.05rem] leading-[2] md:order-0">{event.description}</div>
-		{/if}
-		<aside class="detail-side">
-			<dl class="defs">
+		</div>
+		<div class="min-w-0">
+			<p class="font-serif text-lg text-muted">{formatWhen(event)}</p>
+			<h1 class="mt-2 text-[clamp(1.7rem,3.5vw,2.4rem)]">{event.title}</h1>
+			{#if event.tags.length}
+				<div class="mt-4 flex flex-wrap gap-1.5">
+					{#each event.tags as tag (tag)}
+						<span class="chip chip-tape">{tag}</span>
+					{/each}
+				</div>
+			{/if}
+			{#if canEdit}
+				<a href="/e/{event.id}/edit" class="btn mt-5 px-4 py-1.5 text-sm">この間を編集</a>
+			{/if}
+			<dl class="defs mt-8">
 				{#if event.hosts.length}
 					<dt>主催</dt>
 					<dd>{#each event.hosts as h, i (h.handle)}{#if i > 0}、{/if}<a href="/@{h.handle}" class="font-serif font-bold hover:text-accent-ink">{h.name}</a>{/each}</dd>
@@ -97,20 +101,13 @@ const cardDescription = $derived(
 					<dd>{event.capacity}人</dd>
 				{/if}
 			</dl>
-			<div class="mt-6 flex flex-wrap justify-center gap-3 {event.description ? 'md:justify-start' : ''}">
+			{#if event.description}
+				<div class="mt-8 whitespace-pre-line text-[1.05rem] leading-[2]">{event.description}</div>
+			{/if}
+			<div class="mt-8 flex flex-wrap gap-3">
 				<a href={shareUrl} class="btn btn-primary" rel="noopener">X で共有</a>
 				{#if event.hosts[0]}<a href="/@{event.hosts[0].handle}" class="btn">{event.hosts[0].name} のページ ›</a>{/if}
 			</div>
-		</aside>
+		</div>
 	</div>
-
-	<!-- ページのいちばん下に、壁に貼ったフライヤー（上げた画像が無ければ自動のビラ） -->
-	<div class="flyer-pin mx-auto mt-16 w-full max-w-[17rem]" style="--tilt: {flyerStyle(event.id).tilt / 2}deg">
-		{#if event.flyerUrl}
-			<img src={event.flyerUrl} alt="{event.title} のフライヤー" />
-		{:else}
-			<Flyer id={event.id} title={event.title} startsAt={event.startsAt} endsAt={event.endsAt} allDay={event.allDay} place={event.space?.name ?? event.locationName} host={event.hosts[0]?.name ?? null} />
-		{/if}
-	</div>
-
 </article>
