@@ -412,6 +412,9 @@ h4 {
 	.pills > * {
 		flex-shrink: 0;
 	}
+	.pills-center {
+		justify-content: safe center;
+	}
 	@media (min-width: 40rem) {
 		.pills {
 			flex-wrap: wrap;
@@ -512,32 +515,6 @@ h4 {
 	@keyframes ticker {
 		to {
 			transform: translateX(-50%);
-		}
-	}
-
-	/* ヒーロー本体: 左にコピー、右にアイコン。狭い画面ではアイコンを出さない（notedeck） */
-	.hero-inner {
-		display: flex;
-		align-items: center;
-		gap: 3rem;
-	}
-	.hero-copy {
-		flex: 1;
-		min-width: 0;
-	}
-	.hero-visual {
-		flex: 1;
-		display: flex;
-		justify-content: center;
-	}
-	.hero-visual > img {
-		width: min(18rem, 36vw);
-		height: auto;
-		filter: drop-shadow(0 16px 32px rgb(0 0 0 / 0.55));
-	}
-	@media (max-width: 56rem) {
-		.hero-visual {
-			display: none;
 		}
 	}
 
