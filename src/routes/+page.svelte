@@ -7,9 +7,9 @@ import MonthGrid from '#lib/components/MonthGrid.svelte';
 import type { PageProps } from './$types';
 
 let { data }: PageProps = $props();
-let area = $state<string | null>(null);
+let area = $state<string[]>([]);
 const byArea = <T extends { area: string | null }>(list: T[]) =>
-	area ? list.filter((e) => e.area === area) : list;
+	area.length ? list.filter((e) => e.area !== null && area.includes(e.area)) : list;
 const monthEvents = $derived(byArea(data.calendar.events));
 const weekEvents = $derived(byArea(data.events));
 const areaCount = $derived(new Set(data.calendar.events.map((e) => e.area).filter(Boolean)).size);
@@ -61,6 +61,6 @@ const WORDS = ['間借り店舗', '日替わり店長', 'レンタル○○', '�
 </div>
 
 {#if weekEvents.length === 0}
-	<Empty title={area ? `${area}では、この7日はまだ誰もくねくねしていません。` : 'まだ誰もくねくねしていません。'} hint="エリアを変えるか、カレンダーで先を見てみてください。" />
+	<Empty title={area.length ? `${area.join('・')}では、この7日はまだ誰もくねくねしていません。` : 'まだ誰もくねくねしていません。'} hint="エリアを変えるか、カレンダーで先を見てみてください。" />
 {/if}
 <DayList events={weekEvents} />

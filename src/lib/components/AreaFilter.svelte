@@ -3,11 +3,12 @@ import { onMount } from 'svelte';
 import { PRIMARY_AREAS } from '#lib/area.ts';
 import type { EventSummary } from '#lib/types.ts';
 
+// value は選んだエリアの配列。空なら絞らない
 let {
 	events,
-	value = $bindable(null),
+	value = $bindable([]),
 	center = false
-}: { events: EventSummary[]; value: string | null; center?: boolean } = $props();
+}: { events: EventSummary[]; value: string[]; center?: boolean } = $props();
 
 const STORAGE_KEY = 'magari-area';
 
@@ -31,29 +32,50 @@ let expanded = $state(false);
 const visible = $derived(
 	expanded
 		? areas
-		: areas.filter((a) => PRIMARY_AREAS.includes(a.area) || a.count >= 10 || a.area === value)
+		: areas.filter((a) => PRIMARY_AREAS.includes(a.area) || a.count >= 10 || value.includes(a.area))
 );
 const hiddenCount = $derived(areas.length - visible.length);
 
 onMount(() => {
-	if (value === null) {
-		const saved = localStorage.getItem(STORAGE_KEY);
-		if (saved && areas.some((a) => a.area === saved)) value = saved;
+	if (value.length === 0) {
+		const saved = restore(localStorage.getItem(STORAGE_KEY)).filter((s) =>
+			areas.some((a) => a.area === s)
+		);
+		if (saved.length) value = saved;
 	}
 });
 
-function choose(area: string | null) {
-	value = area;
-	if (area) localStorage.setItem(STORAGE_KEY, area);
+// 保存形式は JSON の配列。以前は文字列 1 つだったので、それも読める
+function restore(raw: string | null): string[] {
+	if (!raw) return [];
+	try {
+		const parsed = JSON.parse(raw);
+		return Array.isArray(parsed) ? parsed.filter((s) => typeof s === 'string') : [];
+	} catch {
+		return [raw];
+	}
+}
+
+function toggle(area: string) {
+	value = value.includes(area) ? value.filter((a) => a !== area) : [...value, area];
+	save();
+}
+function clear() {
+	value = [];
+	save();
+}
+function save() {
+	if (value.length) localStorage.setItem(STORAGE_KEY, JSON.stringify(value));
 	else localStorage.removeItem(STORAGE_KEY);
 }
 </script>
 
 {#if areas.length > 1}
 	<div class="pills {center ? 'pills-center' : ''}" role="group" aria-label="エリアで絞る">
-		<button type="button" class="chip {value === null ? 'chip-tape' : 'chip-plain'}" aria-pressed={value === null} onclick={() => choose(null)}>すべて</button>
+		<button type="button" class="chip {value.length === 0 ? 'chip-tape' : 'chip-plain'}" aria-pressed={value.length === 0} onclick={clear}>すべて</button>
 		{#each visible as a (a.area)}
-			<button type="button" class="chip {value === a.area ? 'chip-tape' : 'chip-plain'}" aria-pressed={value === a.area} onclick={() => choose(a.area)}>
+			{@const on = value.includes(a.area)}
+			<button type="button" class="chip {on ? 'chip-tape' : 'chip-plain'}" aria-pressed={on} onclick={() => toggle(a.area)}>
 				{a.area} <span class="ml-1 opacity-70">{a.count}</span>
 			</button>
 		{/each}

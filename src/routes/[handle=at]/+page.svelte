@@ -9,10 +9,18 @@ import type { PageProps } from './$types';
 let { data }: PageProps = $props();
 const actor = $derived(data.actor);
 const tags = $derived(filterTags(data.events));
-let activeTag = $state<string | null>(null);
+// 選んだタグのどれかを持つ間を出す（複数は OR）
+let activeTags = $state<string[]>([]);
 const filtered = $derived(
-	activeTag ? data.events.filter((e) => e.tags.includes(activeTag as string)) : data.events
+	activeTags.length
+		? data.events.filter((e) => e.tags.some((t) => activeTags.includes(t)))
+		: data.events
 );
+function toggleTag(tag: string) {
+	activeTags = activeTags.includes(tag)
+		? activeTags.filter((t) => t !== tag)
+		: [...activeTags, tag];
+}
 const upcoming = $derived.by(() => {
 	const now = Date.now();
 	return filtered.filter((e) => new Date(e.startsAt).getTime() >= now - 86_400_000);
@@ -53,9 +61,10 @@ const upcoming = $derived.by(() => {
 
 {#if tags.length}
 	<div class="pills mb-6" role="group" aria-label="タグで絞る">
-		<button type="button" class="chip {activeTag === null ? 'chip-tape' : 'chip-plain'}" aria-pressed={activeTag === null} onclick={() => (activeTag = null)}>すべて</button>
+		<button type="button" class="chip {activeTags.length === 0 ? 'chip-tape' : 'chip-plain'}" aria-pressed={activeTags.length === 0} onclick={() => (activeTags = [])}>すべて</button>
 		{#each tags as t (t.tag)}
-			<button type="button" class="chip {activeTag === t.tag ? 'chip-tape' : 'chip-plain'}" aria-pressed={activeTag === t.tag} onclick={() => (activeTag = t.tag)}>
+			{@const on = activeTags.includes(t.tag)}
+			<button type="button" class="chip {on ? 'chip-tape' : 'chip-plain'}" aria-pressed={on} onclick={() => toggleTag(t.tag)}>
 				{t.tag} <span class="ml-1 opacity-70">{t.count}</span>
 			</button>
 		{/each}

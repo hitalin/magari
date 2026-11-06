@@ -8,8 +8,10 @@ import { dayKey } from '#lib/date.ts';
 import type { PageProps } from './$types';
 
 let { data }: PageProps = $props();
-let area = $state<string | null>(null);
-const events = $derived(area ? data.events.filter((e) => e.area === area) : data.events);
+let area = $state<string[]>([]);
+const events = $derived(
+	area.length ? data.events.filter((e) => e.area !== null && area.includes(e.area)) : data.events
+);
 // スマホではグリッドの題が読めないので、この月の間を下に並べる
 const monthEvents = $derived(
 	events.filter((e) => dayKey(e.startsAt).startsWith(monthKey(data.year, data.month)))
