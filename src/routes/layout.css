@@ -515,6 +515,20 @@ h4 {
 		transform: translateX(-50%) rotate(-1.5deg);
 		pointer-events: none;
 	}
+	/* 非公式バッジ: 管理者のいないハコ・団体のアイコンやバナーに重ね、一目で店の公式ではないと分かるようにする */
+	.badge-unofficial {
+		display: inline-block;
+		padding: 0.2rem 0.55rem;
+		border-radius: 9999px;
+		background: rgb(21 22 23 / 0.88);
+		color: #f1efe9;
+		font-size: 0.7rem;
+		font-weight: 700;
+		line-height: 1.2;
+		letter-spacing: 0.12em;
+		white-space: nowrap;
+		box-shadow: 0 1px 3px rgb(0 0 0 / 0.35);
+	}
 	/* テープにマジックで書く（ハコ一覧のエリアなど） */
 	.cardboard[data-tape]::before {
 		content: attr(data-tape);

@@ -88,6 +88,8 @@ export type SpaceSummary = {
 	area: string | null;
 	headerUrl: string | null;
 	avatarUrl: string | null;
+	// 管理者がいるか。いなければ一覧で「非公式」と出す
+	hasManager: boolean;
 	// 今から先の公開の間の数
 	upcoming: number;
 };

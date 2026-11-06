@@ -77,6 +77,11 @@ export async function listSpaces(db: Db): Promise<SpaceSummary[]> {
 		)
 		.groupBy(events.spaceActorId)
 		.as("upcoming");
+	const managers = db
+		.select({ actorId: actorMembers.actorId })
+		.from(actorMembers)
+		.groupBy(actorMembers.actorId)
+		.as("managers");
 	const rows = await db
 		.select({
 			handle: actors.handle,
@@ -86,16 +91,19 @@ export async function listSpaces(db: Db): Promise<SpaceSummary[]> {
 			region: actors.region,
 			headerKey: actors.headerKey,
 			avatarUrl: actors.avatarUrl,
+			managerId: managers.actorId,
 			upcoming: upcoming.n,
 		})
 		.from(actors)
 		.leftJoin(upcoming, eq(upcoming.actorId, actors.id))
+		.leftJoin(managers, eq(managers.actorId, actors.id))
 		.where(eq(actors.kind, "space"));
 	return rows
-		.map(({ region, headerKey, upcoming, ...r }) => ({
+		.map(({ region, headerKey, managerId, upcoming, ...r }) => ({
 			...r,
 			area: detectArea(region),
 			headerUrl: mediaUrl(headerKey),
+			hasManager: managerId !== null,
 			upcoming: upcoming ?? 0,
 		}))
 		.sort(

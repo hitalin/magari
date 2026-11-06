@@ -47,6 +47,8 @@ const hasAccess = $derived(
 	),
 );
 const canInquire = $derived(actor.kind !== "person" && actor.hasManager);
+// 管理者のいないハコ・団体（取り込み元など）は、店や団体の公式ページではない
+const unofficial = $derived(actor.kind !== "person" && !actor.hasManager);
 const mapUrl = $derived(
 	actor.address
 		? `https://www.openstreetmap.org/search?query=${encodeURIComponent(actor.address)}`
@@ -87,16 +89,21 @@ const description = $derived(actor.catch ?? actor.summary ?? undefined);
 <header class="{actor.kind === 'space' ? 'cardboard mt-8' : 'panel mt-4'} mb-8 p-6 sm:p-8">
 	<div class="flex items-start gap-5">
 		{#if actor.avatarUrl}
-			<img src={actor.avatarUrl} alt="" class="h-20 w-20 shrink-0 rounded-full border border-line object-cover sm:h-24 sm:w-24" />
+			<div class="relative shrink-0">
+				<img src={actor.avatarUrl} alt="" class="h-20 w-20 rounded-full border border-line object-cover sm:h-24 sm:w-24" />
+				{#if unofficial}<span class="badge-unofficial absolute -bottom-1.5 left-1/2 -translate-x-1/2">非公式</span>{/if}
+			</div>
 		{/if}
 		<div class="min-w-0">
-			<p class="label">{KIND_LABEL[actor.kind]} · @{actor.handle}</p>
+			<p class="label">
+				{#if unofficial && !actor.avatarUrl}<span class="badge-unofficial mr-2 align-middle">非公式</span>{/if}{KIND_LABEL[actor.kind]} · @{actor.handle}
+			</p>
 			<h1 class="mt-2 text-[clamp(1.8rem,3.5vw,2.6rem)]">{actor.name}</h1>
 			{#if actor.catch}<p class="mt-2 font-serif text-lg text-accent-ink">{actor.catch}</p>{/if}
 		</div>
 	</div>
 	{#if actor.summary}<p class="mt-3 max-w-[34em] text-muted">{actor.summary}</p>{/if}
-	{#if actor.kind !== 'person' && !actor.hasManager}
+	{#if unofficial}
 		<p class="mt-3 max-w-[34em] text-xs text-muted">
 			まがりが公開情報からまとめた非公式のページです。運営者の方で、掲載の取り下げや管理をご希望の場合は<a href="https://github.com/hitalin/magari/issues" class="underline underline-offset-2 hover:text-accent-ink" rel="noopener">こちら</a>へご連絡ください。
 		</p>
