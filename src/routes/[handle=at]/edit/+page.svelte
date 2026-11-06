@@ -1,13 +1,24 @@
 <script lang="ts">
-import Field from '#lib/components/Field.svelte';
-import { formatDay, formatTime } from '#lib/date.ts';
-import { INQUIRY_KIND_LABEL, PLAN_KIND_LABEL, PLAN_KINDS } from '#lib/space-form.ts';
-import type { PageProps } from './$types';
+import Field from "#lib/components/Field.svelte";
+import { formatDay, formatTime } from "#lib/date.ts";
+import {
+	INQUIRY_KIND_LABEL,
+	PLAN_KIND_LABEL,
+	PLAN_KINDS,
+} from "#lib/space-form.ts";
+import type { PageProps } from "./$types";
 
 let { data, form }: PageProps = $props();
-const v = $derived(form?.section === 'profile' && form.values ? form.values : data.values);
-const err = (section: string) => (form?.section === section && 'error' in form ? form.error : null);
-const KIND_WORD: Record<string, string> = { space: 'ハコ', group: '団体', person: '自分' };
+const v = $derived(
+	form?.section === "profile" && form.values ? form.values : data.values,
+);
+const err = (section: string) =>
+	form?.section === section && "error" in form ? form.error : null;
+const KIND_WORD: Record<string, string> = {
+	space: "ハコ",
+	group: "団体",
+	person: "自分",
+};
 let newPlan = $state(false);
 </script>
 

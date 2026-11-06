@@ -1,20 +1,24 @@
 <script lang="ts">
-import { monthKey } from '#lib/calendar.ts';
-import AreaFilter from '#lib/components/AreaFilter.svelte';
-import DayList from '#lib/components/DayList.svelte';
-import Empty from '#lib/components/Empty.svelte';
-import MonthGrid from '#lib/components/MonthGrid.svelte';
-import { dayKey } from '#lib/date.ts';
-import type { PageProps } from './$types';
+import { monthKey } from "#lib/calendar.ts";
+import AreaFilter from "#lib/components/AreaFilter.svelte";
+import DayList from "#lib/components/DayList.svelte";
+import Empty from "#lib/components/Empty.svelte";
+import MonthGrid from "#lib/components/MonthGrid.svelte";
+import { dayKey } from "#lib/date.ts";
+import type { PageProps } from "./$types";
 
 let { data }: PageProps = $props();
 let area = $state<string[]>([]);
 const events = $derived(
-	area.length ? data.events.filter((e) => e.area !== null && area.includes(e.area)) : data.events
+	area.length
+		? data.events.filter((e) => e.area !== null && area.includes(e.area))
+		: data.events,
 );
 // スマホではグリッドの題が読めないので、この月の間を下に並べる
 const monthEvents = $derived(
-	events.filter((e) => dayKey(e.startsAt).startsWith(monthKey(data.year, data.month)))
+	events.filter((e) =>
+		dayKey(e.startsAt).startsWith(monthKey(data.year, data.month)),
+	),
 );
 </script>
 

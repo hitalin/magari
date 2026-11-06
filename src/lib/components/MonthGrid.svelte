@@ -1,15 +1,15 @@
 <script lang="ts">
-import { monthKey, shiftMonth } from '#lib/calendar.ts';
-import { dayKey, formatTime } from '#lib/date.ts';
-import { collapseByActor } from '#lib/group.ts';
-import type { EventSummary } from '#lib/types.ts';
+import { monthKey, shiftMonth } from "#lib/calendar.ts";
+import { dayKey, formatTime } from "#lib/date.ts";
+import { collapseByActor } from "#lib/group.ts";
+import type { EventSummary } from "#lib/types.ts";
 
 let {
 	year,
 	month,
 	grid,
 	events,
-	compact = false
+	compact = false,
 }: {
 	year: number;
 	month: number;
@@ -18,7 +18,7 @@ let {
 	compact?: boolean;
 } = $props();
 
-const WEEKDAYS = ['日', '月', '火', '水', '木', '金', '土'];
+const WEEKDAYS = ["日", "月", "火", "水", "木", "金", "土"];
 const MAX_VISIBLE = $derived(compact ? 2 : 3);
 
 const byDay = $derived.by(() => {

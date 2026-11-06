@@ -5,7 +5,11 @@
 	"type": "module",
 	"imports": {
 		"#lib": "./src/lib/index.js",
-		"#lib/*": "./src/lib/*"
+		"#lib/*": "./src/lib/*",
+		"#kit-worker": {
+			"types": "./kit-worker.d.ts",
+			"default": "./.svelte-kit/cloudflare-tmp/_worker.js"
+		}
 	},
 	"scripts": {
 		"dev": "vite dev",
@@ -24,7 +28,7 @@
 		"db:migrate:remote": "wrangler d1 migrations apply magari --remote"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "^2.6.4",
+		"@biomejs/biome": "^2.6.5",
 		"@sveltejs/adapter-cloudflare": "^8.0.2",
 		"@sveltejs/kit": "^3.0.0",
 		"@sveltejs/vite-plugin-svelte": "^7.2.0",

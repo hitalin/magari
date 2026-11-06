@@ -1,8 +1,8 @@
 <script lang="ts">
-import { formatWhen } from '#lib/date.ts';
-import { eventPlace, eventShareText, xShareUrl } from '#lib/share.ts';
-import { page } from '$app/state';
-import type { PageProps } from './$types';
+import { formatWhen } from "#lib/date.ts";
+import { eventPlace, eventShareText, xShareUrl } from "#lib/share.ts";
+import { page } from "$app/state";
+import type { PageProps } from "./$types";
 
 let { data }: PageProps = $props();
 const event = $derived(data.event);
@@ -10,11 +10,11 @@ const shareUrl = $derived(xShareUrl(eventShareText(event), page.url.href));
 // リンクカードの説明: 日時と場所を先頭に、続けて説明文
 const cardDescription = $derived(
 	[
-		[formatWhen(event), eventPlace(event)].filter(Boolean).join(' · '),
-		event.description?.slice(0, 100)
+		[formatWhen(event), eventPlace(event)].filter(Boolean).join(" · "),
+		event.description?.slice(0, 100),
 	]
 		.filter(Boolean)
-		.join(' — ')
+		.join(" — "),
 );
 </script>
 

@@ -1,11 +1,11 @@
 <script lang="ts">
-import Field from '#lib/components/Field.svelte';
-import type { EventFormValues } from '#lib/event-form.ts';
+import Field from "#lib/components/Field.svelte";
+import type { EventFormValues } from "#lib/event-form.ts";
 
 let {
 	values,
 	error,
-	submitLabel = '公開する'
+	submitLabel = "公開する",
 }: { values: EventFormValues; error?: string; submitLabel?: string } = $props();
 // svelte-ignore state_referenced_locally -- 初期値だけ props から取り、以後は利用者の操作で変える
 let allDay = $state(values.allDay);

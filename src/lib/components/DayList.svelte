@@ -1,11 +1,14 @@
 <script lang="ts">
-import EventRow from '#lib/components/EventRow.svelte';
-import GroupRow from '#lib/components/GroupRow.svelte';
-import { dayKey, formatDay } from '#lib/date.ts';
-import { collapseByActor } from '#lib/group.ts';
-import type { EventSummary } from '#lib/types.ts';
+import EventRow from "#lib/components/EventRow.svelte";
+import GroupRow from "#lib/components/GroupRow.svelte";
+import { dayKey, formatDay } from "#lib/date.ts";
+import { collapseByActor } from "#lib/group.ts";
+import type { EventSummary } from "#lib/types.ts";
 
-let { events, collapse = true }: { events: EventSummary[]; collapse?: boolean } = $props();
+let {
+	events,
+	collapse = true,
+}: { events: EventSummary[]; collapse?: boolean } = $props();
 
 const days = $derived.by(() => {
 	const map = new Map<string, EventSummary[]>();
@@ -18,7 +21,7 @@ const days = $derived.by(() => {
 		list,
 		items: collapse
 			? collapseByActor(list)
-			: list.map((event) => ({ kind: 'event' as const, event }))
+			: list.map((event) => ({ kind: "event" as const, event })),
 	}));
 });
 </script>

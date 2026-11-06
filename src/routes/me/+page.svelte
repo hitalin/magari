@@ -1,38 +1,44 @@
 <script lang="ts">
-import { authClient, startMiAuth } from '#lib/auth-client.ts';
-import Empty from '#lib/components/Empty.svelte';
-import { formatWhen } from '#lib/date.ts';
-import { invalidateAll } from '$app/navigation';
-import type { PageProps } from './$types';
+import { authClient, startMiAuth } from "#lib/auth-client.ts";
+import Empty from "#lib/components/Empty.svelte";
+import { formatWhen } from "#lib/date.ts";
+import { invalidateAll } from "$app/navigation";
+import type { PageProps } from "./$types";
 
 let { data }: PageProps = $props();
 let passkeyMsg = $state<string | null>(null);
-let linkHost = $state('');
+let linkHost = $state("");
 let linkMsg = $state<string | null>(null);
 
 async function addPasskey() {
-	const res = await authClient.passkey.addPasskey({ name: 'まがり' });
+	const res = await authClient.passkey.addPasskey({ name: "まがり" });
 	passkeyMsg = res?.error
-		? 'パスキーの登録に失敗しました'
-		: 'パスキーを登録しました。次回からパスキーでログインできます。';
+		? "パスキーの登録に失敗しました"
+		: "パスキーを登録しました。次回からパスキーでログインできます。";
 }
 async function linkX() {
-	await authClient.linkSocial({ provider: 'twitter', callbackURL: '/me' });
+	await authClient.linkSocial({ provider: "twitter", callbackURL: "/me" });
 }
 async function linkMisskey(e: SubmitEvent) {
 	e.preventDefault();
-	const url = await startMiAuth(linkHost, '/me');
+	const url = await startMiAuth(linkHost, "/me");
 	if (url) location.href = url;
-	else linkMsg = 'サーバー名が正しくありません';
+	else linkMsg = "サーバー名が正しくありません";
 }
 async function unlink(accountId: string) {
-	if (!confirm('このログイン方法を外しますか？')) return;
+	if (!confirm("このログイン方法を外しますか？")) return;
 	const res = await authClient.unlinkAccount({ accountId });
-	linkMsg = res?.error ? '外せませんでした。最後のログイン方法は外せません。' : null;
+	linkMsg = res?.error
+		? "外せませんでした。最後のログイン方法は外せません。"
+		: null;
 	await invalidateAll();
 }
 
-const STATUS: Record<string, string> = { draft: '下書き', published: '公開', cancelled: '中止' };
+const STATUS: Record<string, string> = {
+	draft: "下書き",
+	published: "公開",
+	cancelled: "中止",
+};
 </script>
 
 <svelte:head><title>自分 | まがり</title></svelte:head>

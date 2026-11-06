@@ -1,24 +1,25 @@
 <script lang="ts">
-import { onMount } from 'svelte';
-import { PRIMARY_AREAS } from '#lib/area.ts';
-import type { EventSummary } from '#lib/types.ts';
+import { onMount } from "svelte";
+import { PRIMARY_AREAS } from "#lib/area.ts";
+import type { EventSummary } from "#lib/types.ts";
 
 // value は選んだエリアの配列。空なら絞らない
 let {
 	events,
 	value = $bindable([]),
-	center = false
+	center = false,
 }: { events: EventSummary[]; value: string[]; center?: boolean } = $props();
 
-const STORAGE_KEY = 'magari-area';
+const STORAGE_KEY = "magari-area";
 
 // 件数のあるエリアだけ。主要都市を先に、残りは件数順。
 const areas = $derived.by(() => {
 	const counts = new Map<string, number>();
-	for (const e of events) if (e.area) counts.set(e.area, (counts.get(e.area) ?? 0) + 1);
+	for (const e of events)
+		if (e.area) counts.set(e.area, (counts.get(e.area) ?? 0) + 1);
 	const primary = PRIMARY_AREAS.filter((a) => counts.has(a)).map((a) => ({
 		area: a,
-		count: counts.get(a) as number
+		count: counts.get(a) as number,
 	}));
 	const rest = [...counts.entries()]
 		.filter(([a]) => !PRIMARY_AREAS.includes(a))
@@ -32,14 +33,19 @@ let expanded = $state(false);
 const visible = $derived(
 	expanded
 		? areas
-		: areas.filter((a) => PRIMARY_AREAS.includes(a.area) || a.count >= 10 || value.includes(a.area))
+		: areas.filter(
+				(a) =>
+					PRIMARY_AREAS.includes(a.area) ||
+					a.count >= 10 ||
+					value.includes(a.area),
+			),
 );
 const hiddenCount = $derived(areas.length - visible.length);
 
 onMount(() => {
 	if (value.length === 0) {
 		const saved = restore(localStorage.getItem(STORAGE_KEY)).filter((s) =>
-			areas.some((a) => a.area === s)
+			areas.some((a) => a.area === s),
 		);
 		if (saved.length) value = saved;
 	}
@@ -50,14 +56,18 @@ function restore(raw: string | null): string[] {
 	if (!raw) return [];
 	try {
 		const parsed = JSON.parse(raw);
-		return Array.isArray(parsed) ? parsed.filter((s) => typeof s === 'string') : [];
+		return Array.isArray(parsed)
+			? parsed.filter((s) => typeof s === "string")
+			: [];
 	} catch {
 		return [raw];
 	}
 }
 
 function toggle(area: string) {
-	value = value.includes(area) ? value.filter((a) => a !== area) : [...value, area];
+	value = value.includes(area)
+		? value.filter((a) => a !== area)
+		: [...value, area];
 	save();
 }
 function clear() {

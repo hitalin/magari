@@ -1,16 +1,16 @@
 <script lang="ts">
-import { authClient } from '#lib/auth-client.ts';
-import Field from '#lib/components/Field.svelte';
-import type { PageProps } from './$types';
+import { authClient } from "#lib/auth-client.ts";
+import Field from "#lib/components/Field.svelte";
+import type { PageProps } from "./$types";
 
 let { data, form }: PageProps = $props();
 let passkeyMsg = $state<string | null>(null);
 
 async function addPasskey() {
-	const res = await authClient.passkey.addPasskey({ name: 'まがり' });
+	const res = await authClient.passkey.addPasskey({ name: "まがり" });
 	passkeyMsg = res?.error
-		? 'パスキーを作れませんでした。あとで「自分」のページからも作れます。'
-		: 'パスキーを作りました。次回からパスキーで入れます。';
+		? "パスキーを作れませんでした。あとで「自分」のページからも作れます。"
+		: "パスキーを作りました。次回からパスキーで入れます。";
 }
 </script>
 

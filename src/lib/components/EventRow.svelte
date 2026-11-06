@@ -1,15 +1,20 @@
 <script lang="ts">
-import { formatTime } from '#lib/date.ts';
-import type { EventSummary } from '#lib/types.ts';
+import { formatTime } from "#lib/date.ts";
+import type { EventSummary } from "#lib/types.ts";
 
 let { event }: { event: EventSummary } = $props();
 const hostNames = $derived(event.hosts.map((h) => h.name));
 // 主催と場が同じ（場が自分で開く会）なら場所は繰り返さない
 const place = $derived.by(() => {
-	const name = event.space?.name ?? event.locationName ?? (event.onlineUrl ? 'オンライン' : null);
+	const name =
+		event.space?.name ??
+		event.locationName ??
+		(event.onlineUrl ? "オンライン" : null);
 	return name && hostNames.includes(name) ? null : name;
 });
-const meta = $derived([hostNames.join('、'), place].filter(Boolean).join(' · '));
+const meta = $derived(
+	[hostNames.join("、"), place].filter(Boolean).join(" · "),
+);
 </script>
 
 <a href="/e/{event.id}" class="row group">

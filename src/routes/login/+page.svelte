@@ -1,23 +1,25 @@
 <script lang="ts">
-import { authClient, startMiAuth } from '#lib/auth-client.ts';
-import { goto } from '$app/navigation';
-import type { PageProps } from './$types';
+import { authClient, startMiAuth } from "#lib/auth-client.ts";
+import { goto } from "$app/navigation";
+import type { PageProps } from "./$types";
 
 let { data }: PageProps = $props();
 let busy = $state(false);
 let error = $state<string | null>(null);
-let host = $state('');
+let host = $state("");
 
 const ERRORS: Record<string, string> = {
-	miauth_state: 'Misskey からの戻りが確認できませんでした。もう一度お試しください。',
-	miauth_denied: 'Misskey 側で許可されませんでした。',
-	miauth_user: 'Misskey のアカウント情報を取れませんでした。',
-	miauth_linked_elsewhere: 'その Misskey アカウントは別のユーザーにつながっています。'
+	miauth_state:
+		"Misskey からの戻りが確認できませんでした。もう一度お試しください。",
+	miauth_denied: "Misskey 側で許可されませんでした。",
+	miauth_user: "Misskey のアカウント情報を取れませんでした。",
+	miauth_linked_elsewhere:
+		"その Misskey アカウントは別のユーザーにつながっています。",
 };
 
 async function x() {
 	busy = true;
-	await authClient.signIn.social({ provider: 'twitter', callbackURL: '/me' });
+	await authClient.signIn.social({ provider: "twitter", callbackURL: "/me" });
 }
 async function misskey(e: SubmitEvent) {
 	e.preventDefault();
@@ -27,7 +29,8 @@ async function misskey(e: SubmitEvent) {
 	if (url) location.href = url;
 	else {
 		busy = false;
-		error = 'サーバー名が正しくありません。example.com のようなドメインを入れてください';
+		error =
+			"サーバー名が正しくありません。example.com のようなドメインを入れてください";
 	}
 }
 async function passkey() {
@@ -37,8 +40,8 @@ async function passkey() {
 	busy = false;
 	if (res?.error)
 		error =
-			'パスキーでのログインに失敗しました。まだ作っていなければ、X か Misskey で入ってから作ってください。';
-	else await goto('/me');
+			"パスキーでのログインに失敗しました。まだ作っていなければ、X か Misskey で入ってから作ってください。";
+	else await goto("/me");
 }
 </script>
 

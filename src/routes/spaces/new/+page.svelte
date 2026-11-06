@@ -1,6 +1,6 @@
 <script lang="ts">
-import Field from '#lib/components/Field.svelte';
-import type { PageProps } from './$types';
+import Field from "#lib/components/Field.svelte";
+import type { PageProps } from "./$types";
 
 let { form }: PageProps = $props();
 </script>

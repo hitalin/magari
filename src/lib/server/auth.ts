@@ -1,9 +1,9 @@
-import { passkey } from '@better-auth/passkey';
-import { betterAuth } from 'better-auth';
-import { drizzleAdapter } from 'better-auth/adapters/drizzle';
-import type { Db } from './db';
-import * as schema from './db/schema';
-import { miauth } from './miauth.ts';
+import { passkey } from "@better-auth/passkey";
+import { betterAuth } from "better-auth";
+import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import type { Db } from "./db";
+import * as schema from "./db/schema";
+import { miauth } from "./miauth.ts";
 
 export type AuthEnv = {
 	PUBLIC_ORIGIN: string;
@@ -18,7 +18,7 @@ export function createAuth(db: Db, env: AuthEnv) {
 	return betterAuth({
 		baseURL: env.PUBLIC_ORIGIN,
 		secret: env.BETTER_AUTH_SECRET,
-		database: drizzleAdapter(db, { provider: 'sqlite', schema }),
+		database: drizzleAdapter(db, { provider: "sqlite", schema }),
 		emailAndPassword: { enabled: false },
 		// 本人によるアカウント削除（メール確認なしで即時）
 		user: { deleteUser: { enabled: true } },
@@ -27,8 +27,8 @@ export function createAuth(db: Db, env: AuthEnv) {
 			accountLinking: {
 				enabled: true,
 				allowDifferentEmails: true,
-				trustedProviders: ['twitter', 'miauth']
-			}
+				trustedProviders: ["twitter", "miauth"],
+			},
 		},
 		socialProviders:
 			env.X_CLIENT_ID && env.X_CLIENT_SECRET
@@ -39,18 +39,25 @@ export function createAuth(db: Db, env: AuthEnv) {
 							// 既定の users.email は Free プランのアプリでは許可されず、X が「アプリにアクセスを許可できません」を返す。
 							// メールは使わないので要求しない（無ければ better-auth がダミーを入れる）。
 							disableDefaultScope: true,
-							scope: ['tweet.read', 'users.read', 'offline.access'],
+							scope: ["tweet.read", "users.read", "offline.access"],
 							// X のアイコンは 48px の _normal で来るので 400px に差し替える
 							mapProfileToUser: (profile) => ({
-								image: profile.data.profile_image_url?.replace('_normal.', '_400x400.')
-							})
-						}
+								image: profile.data.profile_image_url?.replace(
+									"_normal.",
+									"_400x400.",
+								),
+							}),
+						},
 					}
 				: {},
 		plugins: [
-			passkey({ rpID: origin.hostname, rpName: 'まがり', origin: env.PUBLIC_ORIGIN }),
-			miauth({ appName: 'まがり' })
-		]
+			passkey({
+				rpID: origin.hostname,
+				rpName: "まがり",
+				origin: env.PUBLIC_ORIGIN,
+			}),
+			miauth({ appName: "まがり" }),
+		],
 	});
 }
 

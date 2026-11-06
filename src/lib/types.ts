@@ -1,6 +1,10 @@
 // API（/api/*）が返す DTO。サーバーとクライアントで共有する。
 
-export type ActorRef = { handle: string; name: string; kind: 'person' | 'space' | 'group' };
+export type ActorRef = {
+	handle: string;
+	name: string;
+	kind: "person" | "space" | "group";
+};
 
 export type EventSummary = {
 	id: string;
@@ -21,11 +25,11 @@ export type EventDetail = EventSummary & {
 	url: string | null;
 	source: string | null;
 	locationAddress: string | null;
-	locationVisibility: 'public' | 'attendees';
+	locationVisibility: "public" | "attendees";
 	capacity: number | null;
 	feeText: string | null;
-	status: 'draft' | 'published' | 'cancelled';
-	visibility: 'public' | 'unlisted' | 'private';
+	status: "draft" | "published" | "cancelled";
+	visibility: "public" | "unlisted" | "private";
 };
 
 export type ActorProfile = ActorRef & {
@@ -52,12 +56,17 @@ export type ActorProfile = ActorRef & {
 export type SpacePlan = {
 	id: string;
 	name: string;
-	kind: 'spot' | 'weekly' | 'exclusive' | 'other';
+	kind: "spot" | "weekly" | "exclusive" | "other";
 	priceText: string | null;
 	description: string | null;
 };
 
-export type Post = { id: string; title: string; body: string | null; publishedAt: string };
+export type Post = {
+	id: string;
+	title: string;
+	body: string | null;
+	publishedAt: string;
+};
 
 export type ActorPage = {
 	actor: ActorProfile;
@@ -70,8 +79,8 @@ export type ActorPage = {
 export const mediaUrl = (key: string | null | undefined): string | null =>
 	key ? `/i/${key}` : null;
 
-export const KIND_LABEL: Record<ActorRef['kind'], string> = {
-	person: '人',
-	space: '場',
-	group: '団体'
+export const KIND_LABEL: Record<ActorRef["kind"], string> = {
+	person: "人",
+	space: "場",
+	group: "団体",
 };

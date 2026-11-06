@@ -1,5 +1,5 @@
 <script lang="ts">
-import { page } from '$app/state';
+import { page } from "$app/state";
 
 const notFound = $derived(page.status === 404);
 </script>

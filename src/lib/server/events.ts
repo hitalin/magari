@@ -1,13 +1,13 @@
-import { and, asc, eq, gte, inArray, lt, or } from 'drizzle-orm';
+import { and, asc, eq, gte, inArray, lt, or } from "drizzle-orm";
 import {
 	type ActorProfile,
 	type ActorRef,
 	type EventDetail,
 	type EventSummary,
-	mediaUrl
-} from '#lib/types.ts';
-import type { Db } from './db/index.ts';
-import { actors, eventHosts, events } from './db/schema.ts';
+	mediaUrl,
+} from "#lib/types.ts";
+import type { Db } from "./db/index.ts";
+import { actors, eventHosts, events } from "./db/schema.ts";
 
 function selectEvents(db: Db) {
 	return db
@@ -33,7 +33,7 @@ function selectEvents(db: Db) {
 			tags: events.tags,
 			spaceHandle: actors.handle,
 			spaceName: actors.name,
-			spaceKind: actors.kind
+			spaceKind: actors.kind,
 		})
 		.from(events)
 		.leftJoin(actors, eq(events.spaceActorId, actors.id))
@@ -41,7 +41,10 @@ function selectEvents(db: Db) {
 }
 type Row = Awaited<ReturnType<typeof selectEvents>>[number];
 
-async function hostsByEvent(db: Db, eventIds: string[]): Promise<Map<string, ActorRef[]>> {
+async function hostsByEvent(
+	db: Db,
+	eventIds: string[],
+): Promise<Map<string, ActorRef[]>> {
 	const map = new Map<string, ActorRef[]>();
 	// D1 は 1 文の bind 変数が 100 までなので分割して引く
 	const CHUNK = 90;
@@ -51,7 +54,7 @@ async function hostsByEvent(db: Db, eventIds: string[]): Promise<Map<string, Act
 				eventId: eventHosts.eventId,
 				handle: actors.handle,
 				name: actors.name,
-				kind: actors.kind
+				kind: actors.kind,
 			})
 			.from(eventHosts)
 			.innerJoin(actors, eq(eventHosts.actorId, actors.id))
@@ -78,7 +81,8 @@ function toDetail(row: Row, hosts: ActorRef[]): EventDetail {
 		visibility: row.visibility,
 		locationName: row.locationName,
 		// 参加者限定の場所は API に出さない
-		locationAddress: row.locationVisibility === 'public' ? row.locationAddress : null,
+		locationAddress:
+			row.locationVisibility === "public" ? row.locationAddress : null,
 		locationVisibility: row.locationVisibility,
 		onlineUrl: row.onlineUrl,
 		capacity: row.capacity,
@@ -88,26 +92,49 @@ function toDetail(row: Row, hosts: ActorRef[]): EventDetail {
 			row.spaceHandle && row.spaceName && row.spaceKind
 				? { handle: row.spaceHandle, name: row.spaceName, kind: row.spaceKind }
 				: null,
-		hosts
+		hosts,
 	};
 }
 
 function toSummary(detail: EventDetail): EventSummary {
-	const { id, title, startsAt, endsAt, allDay, area, locationName, onlineUrl, tags, space, hosts } =
-		detail;
-	return { id, title, startsAt, endsAt, allDay, area, locationName, onlineUrl, tags, space, hosts };
+	const {
+		id,
+		title,
+		startsAt,
+		endsAt,
+		allDay,
+		area,
+		locationName,
+		onlineUrl,
+		tags,
+		space,
+		hosts,
+	} = detail;
+	return {
+		id,
+		title,
+		startsAt,
+		endsAt,
+		allDay,
+		area,
+		locationName,
+		onlineUrl,
+		tags,
+		space,
+		hosts,
+	};
 }
 
 export async function listUpcomingEvents(
 	db: Db,
-	opts: { actorId?: string; limit?: number; from?: Date; to?: Date } = {}
+	opts: { actorId?: string; limit?: number; from?: Date; to?: Date } = {},
 ): Promise<EventSummary[]> {
 	const from = opts.from ?? new Date();
 	const upcoming = and(
-		eq(events.status, 'published'),
-		eq(events.visibility, 'public'),
+		eq(events.status, "published"),
+		eq(events.visibility, "public"),
 		gte(events.startsAt, from),
-		opts.to ? lt(events.startsAt, opts.to) : undefined
+		opts.to ? lt(events.startsAt, opts.to) : undefined,
 	);
 	// actorId 指定時は、その Actor が場または主催の会に絞る
 	const where = opts.actorId
@@ -120,9 +147,9 @@ export async function listUpcomingEvents(
 						db
 							.select({ id: eventHosts.eventId })
 							.from(eventHosts)
-							.where(eq(eventHosts.actorId, opts.actorId))
-					)
-				)
+							.where(eq(eventHosts.actorId, opts.actorId)),
+					),
+				),
 			)
 		: upcoming;
 
@@ -132,14 +159,18 @@ export async function listUpcomingEvents(
 		.limit(opts.limit ?? 100);
 	const hosts = await hostsByEvent(
 		db,
-		rows.map((r) => r.id)
+		rows.map((r) => r.id),
 	);
 	return rows.map((r) => toSummary(toDetail(r, hosts.get(r.id) ?? [])));
 }
 
-export async function getEvent(db: Db, id: string): Promise<EventDetail | null> {
+export async function getEvent(
+	db: Db,
+	id: string,
+): Promise<EventDetail | null> {
 	const [row] = await selectEvents(db).where(eq(events.id, id)).limit(1);
-	if (!row || row.status === 'draft' || row.visibility === 'private') return null;
+	if (!row || row.status === "draft" || row.visibility === "private")
+		return null;
 	const hosts = await hostsByEvent(db, [row.id]);
 	return toDetail(row, hosts.get(row.id) ?? []);
 }
@@ -149,7 +180,7 @@ export async function getEventForUser(
 	db: Db,
 	id: string,
 	userId: string,
-	actorIds: string[]
+	actorIds: string[],
 ): Promise<EventDetail | null> {
 	const [row] = await selectEvents(db).where(eq(events.id, id)).limit(1);
 	if (!row) return null;
@@ -157,13 +188,18 @@ export async function getEventForUser(
 		.select({ actorId: eventHosts.actorId })
 		.from(eventHosts)
 		.where(eq(eventHosts.eventId, id));
-	const mine = row.createdByUserId === userId || hostRows.some((h) => actorIds.includes(h.actorId));
+	const mine =
+		row.createdByUserId === userId ||
+		hostRows.some((h) => actorIds.includes(h.actorId));
 	if (!mine) return null;
 	const hosts = await hostsByEvent(db, [row.id]);
 	return toDetail(row, hosts.get(row.id) ?? []);
 }
 
-export async function getActorByHandle(db: Db, handle: string): Promise<ActorProfile | null> {
+export async function getActorByHandle(
+	db: Db,
+	handle: string,
+): Promise<ActorProfile | null> {
 	const [row] = await db
 		.select({
 			id: actors.id,
@@ -185,7 +221,7 @@ export async function getActorByHandle(db: Db, handle: string): Promise<ActorPro
 			closedDays: actors.closedDays,
 			access: actors.access,
 			operator: actors.operator,
-			links: actors.links
+			links: actors.links,
 		})
 		.from(actors)
 		.where(eq(actors.handle, handle))

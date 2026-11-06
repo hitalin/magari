@@ -1,7 +1,11 @@
 <script lang="ts">
-import type { Snippet } from 'svelte';
+import type { Snippet } from "svelte";
 
-let { label, hint, children }: { label: string; hint?: string; children: Snippet } = $props();
+let {
+	label,
+	hint,
+	children,
+}: { label: string; hint?: string; children: Snippet } = $props();
 </script>
 
 <label class="block">

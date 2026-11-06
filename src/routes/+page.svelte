@@ -1,19 +1,31 @@
 <script lang="ts">
-import logo from '#lib/assets/logo.svg';
-import AreaFilter from '#lib/components/AreaFilter.svelte';
-import DayList from '#lib/components/DayList.svelte';
-import Empty from '#lib/components/Empty.svelte';
-import MonthGrid from '#lib/components/MonthGrid.svelte';
-import type { PageProps } from './$types';
+import logo from "#lib/assets/logo.svg";
+import AreaFilter from "#lib/components/AreaFilter.svelte";
+import DayList from "#lib/components/DayList.svelte";
+import Empty from "#lib/components/Empty.svelte";
+import MonthGrid from "#lib/components/MonthGrid.svelte";
+import type { PageProps } from "./$types";
 
 let { data }: PageProps = $props();
 let area = $state<string[]>([]);
 const byArea = <T extends { area: string | null }>(list: T[]) =>
-	area.length ? list.filter((e) => e.area !== null && area.includes(e.area)) : list;
+	area.length
+		? list.filter((e) => e.area !== null && area.includes(e.area))
+		: list;
 const monthEvents = $derived(byArea(data.calendar.events));
 const weekEvents = $derived(byArea(data.events));
-const areaCount = $derived(new Set(data.calendar.events.map((e) => e.area).filter(Boolean)).size);
-const WORDS = ['間借り店舗', '日替わり店長', 'レンタル○○', 'プロ○○ヤー', 'ライブ', '自助会', 'オフ会'];
+const areaCount = $derived(
+	new Set(data.calendar.events.map((e) => e.area).filter(Boolean)).size,
+);
+const WORDS = [
+	"間借り店舗",
+	"日替わり店長",
+	"レンタル○○",
+	"プロ○○ヤー",
+	"ライブ",
+	"自助会",
+	"オフ会",
+];
 </script>
 
 <svelte:head>

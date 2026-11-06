@@ -1,5 +1,5 @@
 <script lang="ts">
-import { parseBlocks } from '#lib/text.ts';
+import { parseBlocks } from "#lib/text.ts";
 
 let { text }: { text: string | null | undefined } = $props();
 const blocks = $derived(parseBlocks(text));

@@ -1,28 +1,37 @@
-import { fail, redirect } from '@sveltejs/kit';
+import { fail, redirect } from "@sveltejs/kit";
 import {
 	EMPTY_EVENT_FORM,
 	type EventFormValues,
 	parseEventForm,
-	readEventForm
-} from '#lib/event-form.ts';
-import { toFormValues } from '#lib/server/event-values.ts';
+	readEventForm,
+} from "#lib/event-form.ts";
+import { toFormValues } from "#lib/server/event-values.ts";
 import {
 	createEvent,
 	getEditableEvent,
 	listManagedActorIds,
 	requireActor,
-	toEventValues
-} from '#lib/server/me.ts';
-import type { Actions, PageServerLoad } from './$types';
+	toEventValues,
+} from "#lib/server/me.ts";
+import type { Actions, PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ locals, url }) => {
 	const { session, actor } = requireActor(locals);
-	const from = url.searchParams.get('from');
+	const from = url.searchParams.get("from");
 	let values: EventFormValues = { ...EMPTY_EVENT_FORM };
 	if (from) {
-		const actorIds = await listManagedActorIds(locals.db, session.user.id, actor);
-		const src = await getEditableEvent(locals.db, from, session.user.id, actorIds);
-		if (src) values = { ...toFormValues(src), date: '' };
+		const actorIds = await listManagedActorIds(
+			locals.db,
+			session.user.id,
+			actor,
+		);
+		const src = await getEditableEvent(
+			locals.db,
+			from,
+			session.user.id,
+			actorIds,
+		);
+		if (src) values = { ...toFormValues(src), date: "" };
 	}
 	return { values };
 };
@@ -35,8 +44,8 @@ export const actions: Actions = {
 		const parsed = parseEventForm(values);
 		if (!parsed.ok) return fail(400, { error: parsed.error, values });
 		const ev = await toEventValues(locals.db, parsed.event);
-		if ('error' in ev) return fail(400, { error: ev.error, values });
+		if ("error" in ev) return fail(400, { error: ev.error, values });
 		const id = await createEvent(locals.db, ev, actor.id, session.user.id);
-		redirect(303, parsed.event.status === 'draft' ? '/me' : `/e/${id}`);
-	}
+		redirect(303, parsed.event.status === "draft" ? "/me" : `/e/${id}`);
+	},
 };

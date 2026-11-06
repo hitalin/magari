@@ -1,15 +1,19 @@
 <script lang="ts">
-import Blocks from '#lib/components/Blocks.svelte';
-import DayList from '#lib/components/DayList.svelte';
-import Empty from '#lib/components/Empty.svelte';
-import Field from '#lib/components/Field.svelte';
-import MonthGrid from '#lib/components/MonthGrid.svelte';
-import { formatDay } from '#lib/date.ts';
-import { filterTags } from '#lib/group.ts';
-import { INQUIRY_KIND_LABEL, INQUIRY_KINDS, PLAN_KIND_LABEL } from '#lib/space-form.ts';
-import { KIND_LABEL } from '#lib/types.ts';
-import { page } from '$app/state';
-import type { PageProps } from './$types';
+import Blocks from "#lib/components/Blocks.svelte";
+import DayList from "#lib/components/DayList.svelte";
+import Empty from "#lib/components/Empty.svelte";
+import Field from "#lib/components/Field.svelte";
+import MonthGrid from "#lib/components/MonthGrid.svelte";
+import { formatDay } from "#lib/date.ts";
+import { filterTags } from "#lib/group.ts";
+import {
+	INQUIRY_KIND_LABEL,
+	INQUIRY_KINDS,
+	PLAN_KIND_LABEL,
+} from "#lib/space-form.ts";
+import { KIND_LABEL } from "#lib/types.ts";
+import { page } from "$app/state";
+import type { PageProps } from "./$types";
 
 let { data, form }: PageProps = $props();
 const actor = $derived(data.actor);
@@ -19,7 +23,7 @@ let activeTags = $state<string[]>([]);
 const filtered = $derived(
 	activeTags.length
 		? data.events.filter((e) => e.tags.some((t) => activeTags.includes(t)))
-		: data.events
+		: data.events,
 );
 function toggleTag(tag: string) {
 	activeTags = activeTags.includes(tag)
@@ -28,27 +32,35 @@ function toggleTag(tag: string) {
 }
 const upcoming = $derived.by(() => {
 	const now = Date.now();
-	return filtered.filter((e) => new Date(e.startsAt).getTime() >= now - 86_400_000);
+	return filtered.filter(
+		(e) => new Date(e.startsAt).getTime() >= now - 86_400_000,
+	);
 });
 const canEdit = $derived(data.managed.includes(actor.handle));
 const hasAccess = $derived(
-	!!(actor.address || actor.access || actor.hours || actor.closedDays || actor.operator)
+	!!(
+		actor.address ||
+		actor.access ||
+		actor.hours ||
+		actor.closedDays ||
+		actor.operator
+	),
 );
-const canInquire = $derived(actor.kind !== 'person');
+const canInquire = $derived(actor.kind !== "person");
 const mapUrl = $derived(
 	actor.address
 		? `https://www.openstreetmap.org/search?query=${encodeURIComponent(actor.address)}`
-		: null
+		: null,
 );
 const sections = $derived(
 	[
-		data.posts.length && { id: 'news', label: 'お知らせ' },
-		actor.body && { id: 'about', label: '紹介' },
-		data.plans.length && { id: 'plans', label: '出店プラン' },
-		{ id: 'events', label: 'これからの間' },
-		hasAccess && { id: 'access', label: 'アクセス' },
-		canInquire && { id: 'contact', label: 'お問い合わせ' }
-	].filter((s): s is { id: string; label: string } => !!s)
+		data.posts.length && { id: "news", label: "お知らせ" },
+		actor.body && { id: "about", label: "紹介" },
+		data.plans.length && { id: "plans", label: "出店プラン" },
+		{ id: "events", label: "これからの間" },
+		hasAccess && { id: "access", label: "アクセス" },
+		canInquire && { id: "contact", label: "お問い合わせ" },
+	].filter((s): s is { id: string; label: string } => !!s),
 );
 const description = $derived(actor.catch ?? actor.summary ?? undefined);
 </script>

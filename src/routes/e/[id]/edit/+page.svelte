@@ -1,6 +1,6 @@
 <script lang="ts">
-import EventForm from '#lib/components/EventForm.svelte';
-import type { PageProps } from './$types';
+import EventForm from "#lib/components/EventForm.svelte";
+import type { PageProps } from "./$types";
 
 let { data, form }: PageProps = $props();
 </script>

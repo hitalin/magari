@@ -1,10 +1,10 @@
 <script lang="ts">
-import favicon from '#lib/assets/favicon.svg';
-import logo from '#lib/assets/logo.svg';
-import { onNavigate } from '$app/navigation';
-import { navigating, page } from '$app/state';
-import type { LayoutProps } from './$types';
-import './layout.css';
+import favicon from "#lib/assets/favicon.svg";
+import logo from "#lib/assets/logo.svg";
+import { onNavigate } from "$app/navigation";
+import { navigating, page } from "$app/state";
+import type { LayoutProps } from "./$types";
+import "./layout.css";
 
 let { children, data }: LayoutProps = $props();
 const year = new Date().getFullYear();
@@ -19,12 +19,12 @@ onNavigate((navigation) => {
 	});
 });
 const nav = [
-	{ href: '/', label: 'これからの間' },
-	{ href: '/calendar', label: 'カレンダー' }
+	{ href: "/", label: "これからの間" },
+	{ href: "/calendar", label: "カレンダー" },
 ];
-const REPO = 'https://github.com/hitalin/magari';
+const REPO = "https://github.com/hitalin/magari";
 const isActive = (href: string) =>
-	href === '/' ? page.url.pathname === '/' : page.url.pathname.startsWith(href);
+	href === "/" ? page.url.pathname === "/" : page.url.pathname.startsWith(href);
 </script>
 
 <svelte:head>

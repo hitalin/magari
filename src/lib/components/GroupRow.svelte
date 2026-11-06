@@ -1,6 +1,6 @@
 <script lang="ts">
-import { dayKey } from '#lib/date.ts';
-import type { ActorRef, EventSummary } from '#lib/types.ts';
+import { dayKey } from "#lib/date.ts";
+import type { ActorRef, EventSummary } from "#lib/types.ts";
 
 let { actor, events }: { actor: ActorRef; events: EventSummary[] } = $props();
 const day = $derived(dayKey(events[0].startsAt));
