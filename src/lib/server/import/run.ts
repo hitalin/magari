@@ -4,7 +4,7 @@ import type { Db } from '../db/index.ts';
 import { actors, eventHosts, events } from '../db/schema.ts';
 import { fetchFreecalend, freecalendMemNo } from './freecalend';
 import { type IcsCalendar, parseIcs } from './ics';
-import { expandOccurrences, parseEdenTitle, unwrapUrl } from './normalize';
+import { expandOccurrences, parseEdenTitle, storeHoursFor, unwrapUrl } from './normalize';
 import { SOURCES, type Source } from './sources';
 
 const DAY_MS = 86_400_000;
@@ -102,6 +102,15 @@ async function importCalendar(
 					allDay = false;
 				}
 				if (/空いて(い)?ます|空き/.test(title)) tags.push('空き枠');
+			}
+			// 時刻の無い 1 日の会は店の営業時間に置く（複数日にまたがる会は終日のまま）
+			if (allDay && src.storeHours && end && end.getTime() - start.getTime() === DAY_MS) {
+				const h = storeHoursFor(title, start, src.storeHours);
+				if (h) {
+					start = h.start;
+					end = h.end;
+					allDay = false;
+				}
 			}
 			if (cal.region) tags.push(cal.region);
 			if (cal.region === 'オンライン' || /オンライン|zoom/i.test(ev.location ?? '')) {

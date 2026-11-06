@@ -37,8 +37,10 @@ export function expandOccurrences(ev: IcsEvent, from: Date, to: Date): Occurrenc
 const T = '(\\d{1,2})(?:[:：](\\d{2})|時(半))?';
 const T_HOUR = '(\\d{1,2})(?:[:：](\\d{2}))?時(半)?';
 const SEP = '\\s*[-〜~ー–−]\\s*';
-const PREFIX_RANGE = new RegExp(`^[\\s(（]*${T}時?${SEP}${T}時?\\s*[)）]?\\s*`);
-const PREFIX_OPEN = new RegExp(`^[\\s(（]*${T}時?${SEP}[)）]?\\s*`);
+// 頭の「昼」（横浜の「昼14-18時」など）は時刻の前置きとして読み捨てる
+const LEAD = '^[\\s(（]*(?:昼[\\s:：)）]*)?';
+const PREFIX_RANGE = new RegExp(`${LEAD}${T}時?${SEP}${T}時?\\s*[)）]?\\s*`);
+const PREFIX_OPEN = new RegExp(`${LEAD}${T}時?${SEP}[)）]?\\s*`);
 const SUFFIX_RANGE = new RegExp(`\\s*[(（]?${T}時?${SEP}${T_HOUR}\\s*[)）]?\\s*$`);
 
 export function parseEdenTitle(
@@ -65,6 +67,30 @@ export function parseEdenTitle(
 			end: null
 		};
 	return { title: summary, start: null, end: null };
+}
+
+export type StoreHours = {
+	hours: readonly [string, string];
+	// 昼営業の時間（公式に書かれている店だけ）
+	dayHours?: readonly [string, string];
+};
+
+// 時刻の無い 1 日の会を店の営業時間に置く。題に「昼」があれば昼の営業時間に置き、無い店では null（終日のまま）。
+export function storeHoursFor(
+	title: string,
+	dayStartJst: Date,
+	store: StoreHours
+): { start: Date; end: Date } | null {
+	const slot = /昼/.test(title) ? store.dayHours : store.hours;
+	if (!slot) return null;
+	const at = (hm: string) => {
+		const [h, m] = hm.split(':').map(Number);
+		return new Date(dayStartJst.getTime() + (h * 60 + m) * 60_000);
+	};
+	const start = at(slot[0]);
+	let end = at(slot[1]);
+	if (end <= start) end = new Date(end.getTime() + DAY_MS);
+	return { start, end };
 }
 
 // 説明文の <a href="..."> から告知ページの URL を取り出す。Google のリダイレクトは剥がす。

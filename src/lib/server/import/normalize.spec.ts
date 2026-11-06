@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { IcsEvent } from './ics';
-import { expandOccurrences, parseEdenTitle, unwrapUrl } from './normalize';
+import { expandOccurrences, parseEdenTitle, storeHoursFor, unwrapUrl } from './normalize';
 
 const base: IcsEvent = {
 	uid: 'u',
@@ -56,11 +56,44 @@ describe('parseEdenTitle', () => {
 		expect(open.title).toBe('友達マッチングBAR');
 		expect(open.start?.toISOString()).toBe('2026-11-17T09:30:00.000Z');
 	});
+	it('頭の「昼」に続く時刻も読む', () => {
+		const day = new Date('2026-11-20T15:00:00Z');
+		const r = parseEdenTitle('昼14-18時　横浜ワークスペース（ゆうこ）', day);
+		expect(r.title).toBe('横浜ワークスペース（ゆうこ）');
+		expect(r.start?.toISOString()).toBe('2026-11-21T05:00:00.000Z');
+		expect(r.end?.toISOString()).toBe('2026-11-21T09:00:00.000Z');
+		expect(parseEdenTitle('昼14時~19時　討論バー', day).end?.toISOString()).toBe(
+			'2026-11-21T10:00:00.000Z'
+		);
+	});
 
 	it('時刻が無ければそのまま', () => {
 		const r = parseEdenTitle('⚠️夜空いてます', new Date('2026-11-20T15:00:00Z'));
 		expect(r.title).toBe('⚠️夜空いてます');
 		expect(r.start).toBeNull();
+	});
+});
+
+describe('storeHoursFor', () => {
+	const day = new Date('2026-11-20T15:00:00Z'); // JST 11/21 0:00
+	const namba = { hours: ['17:30', '23:00'], dayHours: ['13:00', '17:00'] } as const;
+
+	it('時刻の無い会を店の営業時間に置く', () => {
+		const r = storeHoursFor('初見歓迎バー｜ほうた店長', day, namba);
+		expect(r?.start.toISOString()).toBe('2026-11-21T08:30:00.000Z');
+		expect(r?.end.toISOString()).toBe('2026-11-21T14:00:00.000Z');
+	});
+	it('「昼」の会は昼の営業時間に置き、昼の営業時間が無い店では置かない', () => {
+		const r = storeHoursFor('昼:唐揚げバー　byあずき', day, namba);
+		expect(r?.start.toISOString()).toBe('2026-11-21T04:00:00.000Z');
+		expect(r?.end.toISOString()).toBe('2026-11-21T08:00:00.000Z');
+		expect(
+			storeHoursFor('(昼)羊毛フェルト触りたいバー', day, { hours: ['17:00', '23:00'] })
+		).toBeNull();
+	});
+	it('閉店が開店以前なら翌日', () => {
+		const r = storeHoursFor('深夜バー', day, { hours: ['20:00', '02:00'] });
+		expect(r?.end.toISOString()).toBe('2026-11-21T17:00:00.000Z');
 	});
 });
 
