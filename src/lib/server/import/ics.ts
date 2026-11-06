@@ -19,7 +19,7 @@ export type IcsCalendar = { name: string | null; events: IcsEvent[] };
 const JST_OFFSET_MS = 9 * 3_600_000;
 
 function unescapeText(v: string): string {
-	return v.replace(/\\n/gi, '\n').replace(/\\,/g, ',').replace(/\;/g, ';').replace(/\\\\/g, '\\');
+	return v.replace(/\\n/gi, '\n').replace(/\\,/g, ',').replace(/\\;/g, ';').replace(/\\\\/g, '\\');
 }
 
 // 20261108 / 20261115T123000Z / 20261115T123000（TZID か floating は JST とみなす）

@@ -1,0 +1,11 @@
+// adapter-cloudflare にだけ渡す設定（vite.config.ts の adapter({ config })）。
+// adapter はこの main の場所に生成した Worker を書き、assets.directory に静的ファイルを置く。
+// デプロイに使う本物は wrangler.jsonc。その main（worker.ts）が生成物を包んで scheduled を足す。
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "magari",
+	"main": ".svelte-kit/cloudflare-tmp/_worker.js",
+	"compatibility_date": "2026-11-01",
+	"compatibility_flags": ["nodejs_compat"],
+	"assets": { "binding": "ASSETS", "directory": ".svelte-kit/cloudflare" }
+}

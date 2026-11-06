@@ -20,6 +20,7 @@ function selectEvents(db: Db) {
 			locationName: events.locationName,
 			locationAddress: events.locationAddress,
 			locationVisibility: events.locationVisibility,
+			createdByUserId: events.createdByUserId,
 			onlineUrl: events.onlineUrl,
 			capacity: events.capacity,
 			feeText: events.feeText,
@@ -68,6 +69,7 @@ function toDetail(row: Row, hosts: ActorRef[]): EventDetail {
 		url: row.url,
 		source: row.source,
 		status: row.status,
+		visibility: row.visibility,
 		locationName: row.locationName,
 		// 参加者限定の場所は API に出さない
 		locationAddress: row.locationVisibility === 'public' ? row.locationAddress : null,
@@ -132,6 +134,26 @@ export async function listUpcomingEvents(
 export async function getEvent(db: Db, id: string): Promise<EventDetail | null> {
 	const [row] = await selectEvents(db).where(eq(events.id, id)).limit(1);
 	if (!row || row.status === 'draft' || row.visibility === 'private') return null;
+	const hosts = await hostsByEvent(db, [row.id]);
+	return toDetail(row, hosts.get(row.id) ?? []);
+}
+
+// 下書き・非公開も含めて、作成者か主催者（管理している Actor を含む）なら返す
+export async function getEventForUser(
+	db: Db,
+	id: string,
+	userId: string,
+	actorIds: string[]
+): Promise<EventDetail | null> {
+	const [row] = await selectEvents(db).where(eq(events.id, id)).limit(1);
+	if (!row) return null;
+	const hostRows = await db
+		.select({ actorId: eventHosts.actorId })
+		.from(eventHosts)
+		.where(eq(eventHosts.eventId, id));
+	const mine =
+		row.createdByUserId === userId || hostRows.some((h) => actorIds.includes(h.actorId));
+	if (!mine) return null;
 	const hosts = await hostsByEvent(db, [row.id]);
 	return toDetail(row, hosts.get(row.id) ?? []);
 }

@@ -26,6 +26,10 @@ const shareUrl = $derived(
 
 	{#if event.status === 'cancelled'}
 		<p class="mt-4 rounded-sm bg-accent-soft px-4 py-2 text-sm text-accent-ink">この間は中止になりました。</p>
+	{:else if event.status === 'draft'}
+		<p class="mt-4 rounded-sm bg-accent-soft px-4 py-2 text-sm text-accent-ink">下書きです。あなたにだけ見えています。<a href="/e/{event.id}/edit" class="ml-2 underline">編集 ›</a></p>
+	{:else if event.visibility === 'private'}
+		<p class="mt-4 rounded-sm bg-accent-soft px-4 py-2 text-sm text-accent-ink">自分だけに見える間です。</p>
 	{/if}
 
 	<header class="dots -mx-4 mt-2 px-4 py-10 text-center">

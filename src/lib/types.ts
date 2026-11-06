@@ -25,6 +25,7 @@ export type EventDetail = EventSummary & {
 	capacity: number | null;
 	feeText: string | null;
 	status: 'draft' | 'published' | 'cancelled';
+	visibility: 'public' | 'unlisted' | 'private';
 };
 
 export type ActorProfile = ActorRef & {

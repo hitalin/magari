@@ -14,7 +14,7 @@ DTSTART:20261115T123000Z
 DTEND:20261115T140000Z
 UID:b@google.com
 SUMMARY:長い題名は折り返され
- ます\\, カンマ付き
+ ます\\, カンマ付き\\; セミコロン付き
 LOCATION:オンライン　Zoom
 DESCRIPTION:<a href="https://example.com/x">イベント概要</a>
 STATUS:CONFIRMED
@@ -54,7 +54,7 @@ describe('parseIcs', () => {
 
 	it('折り返しとエスケープを解く。Z は UTC', () => {
 		const e = cal.events[1];
-		expect(e.summary).toBe('長い題名は折り返されます, カンマ付き');
+		expect(e.summary).toBe('長い題名は折り返されます, カンマ付き; セミコロン付き');
 		expect(e.location).toBe('オンライン　Zoom');
 		expect(e.description).toContain('https://example.com/x');
 		expect(e.start.toISOString()).toBe('2026-11-15T12:30:00.000Z');

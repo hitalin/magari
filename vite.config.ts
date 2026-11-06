@@ -12,7 +12,8 @@ export default defineConfig({
 				runes: ({ filename }) =>
 					filename.split(/[/\\]/).includes('node_modules') ? undefined : true
 			},
-			adapter: adapter()
+			// adapter には別の設定を渡す。wrangler.jsonc の main は手書きの worker.ts（scheduled 付き）
+			adapter: adapter({ config: 'wrangler.adapter.jsonc' })
 		})
 	],
 	// rrule は CJS が main なので SSR では vite にバンドルさせて ESM 側を使う
