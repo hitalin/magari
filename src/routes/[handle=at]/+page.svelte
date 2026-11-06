@@ -65,7 +65,8 @@ const description = $derived(actor.catch ?? actor.summary ?? undefined);
 	<img src={actor.headerUrl} alt="" class="mt-4 aspect-[21/9] w-full rounded-lg border border-line object-cover sm:aspect-[3/1]" />
 {/if}
 
-<header class="panel {actor.headerUrl ? 'mt-4' : 'mt-4'} mb-8 p-6 sm:p-8">
+<!-- ハコ（箱）のページは段ボールの看板 -->
+<header class="{actor.kind === 'space' ? 'cardboard mt-8' : 'panel mt-4'} mb-8 p-6 sm:p-8">
 	<div class="flex items-start gap-5">
 		{#if actor.avatarUrl}
 			<img src={actor.avatarUrl} alt="" class="h-20 w-20 shrink-0 rounded-full border border-line object-cover sm:h-24 sm:w-24" />
