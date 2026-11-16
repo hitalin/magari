@@ -675,6 +675,53 @@ h4 {
 		mask-image: linear-gradient(to bottom, #000 55%, transparent);
 	}
 
+	/* 流れるラベル: ヒーロー上端の pill に、テープのラベル + マーキー（notedeck の tickers）。装飾なので aria-hidden */
+	.ticker {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		padding: 0.3rem 0.5rem 0.3rem 0.4rem;
+		border: 1px solid var(--color-line);
+		border-radius: 9999px;
+		background: color-mix(in srgb, var(--color-surface) 80%, transparent);
+	}
+	.ticker-label {
+		flex-shrink: 0;
+	}
+	.ticker-items {
+		flex: 1;
+		min-width: 0;
+		overflow: hidden;
+		mask-image: linear-gradient(
+			to right,
+			transparent,
+			#000 2.5rem,
+			#000 calc(100% - 2.5rem),
+			transparent
+		);
+	}
+	.ticker-track {
+		display: flex;
+		width: max-content;
+		animation: ticker 48s linear infinite;
+	}
+	.ticker-track > span {
+		padding-inline: 1.25rem;
+		font-size: 0.85rem;
+		font-weight: 700;
+		letter-spacing: 0.1em;
+		white-space: nowrap;
+		color: var(--color-muted);
+	}
+	.ticker:hover .ticker-track {
+		animation-play-state: paused;
+	}
+	@keyframes ticker {
+		to {
+			transform: translateX(-50%);
+		}
+	}
+
 	/* ページ遷移中の細い線。テープの色 */
 	.progress {
 		position: fixed;

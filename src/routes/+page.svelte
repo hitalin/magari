@@ -12,6 +12,16 @@ const SAMPLES = [
 ];
 const sampleAt = `${dayKey(new Date())}T18:00:00+09:00`;
 const fan = $derived(data.events.slice(0, 3));
+// 上を流れる帯。どんな間が開いているか
+const WORDS = [
+	"間借り店舗",
+	"日替わり店長",
+	"レンタル○○",
+	"プロ○○ヤー",
+	"ライブ",
+	"自助会",
+	"オフ会",
+];
 </script>
 
 <svelte:head>
@@ -20,6 +30,16 @@ const fan = $derived(data.events.slice(0, 3));
 </svelte:head>
 
 <!-- 左に一文とボタン、右にビラ。それ以外は置かない -->
+<div class="ticker mt-2" aria-hidden="true">
+	<span class="chip chip-tape ticker-label">こんな間</span>
+	<span class="ticker-items">
+		<span class="ticker-track">
+			{#each [...WORDS, ...WORDS] as word, i (i)}<span>{word}</span>{/each}
+		</span>
+	</span>
+</div>
+<p class="sr-only">{WORDS.join('、')}。</p>
+
 <section class="landing">
 	<div class="text-center md:text-left">
 		<h1 class="text-[clamp(1.9rem,4.2vw,2.75rem)] leading-[1.35] whitespace-nowrap">
