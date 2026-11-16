@@ -65,7 +65,7 @@ const SOFT_ONLY: readonly FlyerVariant[] = ["fuda", "tearoff", "riso"];
 const GARIBAN_INKS = ["#262a78", "#7a2230", "#1c543b", "#5b3a1e"];
 
 // FNV-1a（32bit）
-function hash(s: string): number {
+export function hash(s: string): number {
 	let h = 0x811c9dc5;
 	for (let i = 0; i < s.length; i++) {
 		h ^= s.charCodeAt(i);

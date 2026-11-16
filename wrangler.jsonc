@@ -24,6 +24,8 @@
 		}
 	],
 	"r2_buckets": [{ "binding": "MEDIA", "bucket_name": "magari-media" }],
+	// X で共有したときのカード画像を撮る（/e/{id}/og.png）。無料枠はブラウザ時間が 1 日 10 分
+	"browser": { "binding": "BROWSER" },
 	// 落書き（POST /api/graffiti）は誰でも送れるので、同じ IP からは 1 分に 20 回まで。IP は保存しない
 	"ratelimits": [
 		{

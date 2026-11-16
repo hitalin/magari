@@ -123,6 +123,7 @@ export const actions: Actions = {
 		const ev = await editable(locals, params.id);
 		await deleteEvent(locals.db, params.id);
 		if (ev.coverKey) await env.MEDIA.delete(ev.coverKey);
+		await env.MEDIA.delete(`cards/${ev.id}.png`);
 		redirect(303, "/me");
 	},
 };
