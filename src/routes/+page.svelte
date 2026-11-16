@@ -1,92 +1,101 @@
 <script lang="ts">
-import { onMount } from "svelte";
-import logo from "#lib/assets/logo.svg";
-import AreaFilter from "#lib/components/AreaFilter.svelte";
-import DayList from "#lib/components/DayList.svelte";
-import Empty from "#lib/components/Empty.svelte";
-import FlyerWall from "#lib/components/FlyerWall.svelte";
-import MonthGrid from "#lib/components/MonthGrid.svelte";
+import Flyer from "#lib/components/Flyer.svelte";
+import { dayKey, formatWhen } from "#lib/date.ts";
 import type { PageProps } from "./$types";
 
 let { data }: PageProps = $props();
-let area = $state<string[]>([]);
-// これからの間の見せ方。一覧（日ごとの行）か壁（フライヤー）か
-const VIEW_KEY = "magari-view";
-let view = $state<"list" | "wall">("list");
-onMount(() => {
-	if (localStorage.getItem(VIEW_KEY) === "wall") view = "wall";
-});
-function setView(v: "list" | "wall") {
-	view = v;
-	localStorage.setItem(VIEW_KEY, v);
-}
-const byArea = <T extends { area: string | null }>(list: T[]) =>
-	area.length
-		? list.filter((e) => e.area !== null && area.includes(e.area))
-		: list;
-const monthEvents = $derived(byArea(data.calendar.events));
-const weekEvents = $derived(byArea(data.events));
-const WORDS = [
-	"間借り店舗",
-	"日替わり店長",
-	"レンタル○○",
-	"プロ○○ヤー",
-	"ライブ",
-	"自助会",
-	"オフ会",
+// ヒーローの右に貼るビラ。近い順に 3 枚。まだ誰も開けていなければ見本を貼る
+const SAMPLES = [
+	"18時から店にいます",
+	"公園でなんもしない",
+	"日替わり店長やります",
 ];
+const sampleAt = `${dayKey(new Date())}T18:00:00+09:00`;
+const fan = $derived(data.events.slice(0, 3));
 </script>
 
 <svelte:head>
-	<title>これからの間 | まがり</title>
+	<title>まがり | 今日も、どこかで誰かが開けている。</title>
 	<meta name="description" content="今日もどこかで誰かが開けている。行ってもいいし、自分が開けてもいい。間借り店舗・日替わり店長・ライブ・自助会・オフ会を一箇所で。" />
 </svelte:head>
 
-<section class="dots hero -mx-4 px-4 pt-6">
-	<div class="ticker" aria-hidden="true">
-		<span class="chip chip-tape ticker-label">こんな間</span>
-		<span class="ticker-items">
-			<span class="ticker-track">
-				{#each [...WORDS, ...WORDS] as word, i (i)}<span>{word}</span>{/each}
-			</span>
-		</span>
-	</div>
-	<p class="sr-only">{WORDS.join('、')}。</p>
-	<div class="mt-10 text-center sm:mt-12">
-		<img src={logo} alt="まがり" class="mx-auto mb-6 h-32 w-32 drop-shadow-[0_8px_16px_rgba(0,0,0,0.5)] sm:h-40 sm:w-40" />
-		<h1 class="text-[clamp(1.9rem,6vw,3.4rem)] leading-[1.25]">
-			今日も、どこかで<br /><span class="tape mx-1 px-3 leading-[1.15]">誰か</span>が開けている。
+<!-- 左に一文とボタン、右にビラ。それ以外は置かない -->
+<section class="landing">
+	<div class="text-center md:text-left">
+		<h1 class="text-[clamp(1.9rem,4.2vw,2.75rem)] leading-[1.35] whitespace-nowrap">
+			今日も、どこかで<br /><span class="tape mr-1 px-3 leading-[1.15]">誰か</span>が開けている。
 		</h1>
-		<p class="mt-6 text-[0.95rem] leading-loose tracking-[0.12em] text-muted">
-			行ってもいいし、<br class="sm:hidden" />自分が開けてもいい。
+		<p class="mt-6 text-[1.05rem] leading-loose text-muted">
+			行ってもいいし、自分が開けてもいい。<br />ひとこと書けば、ビラが 1 枚できます。
 		</p>
-	</div>
-	<div class="mt-8">
-		<AreaFilter events={data.calendar.events} bind:value={area} center />
-	</div>
-</section>
-
-<section class="lift mb-12">
-	<MonthGrid year={data.calendar.year} month={data.calendar.month} grid={data.calendar.grid} events={monthEvents} compact />
-	<p class="mt-3 text-right text-sm"><a href="/calendar" class="more">カレンダーで見る ›</a></p>
-</section>
-
-<div class="section-head">
-	<h2 class="section-title">これから7日の間</h2>
-	<div class="flex flex-wrap items-center gap-4">
-		<div class="pills" role="group" aria-label="見せ方">
-			<button type="button" class="chip {view === 'list' ? 'chip-tape' : 'chip-plain'}" aria-pressed={view === 'list'} onclick={() => setView('list')}>一覧</button>
-			<button type="button" class="chip {view === 'wall' ? 'chip-tape' : 'chip-plain'}" aria-pressed={view === 'wall'} onclick={() => setView('wall')}>壁</button>
+		<div class="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 md:justify-start">
+			<a href="/new" class="btn btn-primary">とりあえず開ける</a>
+			<a href="/home" class="more">開いている所を見る ›</a>
 		</div>
-		<a href="/calendar" class="more">その先はカレンダーで ›</a>
 	</div>
-</div>
+	<div class="fan" aria-hidden={fan.length === 0}>
+		{#each fan as e (e.id)}
+			<a href="/e/{e.id}" class="flyer-pin" aria-label="{e.title}（{formatWhen(e)}）">
+				{#if e.flyerUrl}
+					<img src={e.flyerUrl} alt="" />
+				{:else}
+					<Flyer id={e.id} title={e.title} startsAt={e.startsAt} endsAt={e.endsAt} allDay={e.allDay} place={e.space?.name ?? e.locationName} host={e.hosts[0]?.name ?? null} />
+				{/if}
+			</a>
+		{:else}
+			{#each SAMPLES as title (title)}
+				<div class="flyer-pin"><Flyer id={title} {title} startsAt={sampleAt} endsAt={null} allDay={false} /></div>
+			{/each}
+		{/each}
+	</div>
+</section>
 
-{#if weekEvents.length === 0}
-	<Empty title={area.length ? `${area.join('・')}では、この7日はまだ誰もくねくねしていません。` : 'まだ誰もくねくねしていません。'} hint="エリアを変えるか、カレンダーで先を見てみてください。" />
-{/if}
-{#if view === 'wall'}
-	<FlyerWall events={weekEvents} />
-{:else}
-	<DayList events={weekEvents} />
-{/if}
+<style>
+	.landing {
+		display: grid;
+		gap: 3.5rem;
+		align-items: center;
+		padding-block: 2.5rem 4.5rem;
+	}
+	@media (min-width: 48rem) {
+		.landing {
+			grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+			gap: 3rem;
+			min-height: calc(100svh - var(--spacing-header) - 12rem);
+		}
+	}
+	/* ビラ 3 枚を少しずらして重ねる。近い会が手前 */
+	.fan {
+		position: relative;
+		width: min(86%, 23rem);
+		aspect-ratio: 1 / 1.1;
+		margin-inline: auto;
+	}
+	.fan > :global(*) {
+		position: absolute;
+		width: 56%;
+	}
+	.fan > :global(* img) {
+		aspect-ratio: 1 / 1.414;
+		object-fit: cover;
+	}
+	.fan > :global(:nth-child(1)) {
+		left: 22%;
+		top: 14%;
+		z-index: 2;
+		--tilt: -1.5deg;
+	}
+	.fan > :global(:nth-child(2)) {
+		left: 0;
+		top: 4%;
+		--tilt: -8deg;
+	}
+	.fan > :global(:nth-child(3)) {
+		right: 0;
+		top: 0;
+		--tilt: 7deg;
+	}
+	.fan > :global(a:hover) {
+		z-index: 3;
+	}
+</style>

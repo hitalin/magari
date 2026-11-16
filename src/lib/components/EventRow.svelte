@@ -34,7 +34,7 @@ const place = $derived.by(() => {
 		{#if event.tags.length}
 			<span class="mt-1.5 flex flex-wrap gap-1">
 				{#each event.tags.slice(0, 3) as tag (tag)}
-					<span class="chip chip-tape">{tag}</span>
+					<span class="chip chip-plain">{tag}</span>
 				{/each}
 			</span>
 		{/if}

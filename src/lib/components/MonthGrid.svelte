@@ -44,7 +44,7 @@ const next = $derived(shiftMonth(year, month, 1));
 	</nav>
 </div>
 
-<div class="overflow-hidden rounded-md border border-line bg-surface/85 backdrop-blur-md">
+<div class="overflow-hidden rounded-md border border-line bg-surface/60">
 	<div class="grid grid-cols-7 border-b border-line text-center">
 		{#each WEEKDAYS as w, i (w)}
 			<div class="label py-2 {i === 0 ? 'text-accent-ink' : ''}">{w}</div>
@@ -68,7 +68,7 @@ const next = $derived(shiftMonth(year, month, 1));
 						{#if item.kind === 'event'}
 							<a
 								href="/e/{item.event.id}"
-								class="mb-0.5 block truncate rounded-sm bg-accent-soft px-1 py-0.5 text-[0.7rem] leading-tight text-text hover:bg-accent hover:text-bg sm:text-xs"
+								class="mb-0.5 block truncate rounded-[3px] px-1 py-0.5 text-[0.7rem] leading-tight text-text hover:bg-accent-soft sm:text-xs"
 								title={item.event.title}
 							>
 								{#if !item.event.allDay}<span class="hidden font-mono text-muted sm:inline">{formatTime(item.event.startsAt)}</span>{/if}
@@ -77,7 +77,7 @@ const next = $derived(shiftMonth(year, month, 1));
 						{:else}
 							<a
 								href="/@{item.actor.handle}#d-{day}"
-								class="mb-0.5 block truncate rounded-sm border border-accent-border px-1 py-0.5 text-[0.7rem] leading-tight text-accent-ink hover:bg-accent hover:text-bg sm:text-xs"
+								class="mb-0.5 block truncate rounded-[3px] px-1 py-0.5 text-[0.7rem] leading-tight font-semibold text-accent-ink hover:bg-accent-soft sm:text-xs"
 								title="{item.actor.name} の間 {item.events.length} 件"
 							>
 								{item.events.length}件 {item.actor.name}

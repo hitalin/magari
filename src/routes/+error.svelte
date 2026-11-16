@@ -15,7 +15,7 @@ const notFound = $derived(page.status === 404);
 		{#if notFound}間はもう終わったか、はじめから無かったのかもしれません。{:else}{page.error?.message ?? 'もう一度試してください。'}{/if}
 	</p>
 	<div class="mt-8 flex flex-wrap justify-center gap-3">
-		<a href="/" class="btn btn-primary">これからの間へ</a>
+		<a href="/home" class="btn btn-primary">これからの間へ</a>
 		<a href="/calendar" class="btn">カレンダー ›</a>
 	</div>
 </section>

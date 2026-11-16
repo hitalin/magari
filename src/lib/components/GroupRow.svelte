@@ -22,7 +22,7 @@ const topTags = $derived.by(() => {
 		<span class="mt-0.5 block truncate text-sm text-muted">{preview.join('、')}{events.length > 3 ? '、…' : ''}</span>
 		{#if topTags.length}
 			<span class="mt-1.5 flex flex-wrap gap-1">
-				{#each topTags as tag (tag)}<span class="chip chip-tape">{tag}</span>{/each}
+				{#each topTags as tag (tag)}<span class="chip chip-plain">{tag}</span>{/each}
 			</span>
 		{/if}
 	</span>

@@ -12,7 +12,7 @@
 	--font-mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
 
 	/* 面: 黒アスファルトの上 */
-	--color-bg: #0f1011;
+	--color-bg: #0a0b0c;
 	--color-surface: #1e1e1e;
 	--color-surface-2: #2a2a2a;
 	--color-text: #f1efe9;
@@ -74,10 +74,10 @@ body {
 	color: var(--color-text);
 	background-color: var(--color-bg);
 	background-image:
-		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='2.6' numOctaves='2' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.9  0 0 0 0 0.92  0 0 0 0 0.95  0 0 0 1 0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='discrete' tableValues='0 0 0 0 0 0 0 0 0.3 0.8'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)' opacity='0.22'/%3E%3C/svg%3E"),
+		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='2.6' numOctaves='2' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.9  0 0 0 0 0.92  0 0 0 0 0.95  0 0 0 1 0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='discrete' tableValues='0 0 0 0 0 0 0 0 0.3 0.8'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)' opacity='0.16'/%3E%3C/svg%3E"),
 		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='d'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='2.1' numOctaves='2' seed='19' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='discrete' tableValues='1 0.5 0.2 0 0 0 0 0 0 0'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23d)' opacity='0.6'/%3E%3C/svg%3E"),
-		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='900' height='900'%3E%3Cfilter id='c'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.02' numOctaves='6' seed='3' stitchTiles='stitch' result='n'/%3E%3CfeDiffuseLighting in='n' lighting-color='white' surfaceScale='4' diffuseConstant='1'%3E%3CfeDistantLight azimuth='40' elevation='50'/%3E%3C/feDiffuseLighting%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='0.045'/%3E%3CfeFuncG type='linear' slope='0.045'/%3E%3CfeFuncB type='linear' slope='0.05'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23c)'/%3E%3C/svg%3E"),
-		linear-gradient(#151617, #0d0e0f);
+		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='900' height='900'%3E%3Cfilter id='c'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.02' numOctaves='6' seed='3' stitchTiles='stitch' result='n'/%3E%3CfeDiffuseLighting in='n' lighting-color='white' surfaceScale='4' diffuseConstant='1'%3E%3CfeDistantLight azimuth='40' elevation='50'/%3E%3C/feDiffuseLighting%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='0.014'/%3E%3CfeFuncG type='linear' slope='0.014'/%3E%3CfeFuncB type='linear' slope='0.016'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23c)'/%3E%3C/svg%3E"),
+		linear-gradient(#0e0f10, #08090a);
 	background-blend-mode: screen, multiply, screen, normal;
 	padding-top: var(--spacing-header);
 	min-height: 100dvh;
@@ -202,7 +202,7 @@ h4 {
 		align-items: center;
 		gap: 1rem;
 		font-family: var(--font-serif);
-		font-size: 1.2rem;
+		font-size: 1.1rem;
 		font-weight: 700;
 		letter-spacing: 0.06em;
 	}
@@ -210,10 +210,10 @@ h4 {
 	.day-rule::after {
 		content: "";
 		flex: 1;
-		height: 4px;
+		height: 2px;
 		background: repeating-linear-gradient(
 			90deg,
-			rgb(241 239 233 / 0.42) 0 28px,
+			rgb(241 239 233 / 0.3) 0 28px,
 			transparent 28px 46px
 		);
 		mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='w'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' seed='5' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 2.2 -0.2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23w)'/%3E%3C/svg%3E");
@@ -237,25 +237,23 @@ h4 {
 		background: var(--color-accent-soft);
 	}
 
-	/* 定義表: 灰のラベル列 + 面の値セル（エデンの店舗概要） */
+	/* 定義表: 面で塗らず、罫線リストと同じ 1px の線で区切る。左に小さなラベル、右に値 */
 	.defs {
 		display: grid;
 		grid-template-columns: 6rem 1fr;
-		gap: 2px;
-		border-radius: var(--radius-md);
-		overflow: hidden;
+		border-top: 1px solid var(--color-line);
+	}
+	.defs > dt,
+	.defs > dd {
+		padding: 0.8rem 0.6rem;
+		border-bottom: 1px solid var(--color-line);
 	}
 	.defs > dt {
-		background: var(--color-surface-2);
-		padding: 0.8rem 1rem;
+		padding-top: 1rem;
 		font-size: 0.78rem;
 		font-weight: 700;
 		letter-spacing: 0.1em;
 		color: var(--color-muted);
-	}
-	.defs > dd {
-		background: var(--color-surface);
-		padding: 0.8rem 1rem;
 	}
 
 	.btn {
@@ -410,22 +408,6 @@ h4 {
 		);
 	}
 
-	.icon-btn {
-		display: inline-grid;
-		place-items: center;
-		width: 36px;
-		height: 36px;
-		border-radius: 50%;
-		color: var(--color-muted);
-		transition:
-			background-color 0.15s,
-			color 0.15s;
-	}
-	.icon-btn:hover {
-		background: var(--color-accent-soft);
-		color: var(--color-text);
-	}
-
 	.gradient-text {
 		background: linear-gradient(
 			135deg,
@@ -444,10 +426,9 @@ h4 {
 	}
 
 	.panel {
-		background: color-mix(in srgb, var(--color-surface) 85%, transparent);
+		background: color-mix(in srgb, var(--color-surface) 70%, transparent);
 		border: 1px solid var(--color-line);
-		border-radius: var(--radius-lg);
-		backdrop-filter: blur(10px);
+		border-radius: var(--radius-md);
 	}
 
 	/* 段ボールの看板: 平らなクラフト紙の地に、細かい繊維のざらつきと、ごく薄い中芯の縦縞だけを残す。
@@ -683,62 +664,15 @@ h4 {
 		font-size: 1.1rem;
 	}
 
-	/* ヒーロー: 下に余白を取り、次の面を食い込ませる（yamidao / notedeck） */
-	.hero {
-		padding-bottom: 6.5rem;
-		margin-bottom: -4rem;
-	}
-	.lift {
-		position: relative;
-		z-index: 1;
-	}
-
-	/* 流れるラベル: ヒーロー上端の pill に、テープのラベル + マーキー（notedeck の tickers）。装飾なので aria-hidden */
-	.ticker {
-		display: flex;
-		align-items: center;
-		gap: 0.75rem;
-		padding: 0.3rem 0.5rem 0.3rem 0.4rem;
-		border: 1px solid var(--color-line);
-		border-radius: 9999px;
-		background: color-mix(in srgb, var(--color-surface) 80%, transparent);
-		backdrop-filter: blur(10px);
-	}
-	.ticker-label {
-		flex-shrink: 0;
-	}
-	.ticker-items {
-		flex: 1;
-		min-width: 0;
-		overflow: hidden;
-		mask-image: linear-gradient(
-			to right,
-			transparent,
-			#000 2.5rem,
-			#000 calc(100% - 2.5rem),
-			transparent
-		);
-	}
-	.ticker-track {
-		display: flex;
-		width: max-content;
-		animation: ticker 48s linear infinite;
-	}
-	.ticker-track > span {
-		padding-inline: 1.25rem;
-		font-size: 0.85rem;
-		font-weight: 700;
-		letter-spacing: 0.1em;
-		white-space: nowrap;
-		color: var(--color-muted);
-	}
-	.ticker:hover .ticker-track {
-		animation-play-state: paused;
-	}
-	@keyframes ticker {
-		to {
-			transform: translateX(-50%);
-		}
+	/* 固定のナビ。地の色も境界線も無く、下を通る本文だけをぼかす。ぼかしは下端へ向けて消えるので帯に見えない */
+	.site-header::before {
+		content: "";
+		position: absolute;
+		inset: 0 0 -1.5rem;
+		z-index: -1;
+		pointer-events: none;
+		backdrop-filter: blur(14px);
+		mask-image: linear-gradient(to bottom, #000 55%, transparent);
 	}
 
 	/* ページ遷移中の細い線。テープの色 */
