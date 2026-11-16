@@ -1,7 +1,5 @@
 <script lang="ts">
 import Field from "#lib/components/Field.svelte";
-import { formatDay, formatTime } from "#lib/date.ts";
-import { PLAN_KIND_LABEL, PLAN_KINDS } from "#lib/space-form.ts";
 import type { PageProps } from "./$types";
 
 let { data, form }: PageProps = $props();
@@ -15,7 +13,6 @@ const KIND_WORD: Record<string, string> = {
 	group: "団体",
 	person: "自分",
 };
-let newPlan = $state(false);
 </script>
 
 <svelte:head><title>{data.values.name} を編集 | ◱</title></svelte:head>
@@ -95,77 +92,6 @@ let newPlan = $state(false);
 
 		<button type="submit" class="btn btn-primary">保存する</button>
 	</form>
-</section>
-
-{#if data.kind === 'space'}
-	<section class="mb-12">
-		<div class="section-head">
-			<h2 class="section-title text-[1.25rem]">出店プラン</h2>
-			<button type="button" class="btn" onclick={() => (newPlan = !newPlan)}>プランを足す</button>
-		</div>
-		<p class="mb-4 text-sm text-muted">時間帯で借りる・曜日固定・貸し切りなど、どう借りられるかと料金。料金は自由に書けます（表のように改行して並べられます）。</p>
-		{#snippet planForm(p: { id: string; name: string; kind: string; priceText: string | null; description: string | null } | null)}
-			<form method="POST" action="?/savePlan" class="panel space-y-4 p-5">
-				{#if form?.section === 'plan' && 'error' in form && (form.planId ?? '') === (p?.id ?? '')}
-					<p class="text-sm text-accent-ink">{form.error}</p>
-				{/if}
-				<input type="hidden" name="id" value={p?.id ?? ''} />
-				<div class="grid gap-4 sm:grid-cols-[1fr_12rem]">
-					<Field label="プラン名"><input name="name" value={p?.name ?? ''} required maxlength="50" class="input" placeholder="例: 間借りパートナープラン" /></Field>
-					<Field label="種類">
-						<select name="kind" class="input">
-							{#each PLAN_KINDS as k (k)}<option value={k} selected={(p?.kind ?? 'spot') === k}>{PLAN_KIND_LABEL[k]}</option>{/each}
-						</select>
-					</Field>
-				</div>
-				<Field label="料金" hint="例: 昼 11:00〜17:00 平日 3,000円 / 土日祝 4,000円（1 行ずつ）">
-					<textarea name="priceText" rows="4" class="input">{p?.priceText ?? ''}</textarea>
-				</Field>
-				<Field label="説明" hint="含まれるもの、条件、審査など。「- 箇条書き」が使えます">
-					<textarea name="description" rows="4" class="input">{p?.description ?? ''}</textarea>
-				</Field>
-				<div class="flex gap-3">
-					<button type="submit" class="btn btn-primary">{p ? '保存する' : '追加する'}</button>
-					{#if p}
-						<button type="submit" form="delete-plan-{p.id}" class="btn" onclick={(e) => { if (!confirm('このプランを消しますか？')) e.preventDefault(); }}>消す</button>
-					{/if}
-				</div>
-			</form>
-			{#if p}
-				<form id="delete-plan-{p.id}" method="POST" action="?/deletePlan" hidden><input type="hidden" name="id" value={p.id} /></form>
-			{/if}
-		{/snippet}
-		<div class="space-y-4">
-			{#if newPlan || data.plans.length === 0}{@render planForm(null)}{/if}
-			{#each data.plans as p (p.id)}{@render planForm(p)}{/each}
-		</div>
-	</section>
-{/if}
-
-<section class="mb-12">
-	<div class="section-head"><h2 class="section-title text-[1.25rem]">お知らせ</h2></div>
-	<form method="POST" action="?/addPost" class="panel space-y-4 p-5">
-		{@render error('post')}
-		<Field label="題"><input name="title" required maxlength="100" class="input" placeholder="例: 9/15 グランドオープン" /></Field>
-		<Field label="本文" hint="「## 見出し」「- 箇条書き」が使えます"><textarea name="body" rows="5" class="input"></textarea></Field>
-		<button type="submit" class="btn btn-primary">出す</button>
-	</form>
-	{#if data.posts.length}
-		<div class="rule-list mt-6">
-			{#each data.posts as post (post.id)}
-				<div class="row">
-					<span class="font-mono text-xs text-muted">{formatDay(post.publishedAt)}</span>
-					<span class="flex flex-wrap items-baseline gap-3">
-						<span class="font-serif font-bold">{post.title}</span>
-						<form method="POST" action="?/deletePost" onsubmit={(e) => { if (!confirm('このお知らせを消しますか？')) e.preventDefault(); }}>
-							<input type="hidden" name="id" value={post.id} />
-							<button type="submit" class="text-xs text-muted hover:text-accent-ink">消す</button>
-						</form>
-					</span>
-				</div>
-			{/each}
-		</div>
-	{/if}
 </section>
 
 {#if data.kind !== 'person'}

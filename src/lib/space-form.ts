@@ -159,69 +159,6 @@ export function parseSpaceForm(
 	};
 }
 
-export const PLAN_KINDS = ["spot", "weekly", "exclusive", "other"] as const;
-export type PlanKind = (typeof PLAN_KINDS)[number];
-export const PLAN_KIND_LABEL: Record<PlanKind, string> = {
-	spot: "時間帯で借りる",
-	weekly: "曜日固定",
-	exclusive: "貸し切り",
-	other: "その他",
-};
-
-export type PlanFormValues = {
-	name: string;
-	kind: string;
-	priceText: string;
-	description: string;
-};
-export type ParsedPlan = {
-	name: string;
-	kind: PlanKind;
-	priceText: string | null;
-	description: string | null;
-};
-
-export function parsePlanForm(
-	v: PlanFormValues,
-): { ok: true; values: ParsedPlan } | { ok: false; error: string } {
-	const name = v.name.trim();
-	if (!name) return { ok: false, error: "プラン名を入れてください" };
-	for (const [label, s, max] of [
-		["プラン名", name, 50],
-		["料金", v.priceText, 2000],
-		["説明", v.description, 5000],
-	] as const) {
-		const e = tooLong(label, s, max);
-		if (e) return { ok: false, error: e };
-	}
-	const kind = (PLAN_KINDS as readonly string[]).includes(v.kind)
-		? (v.kind as PlanKind)
-		: "other";
-	return {
-		ok: true,
-		values: {
-			name,
-			kind,
-			priceText: nullable(v.priceText),
-			description: nullable(v.description),
-		},
-	};
-}
-
-export type PostFormValues = { title: string; body: string };
-
-export function parsePostForm(
-	v: PostFormValues,
-):
-	| { ok: true; values: { title: string; body: string | null } }
-	| { ok: false; error: string } {
-	const title = v.title.trim();
-	if (!title) return { ok: false, error: "題を入れてください" };
-	const e = tooLong("題", title, 100) ?? tooLong("本文", v.body, 10000);
-	if (e) return { ok: false, error: e };
-	return { ok: true, values: { title, body: nullable(v.body) } };
-}
-
 // 場・団体の新規登録
 export function parseNewActorForm(
 	handle: string,

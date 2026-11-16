@@ -4,8 +4,6 @@ import Blocks from "#lib/components/Blocks.svelte";
 import DayList from "#lib/components/DayList.svelte";
 import Empty from "#lib/components/Empty.svelte";
 import MonthGrid from "#lib/components/MonthGrid.svelte";
-import { formatDay } from "#lib/date.ts";
-import { PLAN_KIND_LABEL } from "#lib/space-form.ts";
 import { KIND_LABEL } from "#lib/types.ts";
 import { page } from "$app/state";
 import type { PageProps } from "./$types";
@@ -49,9 +47,7 @@ const reviewsUrl = $derived(
 );
 const sections = $derived(
 	[
-		data.posts.length && { id: "news", label: "お知らせ" },
 		actor.body && { id: "about", label: "紹介" },
-		data.plans.length && { id: "plans", label: "出店プラン" },
 		{ id: "events", label: "これからの間" },
 		hasAccess && { id: "access", label: "アクセス" },
 	].filter((s): s is { id: string; label: string } => !!s),
@@ -120,45 +116,10 @@ const description = $derived(actor.catch ?? actor.summary ?? undefined);
 	{/if}
 </header>
 
-{#if data.posts.length}
-	<section id="news" class="mb-12 scroll-mt-20">
-		<div class="section-head"><h2 class="section-title">お知らせ</h2></div>
-		<div class="rule-list">
-			{#each data.posts as post (post.id)}
-				<article class="row">
-					<span class="font-mono text-xs text-muted">{formatDay(post.publishedAt)}</span>
-					<div class="min-w-0">
-						<h3 class="font-serif text-[1.1rem] font-bold">{post.title}</h3>
-						{#if post.body}<div class="mt-2 text-[0.95rem]"><Blocks text={post.body} /></div>{/if}
-					</div>
-				</article>
-			{/each}
-		</div>
-	</section>
-{/if}
-
 {#if actor.body}
 	<section id="about" class="mb-12 max-w-[40em] scroll-mt-20">
 		<div class="section-head"><h2 class="section-title">紹介</h2></div>
 		<Blocks text={actor.body} />
-	</section>
-{/if}
-
-{#if data.plans.length}
-	<section id="plans" class="mb-12 scroll-mt-20">
-		<div class="section-head">
-			<h2 class="section-title">出店プラン</h2>
-		</div>
-		<div class="grid gap-4 sm:grid-cols-2">
-			{#each data.plans as plan (plan.id)}
-				<article class="panel p-5">
-					<p class="label">{PLAN_KIND_LABEL[plan.kind]}</p>
-					<h3 class="mt-1 font-serif text-[1.25rem] font-bold">{plan.name}</h3>
-					{#if plan.priceText}<p class="mt-3 whitespace-pre-line font-serif text-[1.05rem] leading-[1.9]">{plan.priceText}</p>{/if}
-					{#if plan.description}<div class="mt-3 text-sm text-muted"><Blocks text={plan.description} /></div>{/if}
-				</article>
-			{/each}
-		</div>
 	</section>
 {/if}
 

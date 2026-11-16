@@ -78,6 +78,20 @@
       "when": 1794829367688,
       "tag": "0010_event_fields_trim",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "6",
+      "when": 1794829523809,
+      "tag": "0011_drop_posts_plans",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "6",
+      "when": 1794829563858,
+      "tag": "0012_drop_unused",
+      "breakpoints": true
     }
   ]
 }

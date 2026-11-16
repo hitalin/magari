@@ -59,25 +59,8 @@ export type ActorProfile = ActorRef & {
 	links: { label: string; url: string }[];
 };
 
-export type SpacePlan = {
-	id: string;
-	name: string;
-	kind: "spot" | "weekly" | "exclusive" | "other";
-	priceText: string | null;
-	description: string | null;
-};
-
-export type Post = {
-	id: string;
-	title: string;
-	body: string | null;
-	publishedAt: string;
-};
-
 export type ActorPage = {
 	actor: ActorProfile;
-	plans: SpacePlan[];
-	posts: Post[];
 	events: EventSummary[];
 };
 

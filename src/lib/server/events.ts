@@ -111,7 +111,7 @@ function toDetail(row: Row, hosts: ActorRef[]): EventDetail {
 		visibility: row.visibility,
 		hidden: row.hiddenAt !== null,
 		locationName: row.locationName,
-		// 参加者限定の場所は API に出さない
+		// 「主催に聞いてもらう」会の住所は API に出さない
 		locationAddress:
 			row.locationVisibility === "public" ? row.locationAddress : null,
 		locationVisibility: row.locationVisibility,

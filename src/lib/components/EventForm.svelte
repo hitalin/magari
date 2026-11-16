@@ -83,7 +83,7 @@ const place = $derived(v.locationName || (v.space ? `@${v.space}` : null));
 			<Field label="場所の見せ方">
 				<select name="locationVisibility" class="input">
 					<option value="public" selected={values.locationVisibility === 'public'}>誰にでも見せる</option>
-					<option value="attendees" selected={values.locationVisibility === 'attendees'}>参加者にだけ知らせる（自助会・オフ会向け）</option>
+					<option value="attendees" selected={values.locationVisibility === 'attendees'}>住所は載せず、主催に聞いてもらう（自助会・オフ会向け）</option>
 				</select>
 			</Field>
 			<Field label="オンラインの URL" hint="Zoom や Discord など。オンライン開催なら"><input name="onlineUrl" value={values.onlineUrl} class="input" placeholder="https://" /></Field>

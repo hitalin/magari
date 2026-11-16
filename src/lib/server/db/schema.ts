@@ -26,7 +26,6 @@ export const actors = sqliteTable(
 		userId: text("user_id").references(() => user.id, { onDelete: "set null" }),
 		name: text("name").notNull(),
 		summary: text("summary"),
-		avatarKey: text("avatar_key"),
 		// 外部（X / Misskey）のアイコン URL。ログイン時に写す
 		avatarUrl: text("avatar_url"),
 		headerKey: text("header_key"),
@@ -105,7 +104,6 @@ export const events = sqliteTable(
 		startsAt: timestamp("starts_at").notNull(),
 		endsAt: timestamp("ends_at"),
 		allDay: integer("all_day", { mode: "boolean" }).notNull().default(false),
-		timezone: text("timezone").notNull().default("Asia/Tokyo"),
 		status: text("status", { enum: ["draft", "published", "cancelled"] })
 			.notNull()
 			.default("draft"),
@@ -120,7 +118,7 @@ export const events = sqliteTable(
 		locationAddress: text("location_address"),
 		// 絞り込み用のエリア。都道府県名（接尾辞なし）か「オンライン」
 		area: text("area"),
-		// attendees: 場所は参加者にだけ見せる（自助会・オフ会向け）
+		// attendees: 住所は載せず、主催に聞いてもらう（自助会・オフ会向け。参加者という概念は持たない）
 		locationVisibility: text("location_visibility", {
 			enum: ["public", "attendees"],
 		})
@@ -131,7 +129,6 @@ export const events = sqliteTable(
 		url: text("url"),
 		feeText: text("fee_text"),
 		coverKey: text("cover_key"),
-		ogpKey: text("ogp_key"),
 		seriesId: text("series_id").references(() => eventSeries.id, {
 			onDelete: "set null",
 		}),
@@ -173,78 +170,6 @@ export const eventHosts = sqliteTable(
 		primaryKey({ columns: [t.eventId, t.actorId] }),
 		index("event_hosts_actor_idx").on(t.actorId),
 	],
-);
-
-// フォロー。マイ予定の元になる。
-export const follows = sqliteTable(
-	"follows",
-	{
-		userId: text("user_id")
-			.notNull()
-			.references(() => user.id, { onDelete: "cascade" }),
-		actorId: text("actor_id")
-			.notNull()
-			.references(() => actors.id, { onDelete: "cascade" }),
-		createdAt: timestamp("created_at").notNull().$defaultFn(now),
-	},
-	(t) => [
-		primaryKey({ columns: [t.userId, t.actorId] }),
-		index("follows_actor_idx").on(t.actorId),
-	],
-);
-
-// 個人 iCal 用トークン。/me/calendar/{token}.ics
-export const calendarTokens = sqliteTable("calendar_tokens", {
-	token: text("token")
-		.primaryKey()
-		.$defaultFn(() => shortId(24)),
-	userId: text("user_id")
-		.notNull()
-		.unique()
-		.references(() => user.id, { onDelete: "cascade" }),
-	createdAt: timestamp("created_at").notNull().$defaultFn(now),
-});
-
-// 出店プラン。段階2 の「枠」の親概念（何がどう借りられるか）。
-export const spacePlans = sqliteTable(
-	"space_plans",
-	{
-		id: text("id").primaryKey().$defaultFn(shortId),
-		actorId: text("actor_id")
-			.notNull()
-			.references(() => actors.id, { onDelete: "cascade" }),
-		name: text("name").notNull(),
-		// spot: 時間帯で / weekly: 曜日固定 / exclusive: 貸し切り
-		kind: text("kind", { enum: ["spot", "weekly", "exclusive", "other"] })
-			.notNull()
-			.default("other"),
-		priceText: text("price_text"),
-		description: text("description"),
-		sortOrder: integer("sort_order").notNull().default(0),
-	},
-	(t) => [index("space_plans_actor_idx").on(t.actorId, t.sortOrder)],
-);
-
-// お知らせ。Actor が出す投稿。会に紐づけられる。将来の ActivityPub Note。
-export const posts = sqliteTable(
-	"posts",
-	{
-		id: text("id").primaryKey().$defaultFn(shortId),
-		actorId: text("actor_id")
-			.notNull()
-			.references(() => actors.id, { onDelete: "cascade" }),
-		title: text("title").notNull(),
-		body: text("body"),
-		eventId: text("event_id").references(() => events.id, {
-			onDelete: "set null",
-		}),
-		status: text("status", { enum: ["draft", "published"] })
-			.notNull()
-			.default("published"),
-		publishedAt: timestamp("published_at").notNull().$defaultFn(now),
-		createdAt: timestamp("created_at").notNull().$defaultFn(now),
-	},
-	(t) => [index("posts_actor_idx").on(t.actorId, t.status, t.publishedAt)],
 );
 
 // 運営への連絡（掲載の取り下げ、ページの引き取りなど）。ログイン不要で送れる。

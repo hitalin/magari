@@ -3,22 +3,13 @@ import { error, fail, redirect } from "@sveltejs/kit";
 import { shortId } from "#lib/id.ts";
 import { requireActor } from "#lib/server/me.ts";
 import {
-	createPlan,
-	createPost,
-	deletePlan,
-	deletePost,
 	getManagedActor,
 	listMembers,
-	listPlans,
-	listPosts,
 	removeMember,
 	setHeaderKey,
 	updateActorPage,
-	updatePlan,
 } from "#lib/server/spaces.ts";
 import {
-	parsePlanForm,
-	parsePostForm,
 	parseSpaceForm,
 	readSpaceForm,
 	type SpaceFormValues,
@@ -37,11 +28,8 @@ const str = (form: FormData, k: string) => String(form.get(k) ?? "");
 
 export const load: PageServerLoad = async ({ locals, params }) => {
 	const actor = await managed(locals, params.handle);
-	const [plans, posts, members] = await Promise.all([
-		actor.kind === "space" ? listPlans(locals.db, actor.id) : [],
-		listPosts(locals.db, actor.id, 50),
-		actor.kind === "person" ? [] : listMembers(locals.db, actor.id),
-	]);
+	const members =
+		actor.kind === "person" ? [] : await listMembers(locals.db, actor.id);
 	const values: SpaceFormValues = {
 		name: actor.name,
 		catch: actor.catch ?? "",
@@ -66,8 +54,6 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 		// 運営が非表示にしている（公開のページは出ていない）
 		hidden: actor.hiddenAt !== null,
 		values,
-		plans,
-		posts,
 		members,
 		myUserId: locals.session?.user.id ?? null,
 	};
@@ -130,45 +116,5 @@ export const actions: Actions = {
 			await env.MEDIA.delete(actor.headerKey);
 		}
 		return { section: "header", ok: true };
-	},
-	savePlan: async ({ request, locals, params }) => {
-		const actor = await managed(locals, params.handle);
-		if (actor.kind !== "space") error(400, "プランは場だけ");
-		const form = await request.formData();
-		const parsed = parsePlanForm({
-			name: str(form, "name"),
-			kind: str(form, "kind"),
-			priceText: str(form, "priceText"),
-			description: str(form, "description"),
-		});
-		const id = str(form, "id");
-		if (!parsed.ok)
-			return fail(400, { section: "plan", planId: id, error: parsed.error });
-		if (id) await updatePlan(locals.db, actor.id, id, parsed.values);
-		else await createPlan(locals.db, actor.id, parsed.values);
-		return { section: "plan", ok: true };
-	},
-	deletePlan: async ({ request, locals, params }) => {
-		const actor = await managed(locals, params.handle);
-		const form = await request.formData();
-		await deletePlan(locals.db, actor.id, str(form, "id"));
-		return { section: "plan", ok: true };
-	},
-	addPost: async ({ request, locals, params }) => {
-		const actor = await managed(locals, params.handle);
-		const form = await request.formData();
-		const parsed = parsePostForm({
-			title: str(form, "title"),
-			body: str(form, "body"),
-		});
-		if (!parsed.ok) return fail(400, { section: "post", error: parsed.error });
-		await createPost(locals.db, actor.id, parsed.values);
-		return { section: "post", ok: true };
-	},
-	deletePost: async ({ request, locals, params }) => {
-		const actor = await managed(locals, params.handle);
-		const form = await request.formData();
-		await deletePost(locals.db, actor.id, str(form, "id"));
-		return { section: "post", ok: true };
 	},
 };

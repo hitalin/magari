@@ -1,22 +1,11 @@
-// 場（ハコ）・団体のページ: 作成、管理者判定、プロフィール・プラン・お知らせの読み書き。
-import { and, asc, count, desc, eq, gte, isNull } from "drizzle-orm";
+// 場（ハコ）・団体のページ: 作成、管理者判定、プロフィールの読み書き。
+import { and, asc, count, eq, gte, isNull } from "drizzle-orm";
 import { nameOnlyIfUnmanaged } from "#lib/actor.ts";
 import { compareArea, detectArea } from "#lib/area.ts";
-import type { ParsedPlan, ParsedSpace } from "#lib/space-form.ts";
-import {
-	mediaUrl,
-	type Post,
-	type SpacePlan,
-	type SpaceSummary,
-} from "#lib/types.ts";
+import type { ParsedSpace } from "#lib/space-form.ts";
+import { mediaUrl, type SpaceSummary } from "#lib/types.ts";
 import type { Db } from "./db/index.ts";
-import {
-	actorMembers,
-	actors,
-	events,
-	posts,
-	spacePlans,
-} from "./db/schema.ts";
+import { actorMembers, actors, events } from "./db/schema.ts";
 import { isBlockedHandle } from "./moderation.ts";
 
 export type ManagedActor = typeof actors.$inferSelect;
@@ -26,39 +15,6 @@ export type ManagedRef = {
 	name: string;
 	kind: ManagedActor["kind"];
 };
-
-export async function listPlans(db: Db, actorId: string): Promise<SpacePlan[]> {
-	return db
-		.select({
-			id: spacePlans.id,
-			name: spacePlans.name,
-			kind: spacePlans.kind,
-			priceText: spacePlans.priceText,
-			description: spacePlans.description,
-		})
-		.from(spacePlans)
-		.where(eq(spacePlans.actorId, actorId))
-		.orderBy(asc(spacePlans.sortOrder), asc(spacePlans.id));
-}
-
-export async function listPosts(
-	db: Db,
-	actorId: string,
-	limit = 20,
-): Promise<Post[]> {
-	const rows = await db
-		.select({
-			id: posts.id,
-			title: posts.title,
-			body: posts.body,
-			publishedAt: posts.publishedAt,
-		})
-		.from(posts)
-		.where(and(eq(posts.actorId, actorId), eq(posts.status, "published")))
-		.orderBy(desc(posts.publishedAt))
-		.limit(limit);
-	return rows.map((r) => ({ ...r, publishedAt: r.publishedAt.toISOString() }));
-}
 
 // ハコ一覧。エリア順（region の都道府県）、同じエリアでは今から先の間が多い順。
 // showSamples: 開発環境で、取り込んだ見本のハコを写真つきで出す（nameOnlyIfUnmanaged）
@@ -208,57 +164,6 @@ export async function setHeaderKey(
 		.update(actors)
 		.set({ headerKey, updatedAt: new Date() })
 		.where(eq(actors.id, actorId));
-}
-
-export async function createPlan(
-	db: Db,
-	actorId: string,
-	values: ParsedPlan,
-): Promise<void> {
-	const existing = await listPlans(db, actorId);
-	await db
-		.insert(spacePlans)
-		.values({ ...values, actorId, sortOrder: existing.length });
-}
-
-export async function updatePlan(
-	db: Db,
-	actorId: string,
-	id: string,
-	values: ParsedPlan,
-) {
-	await db
-		.update(spacePlans)
-		.set(values)
-		.where(and(eq(spacePlans.id, id), eq(spacePlans.actorId, actorId)));
-}
-
-export async function deletePlan(
-	db: Db,
-	actorId: string,
-	id: string,
-): Promise<void> {
-	await db
-		.delete(spacePlans)
-		.where(and(eq(spacePlans.id, id), eq(spacePlans.actorId, actorId)));
-}
-
-export async function createPost(
-	db: Db,
-	actorId: string,
-	values: { title: string; body: string | null },
-): Promise<void> {
-	await db.insert(posts).values({ ...values, actorId });
-}
-
-export async function deletePost(
-	db: Db,
-	actorId: string,
-	id: string,
-): Promise<void> {
-	await db
-		.delete(posts)
-		.where(and(eq(posts.id, id), eq(posts.actorId, actorId)));
 }
 
 // 会をハコに紐づけるときの解決。handle が空なら null、場でなければ error

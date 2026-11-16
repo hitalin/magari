@@ -94,7 +94,7 @@ const cardDescription = $derived(
 				{/if}
 				{#if event.locationVisibility === 'attendees'}
 					<dt>場所</dt>
-					<dd>{event.locationName ?? ''}<span class="ml-2 text-sm text-muted">詳しい場所は参加者にお知らせします</span></dd>
+					<dd>{event.locationName ?? ''}<span class="ml-2 text-sm text-muted">詳しい場所は主催に聞いてください</span></dd>
 				{:else if event.locationName || event.locationAddress}
 					<dt>場所</dt>
 					<dd>{event.locationName}{#if event.locationAddress}<span class="ml-2 text-sm text-muted">{event.locationAddress}</span>{/if}</dd>

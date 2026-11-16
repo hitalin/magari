@@ -3,8 +3,6 @@ import {
 	EMPTY_SPACE_FORM,
 	parseLinks,
 	parseNewActorForm,
-	parsePlanForm,
-	parsePostForm,
 	parseSpaceForm,
 	readSpaceForm,
 } from "./space-form";
@@ -48,37 +46,6 @@ describe("parseSpaceForm", () => {
 	});
 	it("readSpaceForm は無い項目を空文字にする", () => {
 		expect(readSpaceForm(() => null)).toEqual(EMPTY_SPACE_FORM);
-	});
-});
-
-describe("parsePlanForm", () => {
-	it("名前が必須、種類は既知のものだけ", () => {
-		const r = parsePlanForm({
-			name: "間借りパートナー",
-			kind: "spot",
-			priceText: "昼 3,000円",
-			description: "",
-		});
-		expect(r.ok && r.values.kind).toBe("spot");
-		expect(r.ok && r.values.description).toBeNull();
-		expect(
-			parsePlanForm({ name: "", kind: "spot", priceText: "", description: "" })
-				.ok,
-		).toBe(false);
-		const bad = parsePlanForm({
-			name: "x",
-			kind: "nope",
-			priceText: "",
-			description: "",
-		});
-		expect(bad.ok && bad.values.kind).toBe("other");
-	});
-});
-
-describe("parsePostForm", () => {
-	it("題が必須", () => {
-		expect(parsePostForm({ title: "オープン", body: "" }).ok).toBe(true);
-		expect(parsePostForm({ title: "", body: "x" }).ok).toBe(false);
 	});
 });
 
