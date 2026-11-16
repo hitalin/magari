@@ -16,6 +16,16 @@ describe("flyerStyle", () => {
 	});
 });
 
+describe("flyerStyle の色", () => {
+	it("紙・墨・差し色の 3 色が決まり、互いに違う", () => {
+		for (let i = 0; i < 60; i++) {
+			const { paper, ink, spot } = flyerStyle(`ev${i}x`);
+			for (const c of [paper, ink, spot]) expect(c).toMatch(/^#[0-9a-f]{6}$/);
+			expect(new Set([paper, ink, spot]).size).toBe(3);
+		}
+	});
+});
+
 describe("flyerTitleSize", () => {
 	it("題が長いほど小さくする", () => {
 		expect(flyerTitleSize("朝カフェ")).toBe("xl");
