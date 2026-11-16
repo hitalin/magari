@@ -36,6 +36,7 @@ async function addPasskey() {
 			<input name="name" value={form?.name ?? data.suggestedName} required maxlength="50" class="input" />
 		</Field>
 		<button type="submit" class="btn btn-primary">これで始める</button>
+		<p class="text-xs text-dim">始めると、<a href="/terms" class="underline underline-offset-2 hover:text-accent-ink">利用規約</a>と<a href="/privacy" class="underline underline-offset-2 hover:text-accent-ink">プライバシーポリシー</a>に同意したことになります。</p>
 	</form>
 
 	<div class="panel mt-6 p-6">

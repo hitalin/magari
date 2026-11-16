@@ -115,6 +115,7 @@ const place = $derived(v.locationName || (v.space ? `@${v.space}` : null));
 		<button type="submit" name="status" value="published" class="btn btn-primary">{submitLabel}</button>
 		<button type="submit" name="status" value="draft" class="btn">下書きで保存</button>
 	</div>
+	<p class="text-xs text-dim">載せる内容（題・説明・画像）は、自分に権利があるか、載せてよいものだけにしてください。<a href="/terms" class="underline underline-offset-2 hover:text-accent-ink">利用規約</a></p>
 {/snippet}
 
 {#if flyerId}

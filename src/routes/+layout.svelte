@@ -79,6 +79,9 @@ const isActive = (href: string) => page.url.pathname.startsWith(href);
 		<p>© {year} まがり</p>
 		<nav aria-label="フッター" class="flex flex-wrap gap-x-5 gap-y-1">
 			<a href="/wall" class="hover:text-text">フライヤーの壁</a>
+			<a href="/terms" class="hover:text-text">利用規約</a>
+			<a href="/privacy" class="hover:text-text">プライバシー</a>
+			<a href="/policy" class="hover:text-text">掲載と削除の方針</a>
 			<a href="/contact" class="hover:text-text">掲載の取り下げ・連絡</a>
 			<a href={REPO} class="hover:text-text" rel="noopener">GitHub（MIT）</a>
 		</nav>

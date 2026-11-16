@@ -722,6 +722,54 @@ h4 {
 		}
 	}
 
+	/* 規約などの読みもの。見出しは明朝、本文は 1 段落ずつ間を空ける */
+	.doc h1 {
+		margin-top: 0.5rem;
+		font-size: 1.8rem;
+	}
+	.doc-lead {
+		margin-top: 1rem;
+		color: var(--color-muted);
+	}
+	.doc h2 {
+		margin-top: 2.5rem;
+		padding-bottom: 0.4rem;
+		border-bottom: 1px solid var(--color-line);
+		font-size: 1.15rem;
+	}
+	.doc p,
+	.doc ul,
+	.doc ol {
+		margin-top: 1rem;
+		font-size: 0.95rem;
+		line-height: 1.9;
+	}
+	.doc ul,
+	.doc ol {
+		padding-left: 1.4em;
+	}
+	.doc ul {
+		list-style: disc;
+	}
+	.doc ol {
+		list-style: decimal;
+	}
+	.doc li + li {
+		margin-top: 0.4rem;
+	}
+	.doc a {
+		color: var(--color-accent-ink);
+		text-decoration: underline;
+		text-underline-offset: 2px;
+	}
+	.doc p.doc-foot {
+		margin-top: 3rem;
+		padding-top: 1rem;
+		border-top: 1px solid var(--color-line);
+		font-size: 0.8rem;
+		color: var(--color-dim);
+	}
+
 	/* ページ遷移中の細い線。テープの色 */
 	.progress {
 		position: fixed;
