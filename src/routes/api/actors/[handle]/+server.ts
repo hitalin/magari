@@ -7,11 +7,11 @@ import type { ActorPage } from "#lib/types.ts";
 import type { RequestHandler } from "./$types";
 
 export const GET: RequestHandler = async ({ locals, params }) => {
-	// 取り込みを有効にした環境（開発）では、見本のハコを写真つきで返す。本番には IMPORT_ENABLED が無い
+	// 見本を出す環境（開発）では、取り込んだハコを写真つきで返す。本番には IMPORT_SAMPLES を置かない
 	const actor = await getActorByHandle(
 		locals.db,
 		params.handle,
-		env.IMPORT_ENABLED === "1",
+		env.IMPORT_SAMPLES === "1",
 	);
 	if (!actor) error(404, "見つかりません");
 	// 今月のカレンダーも描くので、今月グリッドの先頭から先を返す

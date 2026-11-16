@@ -111,6 +111,20 @@ export function storeHoursFor(
 	return { start, end };
 }
 
+// 説明文は頭の短い抜粋だけを載せる（全文は元の告知で読んでもらう）。リンクだけの説明は載せない。
+const EXCERPT_LENGTH = 120;
+export function excerpt(description: string | null): string | null {
+	if (!description || /^<a href/.test(description)) return null;
+	const text = description
+		.replace(/<[^>]+>/g, "")
+		.replace(/\s+/g, " ")
+		.trim();
+	if (!text) return null;
+	return text.length > EXCERPT_LENGTH
+		? `${text.slice(0, EXCERPT_LENGTH)}…`
+		: text;
+}
+
 // 説明文の <a href="..."> から告知ページの URL を取り出す。Google のリダイレクトは剥がす。
 export function unwrapUrl(description: string | null): string | null {
 	if (!description) return null;

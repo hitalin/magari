@@ -9,6 +9,7 @@ import { setHeaderKey } from "../spaces.ts";
 import { fetchFreecalend, freecalendMemNo } from "./freecalend";
 import { type IcsCalendar, parseIcs } from "./ics";
 import {
+	excerpt,
 	expandOccurrences,
 	parseEdenTitle,
 	storeHoursFor,
@@ -46,20 +47,23 @@ async function fetchCalendar(
 	return parseIcs(await res.text());
 }
 
-// 取り込みは開発専用（IMPORT_ENABLED）。見本として、紹介文と画像（公式ページの写真、X のアイコン）も写す。
-// 画面に出るのは開発環境だけ（nameOnlyIfUnmanaged）
+// 取り込み元のページは名前・公式へのリンク・エリアだけ。紹介文と画像（公式ページの写真、X のアイコン）は
+// 見本を出す環境（IMPORT_SAMPLES=1。開発だけ）でしか写さない
+const withSamples = () => env.IMPORT_SAMPLES === "1";
+
 async function upsertActor(
 	db: Db,
 	src: Source,
 ): Promise<{ id: string; headerKey: string | null; avatarUrl: string | null }> {
 	const a = src.actor;
+	const summary = withSamples() ? { summary: a.summary } : {};
 	const [row] = await db
 		.insert(actors)
 		.values({
 			handle: a.handle,
 			kind: a.kind,
 			name: a.name,
-			summary: a.summary,
+			...summary,
 			url: a.url ?? null,
 			xHandle: a.xHandle ?? null,
 			region: src.area ?? null,
@@ -68,7 +72,7 @@ async function upsertActor(
 			target: actors.handle,
 			set: {
 				name: a.name,
-				summary: a.summary,
+				...summary,
 				url: a.url ?? null,
 				xHandle: a.xHandle ?? null,
 				region: src.area ?? null,
@@ -198,10 +202,7 @@ async function importCalendar(
 			rows.push({
 				id,
 				title: title.slice(0, 200),
-				description:
-					ev.description && !/^<a href/.test(ev.description)
-						? ev.description.replace(/<[^>]+>/g, "").slice(0, 4000)
-						: null,
+				description: excerpt(ev.description),
 				startsAt: start,
 				endsAt: end,
 				allDay,
@@ -210,7 +211,8 @@ async function importCalendar(
 				spaceActorId: src.role === "space" ? actorId : null,
 				area,
 				locationName: ev.location?.slice(0, 200) ?? null,
-				url: unwrapUrl(ev.description),
+				// 告知ページが無い会は、取り込み元の公式ページを出典にする
+				url: unwrapUrl(ev.description) ?? src.actor.url ?? null,
 				source: sourceKey,
 				sourceUid: ev.uid,
 				updatedAt: now,
@@ -298,9 +300,10 @@ export async function runImports(
 		const actor = await upsertActor(db, src);
 		const actorId = actor.id;
 		// 画像が取れなくても会の取り込みは続ける
-		await syncImages(db, src, actor).catch((e) =>
-			console.error(`images ${src.id}: ${e}`),
-		);
+		if (withSamples())
+			await syncImages(db, src, actor).catch((e) =>
+				console.error(`images ${src.id}: ${e}`),
+			);
 		for (const cal of src.calendars) {
 			try {
 				results.push(await importCalendar(db, src, cal, actorId, from, to));

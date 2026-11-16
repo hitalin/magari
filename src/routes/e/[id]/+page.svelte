@@ -121,7 +121,7 @@ const cardDescription = $derived(
 			{/if}
 			<!-- まがりは載せる場所で、内容を確かめてはいない。行く前の確認先を必ず出す -->
 			<p class="mt-8 text-xs leading-relaxed text-dim">
-				載せた人が書いた内容です。日時や場所は変わることがあるので、行く前に{#if event.url}<a href={event.url} class="underline underline-offset-2 hover:text-accent-ink" rel="noopener">主催の告知</a>{:else}主催の告知{/if}で確かめてください。
+				{#if event.source}{event.space?.name ?? event.hosts[0]?.name ?? '主催'}が公開している予定表から、まがりが写した情報です（ご本人が載せたものではありません）。{:else}載せた人が書いた内容です。{/if}日時や場所は変わることがあるので、行く前に{#if event.url}<a href={event.url} class="underline underline-offset-2 hover:text-accent-ink" rel="noopener">主催の告知</a>{:else}主催の告知{/if}で確かめてください。
 				この掲載に問題があれば<a href="/contact?kind=takedown&about=/e/{event.id}" class="underline underline-offset-2 hover:text-accent-ink">運営に連絡</a>できます。
 			</p>
 			<div class="mt-4 flex flex-wrap gap-3">

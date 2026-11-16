@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { IcsEvent } from "./ics";
 import {
+	excerpt,
 	expandOccurrences,
 	parseEdenTitle,
 	storeHoursFor,
@@ -132,6 +133,23 @@ describe("unwrapUrl", () => {
 			),
 		).toBe("https://www.tekutekukai.org/");
 		expect(unwrapUrl("ただの文")).toBeNull();
+	});
+});
+
+describe("excerpt", () => {
+	it("タグを落とし、短ければそのまま返す", () => {
+		expect(excerpt("<b>初心者</b>歓迎\n\n持ち込み可")).toBe(
+			"初心者歓迎 持ち込み可",
+		);
+	});
+	it("長い説明は頭の 120 字で切って … を付ける", () => {
+		const out = excerpt("あ".repeat(300));
+		expect(out).toBe(`${"あ".repeat(120)}…`);
+	});
+	it("リンクだけ・空の説明は載せない", () => {
+		expect(excerpt('<a href="https://example.com/">概要</a>')).toBeNull();
+		expect(excerpt("  ")).toBeNull();
+		expect(excerpt(null)).toBeNull();
 	});
 });
 

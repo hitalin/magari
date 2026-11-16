@@ -5,6 +5,8 @@ X_CLIENT_ID=
 X_CLIENT_SECRET=
 # 外部カレンダーの取り込み（開発用のサンプルデータ）。1 のときだけ POST /api/admin/import が動く。本番には置かない
 IMPORT_ENABLED=1
+# 取り込んだハコを、見本として紹介文と画像つきで出す（見た目の確認用）。本番には置かない
+IMPORT_SAMPLES=1
 # 取り込みを手で走らせるときのトークン
 IMPORT_TOKEN=
 # 運営への連絡（/contact）が届いたら知らせる Webhook（Discord / Slack など）。無ければ知らせない
