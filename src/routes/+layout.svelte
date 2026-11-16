@@ -73,30 +73,14 @@ const isActive = (href: string) => page.url.pathname.startsWith(href);
 	{@render children()}
 </main>
 
+<!-- ナビと同じものは繰り返さない。ここにしか無い入口（壁、運営への連絡、ソース）だけを 1 行で -->
 <footer class="border-t border-line">
-	<div class="mx-auto grid max-w-content gap-8 px-4 py-10 text-sm text-muted sm:grid-cols-[1fr_auto_auto] sm:gap-12">
-		<div>
-			<a href="/" class="inline-flex items-center gap-2 font-serif text-lg font-bold text-text"><img src={logo} alt="" class="h-6 w-6" />まがり</a>
-			<p class="mt-2 max-w-[28em]">今日もどこかで誰かが開けている。行ってもいいし、自分が開けてもいい。間借り店舗・日替わり店長・ライブ・自助会・オフ会を一箇所に。</p>
-		</div>
-		<nav aria-label="フッター" class="grid gap-1.5">
-			<p class="label mb-1">見る</p>
-			<a href="/home" class="hover:text-accent-ink">イベント</a>
-			<a href="/calendar" class="hover:text-accent-ink">カレンダー</a>
-			<a href="/spaces" class="hover:text-accent-ink">ハコ</a>
-			<a href="/wall" class="hover:text-accent-ink">フライヤー</a>
-		</nav>
-		<nav aria-label="開ける人" class="grid gap-1.5">
-			<p class="label mb-1">まがりする</p>
-			{#if data.loggedIn}
-				<a href="/new" class="hover:text-accent-ink">間を開く</a>
-				<a href="/me" class="hover:text-accent-ink">自分のページ</a>
-			{:else}
-				<a href="/login" class="hover:text-accent-ink">ログイン</a>
-			{/if}
-			<a href="/contact" class="hover:text-accent-ink">掲載の取り下げ・連絡</a>
-			<a href={REPO} class="hover:text-accent-ink" rel="noopener">GitHub ›</a>
+	<div class="mx-auto flex max-w-content flex-wrap items-center justify-between gap-x-6 gap-y-2 px-4 py-6 text-xs text-dim">
+		<p>© {year} まがり</p>
+		<nav aria-label="フッター" class="flex flex-wrap gap-x-5 gap-y-1">
+			<a href="/wall" class="hover:text-text">フライヤーの壁</a>
+			<a href="/contact" class="hover:text-text">掲載の取り下げ・連絡</a>
+			<a href={REPO} class="hover:text-text" rel="noopener">GitHub（MIT）</a>
 		</nav>
 	</div>
-	<p class="mx-auto max-w-content px-4 pb-8 text-xs text-dim">© {year} まがり · オープンソース（MIT）</p>
 </footer>
