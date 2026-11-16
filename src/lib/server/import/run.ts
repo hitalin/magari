@@ -165,7 +165,6 @@ async function importCalendar(
 			let start = occ.start;
 			let end = occ.end;
 			let allDay = ev.allDay;
-			const tags = [...src.tags];
 			if (src.id.startsWith("eden")) {
 				const t = parseEdenTitle(ev.summary, occ.start);
 				title = t.title;
@@ -174,7 +173,6 @@ async function importCalendar(
 					end = t.end;
 					allDay = false;
 				}
-				if (/空いて(い)?ます|空き/.test(title)) tags.push("空き枠");
 			}
 			// 時刻の無い 1 日の会は店の営業時間に置く（複数日にまたがる会は終日のまま）
 			if (
@@ -189,13 +187,6 @@ async function importCalendar(
 					end = h.end;
 					allDay = false;
 				}
-			}
-			if (cal.region) tags.push(cal.region);
-			if (
-				cal.region === "オンライン" ||
-				/オンライン|zoom/i.test(ev.location ?? "")
-			) {
-				if (!tags.includes("オンライン")) tags.push("オンライン");
 			}
 			// 場のエリア > 会場文字列の都道府県 > カレンダーの地域（近畿など、粗い単位）
 			const area =
@@ -220,7 +211,6 @@ async function importCalendar(
 				area,
 				locationName: ev.location?.slice(0, 200) ?? null,
 				url: unwrapUrl(ev.description),
-				tags,
 				source: sourceKey,
 				sourceUid: ev.uid,
 				updatedAt: now,
@@ -250,7 +240,6 @@ async function importCalendar(
 						area: r.area,
 						locationName: r.locationName,
 						url: r.url,
-						tags: r.tags,
 						updatedAt: now,
 					},
 				}),

@@ -109,8 +109,8 @@ export const events = sqliteTable(
 		status: text("status", { enum: ["draft", "published", "cancelled"] })
 			.notNull()
 			.default("draft"),
-		// public: 一覧に出る / unlisted: URL を知る人だけ / private: 主催と参加者だけ
-		visibility: text("visibility", { enum: ["public", "unlisted", "private"] })
+		// public: 一覧に出る / unlisted: URL を知る人だけ
+		visibility: text("visibility", { enum: ["public", "unlisted"] })
 			.notNull()
 			.default("public"),
 		spaceActorId: text("space_actor_id").references(() => actors.id, {
@@ -129,13 +129,7 @@ export const events = sqliteTable(
 		onlineUrl: text("online_url"),
 		// 外部の告知ページ（こくちーず、X のポストなど）
 		url: text("url"),
-		capacity: integer("capacity"),
 		feeText: text("fee_text"),
-		// 自由タグの JSON 配列。例: ["間借り","自助会","オフ会"]
-		tags: text("tags", { mode: "json" })
-			.$type<string[]>()
-			.notNull()
-			.default([]),
 		coverKey: text("cover_key"),
 		ogpKey: text("ogp_key"),
 		seriesId: text("series_id").references(() => eventSeries.id, {

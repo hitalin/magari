@@ -34,13 +34,6 @@ describe("parseEventForm", () => {
 			"2026-11-08T15:00:00.000Z",
 		);
 	});
-	it("タグはカンマ・読点・空白で分け、# と重複を除く", () => {
-		const r = parseEventForm({
-			...base,
-			tags: "#間借り, オフ会、オフ会 自助会",
-		});
-		expect(r.ok && r.event.tags).toEqual(["間借り", "オフ会", "自助会"]);
-	});
 	it("ハコは @ を外して小文字にし、形が変ならエラー", () => {
 		const r = parseEventForm({ ...base, space: "@Curry_Shop" });
 		expect(r.ok && r.event.spaceHandle).toBe("curry_shop");
@@ -68,6 +61,12 @@ describe("readEventForm", () => {
 		expect(v.allDay).toBe(true);
 		expect(v.visibility).toBe("public");
 		expect(v.status).toBe("draft");
+	});
+	it("公開範囲は公開か URL 限定だけ（「自分だけ」は下書きで足りる）", () => {
+		const read = (visibility: string) =>
+			readEventForm((k) => (k === "visibility" ? visibility : null)).visibility;
+		expect(read("unlisted")).toBe("unlisted");
+		expect(read("private")).toBe("public");
 	});
 });
 

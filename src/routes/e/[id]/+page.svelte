@@ -64,8 +64,6 @@ const cardDescription = $derived(
 		<p class="mt-4 rounded-sm bg-accent-soft px-4 py-2 text-sm text-accent-ink">この間は中止になりました。</p>
 	{:else if event.status === 'draft'}
 		<p class="mt-4 rounded-sm bg-accent-soft px-4 py-2 text-sm text-accent-ink">下書きです。あなたにだけ見えています。<a href="/e/{event.id}/edit" class="ml-2 underline">編集 ›</a></p>
-	{:else if event.visibility === 'private'}
-		<p class="mt-4 rounded-sm bg-accent-soft px-4 py-2 text-sm text-accent-ink">自分だけに見える間です。</p>
 	{/if}
 
 	<!-- 左にフライヤー（上げた画像が無ければ自動のビラ）、右に会の情報 -->
@@ -82,13 +80,6 @@ const cardDescription = $derived(
 		<div class="min-w-0">
 			<p class="font-serif text-lg text-muted">{formatWhen(event)}</p>
 			<h1 class="mt-2 text-[clamp(1.7rem,3.5vw,2.4rem)]">{event.title}</h1>
-			{#if event.tags.length}
-				<div class="mt-4 flex flex-wrap gap-1.5">
-					{#each event.tags as tag (tag)}
-						<span class="chip chip-plain">{tag}</span>
-					{/each}
-				</div>
-			{/if}
 			{#if canEdit}
 				<a href="/e/{event.id}/edit" class="btn mt-5 px-4 py-1.5 text-sm">この間を編集</a>
 			{/if}
@@ -119,10 +110,6 @@ const cardDescription = $derived(
 				{#if event.feeText}
 					<dt>料金</dt>
 					<dd>{event.feeText}</dd>
-				{/if}
-				{#if event.capacity}
-					<dt>定員</dt>
-					<dd>{event.capacity}人</dd>
 				{/if}
 			</dl>
 			{#if event.description}

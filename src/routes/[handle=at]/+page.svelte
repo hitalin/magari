@@ -5,7 +5,6 @@ import DayList from "#lib/components/DayList.svelte";
 import Empty from "#lib/components/Empty.svelte";
 import MonthGrid from "#lib/components/MonthGrid.svelte";
 import { formatDay } from "#lib/date.ts";
-import { filterTags } from "#lib/group.ts";
 import { PLAN_KIND_LABEL } from "#lib/space-form.ts";
 import { KIND_LABEL } from "#lib/types.ts";
 import { page } from "$app/state";
@@ -13,22 +12,9 @@ import type { PageProps } from "./$types";
 
 let { data }: PageProps = $props();
 const actor = $derived(data.actor);
-const tags = $derived(filterTags(data.events));
-// 選んだタグのどれかを持つ間を出す（複数は OR）
-let activeTags = $state<string[]>([]);
-const filtered = $derived(
-	activeTags.length
-		? data.events.filter((e) => e.tags.some((t) => activeTags.includes(t)))
-		: data.events,
-);
-function toggleTag(tag: string) {
-	activeTags = activeTags.includes(tag)
-		? activeTags.filter((t) => t !== tag)
-		: [...activeTags, tag];
-}
 const upcoming = $derived.by(() => {
 	const now = Date.now();
-	return filtered.filter(
+	return data.events.filter(
 		(e) => new Date(e.startsAt).getTime() >= now - 86_400_000,
 	);
 });
@@ -177,25 +163,13 @@ const description = $derived(actor.catch ?? actor.summary ?? undefined);
 {/if}
 
 <section id="events" class="mb-12 scroll-mt-20">
-	<MonthGrid year={data.calendar.year} month={data.calendar.month} grid={data.calendar.grid} events={filtered} compact />
+	<MonthGrid year={data.calendar.year} month={data.calendar.month} grid={data.calendar.grid} events={data.events} compact />
 </section>
 
 <div class="section-head">
 	<h2 class="section-title">これからの間</h2>
 	<span class="chip">{upcoming.length} 間</span>
 </div>
-
-{#if tags.length}
-	<div class="pills mb-6" role="group" aria-label="タグで絞る">
-		<button type="button" class="chip {activeTags.length === 0 ? 'chip-tape' : 'chip-plain'}" aria-pressed={activeTags.length === 0} onclick={() => (activeTags = [])}>すべて</button>
-		{#each tags as t (t.tag)}
-			{@const on = activeTags.includes(t.tag)}
-			<button type="button" class="chip {on ? 'chip-tape' : 'chip-plain'}" aria-pressed={on} onclick={() => toggleTag(t.tag)}>
-				{t.tag} <span class="ml-1 opacity-70">{t.count}</span>
-			</button>
-		{/each}
-	</div>
-{/if}
 
 {#if upcoming.length === 0}
 	<Empty title="これからの間はまだありません。" hint="くねくねし始めたらここに出ます。" />

@@ -13,11 +13,9 @@ export type EventFormValues = {
 	locationVisibility: "public" | "attendees";
 	onlineUrl: string;
 	description: string;
-	tags: string; // カンマ・読点区切り
-	capacity: string;
 	feeText: string;
 	url: string;
-	visibility: "public" | "unlisted" | "private";
+	visibility: "public" | "unlisted";
 	status: "published" | "draft";
 };
 
@@ -33,8 +31,6 @@ export const EMPTY_EVENT_FORM: EventFormValues = {
 	locationVisibility: "public",
 	onlineUrl: "",
 	description: "",
-	tags: "",
-	capacity: "",
 	feeText: "",
 	url: "",
 	visibility: "public",
@@ -53,8 +49,6 @@ export type ParsedEvent = {
 	locationVisibility: "public" | "attendees";
 	onlineUrl: string | null;
 	description: string | null;
-	tags: string[];
-	capacity: number | null;
 	feeText: string | null;
 	url: string | null;
 	visibility: EventFormValues["visibility"];
@@ -94,11 +88,9 @@ export function readEventForm(
 		),
 		onlineUrl: s("onlineUrl"),
 		description: s("description"),
-		tags: s("tags"),
-		capacity: s("capacity"),
 		feeText: s("feeText"),
 		url: s("url"),
-		visibility: pick("visibility", ["public", "unlisted", "private"], "public"),
+		visibility: pick("visibility", ["public", "unlisted"], "public"),
 		status: pick("status", ["published", "draft"], "published"),
 	};
 }
@@ -144,23 +136,8 @@ export function parseEventForm(
 	const spaceHandle = v.space.replace(/^@/, "").toLowerCase() || null;
 	if (spaceHandle && !HANDLE_PATTERN.test(spaceHandle))
 		return { ok: false, error: "ハコの ID は @ に続く小文字の英数字と _" };
-	const capacity = v.capacity ? Number(v.capacity) : null;
-	if (
-		capacity !== null &&
-		(!Number.isInteger(capacity) || capacity < 1 || capacity > 100000)
-	)
-		return { ok: false, error: "定員は 1 以上の整数で" };
 	if (v.description.length > 10000)
 		return { ok: false, error: "説明が長すぎます" };
-
-	const tags = [
-		...new Set(
-			v.tags
-				.split(/[,、\s]+/)
-				.map((t) => t.replace(/^#/, "").trim())
-				.filter(Boolean),
-		),
-	].slice(0, 10);
 
 	return {
 		ok: true,
@@ -175,8 +152,6 @@ export function parseEventForm(
 			locationVisibility: v.locationVisibility,
 			onlineUrl: nullable(v.onlineUrl),
 			description: nullable(v.description),
-			tags,
-			capacity,
 			feeText: nullable(v.feeText),
 			url: nullable(v.url),
 			visibility: v.visibility,

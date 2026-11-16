@@ -36,8 +36,6 @@ const more = $derived(
 		values.locationAddress ||
 		values.onlineUrl ||
 		values.description ||
-		values.tags ||
-		values.capacity ||
 		values.feeText ||
 		values.url
 	) ||
@@ -92,11 +90,7 @@ const place = $derived(v.locationName || (v.space ? `@${v.space}` : null));
 
 			<Field label="説明"><textarea name="description" rows="8" class="input">{values.description}</textarea></Field>
 
-			<div class="grid gap-4 sm:grid-cols-3">
-				<Field label="タグ" hint="カンマ区切り。間借り、ライブ、自助会、オフ会 など"><input name="tags" value={values.tags} class="input" /></Field>
-				<Field label="定員"><input type="number" name="capacity" value={values.capacity} min="1" class="input" /></Field>
-				<Field label="料金"><input name="feeText" value={values.feeText} class="input" placeholder="無料 / 500円 / 投げ銭" /></Field>
-			</div>
+			<Field label="料金"><input name="feeText" value={values.feeText} class="input" placeholder="無料 / 500円 / 投げ銭" /></Field>
 			<Field label="告知ページの URL" hint="X のポスト、こくちーず、自分のサイトなど"><input name="url" value={values.url} class="input" placeholder="https://" /></Field>
 
 			<div class="grid gap-4 sm:grid-cols-2">
@@ -104,7 +98,6 @@ const place = $derived(v.locationName || (v.space ? `@${v.space}` : null));
 					<select name="visibility" class="input">
 						<option value="public" selected={values.visibility === 'public'}>公開（一覧に出る）</option>
 						<option value="unlisted" selected={values.visibility === 'unlisted'}>URL を知っている人だけ</option>
-						<option value="private" selected={values.visibility === 'private'}>自分だけ</option>
 					</select>
 				</Field>
 			</div>

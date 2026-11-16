@@ -40,9 +40,7 @@ function selectEvents(db: Db) {
 			locationVisibility: events.locationVisibility,
 			createdByUserId: events.createdByUserId,
 			onlineUrl: events.onlineUrl,
-			capacity: events.capacity,
 			feeText: events.feeText,
-			tags: events.tags,
 			coverKey: events.coverKey,
 			hiddenAt: events.hiddenAt,
 			spaceHandle: actors.handle,
@@ -118,9 +116,7 @@ function toDetail(row: Row, hosts: ActorRef[]): EventDetail {
 			row.locationVisibility === "public" ? row.locationAddress : null,
 		locationVisibility: row.locationVisibility,
 		onlineUrl: row.onlineUrl,
-		capacity: row.capacity,
 		feeText: row.feeText,
-		tags: row.tags,
 		flyerUrl: mediaUrl(row.coverKey),
 		space:
 			row.spaceHandle && row.spaceName && row.spaceKind
@@ -140,7 +136,6 @@ function toSummary(detail: EventDetail): EventSummary {
 		area,
 		locationName,
 		onlineUrl,
-		tags,
 		space,
 		hosts,
 		flyerUrl,
@@ -154,7 +149,6 @@ function toSummary(detail: EventDetail): EventSummary {
 		area,
 		locationName,
 		onlineUrl,
-		tags,
 		space,
 		hosts,
 		flyerUrl,
@@ -213,8 +207,7 @@ export async function getEvent(
 	const [row] = await selectEvents(db)
 		.where(and(eq(events.id, id), notHidden(db)))
 		.limit(1);
-	if (!row || row.status === "draft" || row.visibility === "private")
-		return null;
+	if (!row || row.status === "draft") return null;
 	const hosts = await hostsByEvent(db, [row.id]);
 	return toDetail(row, hosts.get(row.id) ?? []);
 }

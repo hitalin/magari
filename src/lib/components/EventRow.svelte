@@ -31,12 +31,5 @@ const place = $derived.by(() => {
 			<span class="block font-serif text-[1.1rem] font-bold leading-snug group-hover:text-accent-ink">{event.title}</span>
 		{/if}
 		{#if place}<span class="mt-0.5 block text-sm text-muted">{place}</span>{/if}
-		{#if event.tags.length}
-			<span class="mt-1.5 flex flex-wrap gap-1">
-				{#each event.tags.slice(0, 3) as tag (tag)}
-					<span class="chip chip-plain">{tag}</span>
-				{/each}
-			</span>
-		{/if}
 	</span>
 </a>

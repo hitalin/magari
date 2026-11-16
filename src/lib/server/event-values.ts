@@ -21,8 +21,6 @@ export function toFormValues(e: {
 	locationVisibility: "public" | "attendees";
 	onlineUrl: string | null;
 	description: string | null;
-	tags: string[];
-	capacity: number | null;
 	feeText: string | null;
 	url: string | null;
 	visibility: EventFormValues["visibility"];
@@ -41,8 +39,6 @@ export function toFormValues(e: {
 		locationVisibility: e.locationVisibility,
 		onlineUrl: e.onlineUrl ?? "",
 		description: e.description ?? "",
-		tags: e.tags.join(", "),
-		capacity: e.capacity ? String(e.capacity) : "",
 		feeText: e.feeText ?? "",
 		url: e.url ?? "",
 		visibility: e.visibility,

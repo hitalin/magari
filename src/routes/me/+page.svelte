@@ -80,7 +80,7 @@ const STATUS: Record<string, string> = {
 							<a href="/e/{e.id}/edit" class="block font-serif text-[1.05rem] font-bold hover:text-accent-ink">{e.title}</a>
 							<span class="mt-1 flex flex-wrap gap-2 text-xs text-muted">
 								<span class="chip chip-plain">{STATUS[e.status]}</span>
-								{#if e.visibility !== 'public'}<span class="chip chip-plain">{e.visibility === 'unlisted' ? 'URL 限定' : '自分だけ'}</span>{/if}
+								{#if e.visibility === 'unlisted'}<span class="chip chip-plain">URL 限定</span>{/if}
 								<a href="/e/{e.id}" class="hover:text-accent-ink">見る ›</a>
 								<a href="/new?from={e.id}" class="hover:text-accent-ink">複製 ›</a>
 							</span>

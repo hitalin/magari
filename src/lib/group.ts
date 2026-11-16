@@ -35,18 +35,3 @@ export function collapseByActor(
 	}
 	return out;
 }
-
-// タグの出現数。ほぼ全件に付くタグは絞り込みに使えないので除く。
-export function filterTags(
-	events: EventSummary[],
-	max = 10,
-): { tag: string; count: number }[] {
-	const counts = new Map<string, number>();
-	for (const e of events)
-		for (const t of e.tags) counts.set(t, (counts.get(t) ?? 0) + 1);
-	return [...counts.entries()]
-		.filter(([, c]) => c >= 3 && c < events.length * 0.9)
-		.sort((a, b) => b[1] - a[1])
-		.slice(0, max)
-		.map(([tag, count]) => ({ tag, count }));
-}

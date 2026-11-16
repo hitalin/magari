@@ -17,7 +17,6 @@ export type EventSummary = {
 	area: string | null;
 	locationName: string | null;
 	onlineUrl: string | null;
-	tags: string[];
 	space: ActorRef | null;
 	hosts: ActorRef[];
 	// 主催が上げたフライヤー。無ければ自動のビラを描く
@@ -30,10 +29,9 @@ export type EventDetail = EventSummary & {
 	source: string | null;
 	locationAddress: string | null;
 	locationVisibility: "public" | "attendees";
-	capacity: number | null;
 	feeText: string | null;
 	status: "draft" | "published" | "cancelled";
-	visibility: "public" | "unlisted" | "private";
+	visibility: "public" | "unlisted";
 	// 運営が非表示にしている（主催にだけ見える）
 	hidden: boolean;
 };

@@ -24,7 +24,6 @@ export type Source = {
 	// 場の所在エリア（都道府県名）。会のエリアに使う
 	area?: string;
 	calendars: { id: string; url: string; region?: string }[];
-	tags: string[];
 	// 店の営業時間（公式の店舗ページから）。時刻の無い 1 日の会をこの時間に置く
 	storeHours?: StoreHours;
 };
@@ -56,7 +55,6 @@ export const SOURCES: Source[] = [
 				url: gcal("jjl7dmes381n9kt27u225g6lr0@group.calendar.google.com"),
 			},
 		],
-		tags: ["間借り"],
 		storeHours: { hours: ["18:00", "23:00"] },
 	},
 	{
@@ -75,7 +73,6 @@ export const SOURCES: Source[] = [
 		},
 		role: "space",
 		calendars: [{ id: "main", url: gcal("baredenkanda@gmail.com") }],
-		tags: ["間借り"],
 		storeHours: { hours: ["17:00", "23:00"] },
 	},
 	{
@@ -94,7 +91,6 @@ export const SOURCES: Source[] = [
 		},
 		role: "space",
 		calendars: [{ id: "main", url: gcal("ebe.nippori@gmail.com") }],
-		tags: ["間借り"],
 		storeHours: { hours: ["18:00", "23:00"] },
 	},
 	{
@@ -113,7 +109,6 @@ export const SOURCES: Source[] = [
 		},
 		role: "space",
 		calendars: [{ id: "main", url: gcal("eden.yokohama@gmail.com") }],
-		tags: ["間借り"],
 		storeHours: { hours: ["18:00", "23:00"] },
 	},
 	{
@@ -132,7 +127,6 @@ export const SOURCES: Source[] = [
 		},
 		role: "space",
 		calendars: [{ id: "main", url: gcal("edenstoneee@gmail.com") }],
-		tags: ["間借り"],
 		storeHours: { hours: ["18:00", "23:00"] },
 	},
 	{
@@ -158,7 +152,6 @@ export const SOURCES: Source[] = [
 				),
 			},
 		],
-		tags: ["間借り"],
 		storeHours: { hours: ["18:00", "23:00"] },
 	},
 	{
@@ -177,7 +170,6 @@ export const SOURCES: Source[] = [
 		},
 		role: "space",
 		calendars: [{ id: "main", url: gcal("baredennamba@gmail.com") }],
-		tags: ["間借り"],
 		storeHours: { hours: ["17:30", "23:00"], dayHours: ["13:00", "17:00"] },
 	},
 	{
@@ -196,7 +188,6 @@ export const SOURCES: Source[] = [
 		},
 		role: "space",
 		calendars: [{ id: "main", url: "https://freecalend.com/open/mem317765" }],
-		tags: ["間借り"],
 		storeHours: { hours: ["18:00", "23:00"] },
 	},
 	{
@@ -215,7 +206,6 @@ export const SOURCES: Source[] = [
 		},
 		role: "space",
 		calendars: [{ id: "main", url: gcal("ebe.fukuoka@gmail.com") }],
-		tags: ["間借り"],
 		storeHours: { hours: ["17:00", "23:00"] },
 	},
 ];
