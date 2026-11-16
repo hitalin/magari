@@ -7,8 +7,8 @@ let { data, form }: PageProps = $props();
 
 <svelte:head><title>まがりする | まがり</title></svelte:head>
 
-<section class="mx-auto mt-4 max-w-2xl">
+<section class="mt-4">
 	<p class="label">まがりする</p>
 	<h1 class="mt-2 mb-8 text-2xl">とりあえず開ける</h1>
-	<EventForm values={form?.values ?? data.values} error={form?.error} />
+	<EventForm values={form?.values ?? data.values} error={form?.error} flyerId={data.id} host={data.me?.name ?? null} />
 </section>

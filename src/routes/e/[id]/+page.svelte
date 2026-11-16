@@ -8,11 +8,22 @@ import type { PageProps } from "./$types";
 
 let { data }: PageProps = $props();
 const event = $derived(data.event);
-const shareUrl = $derived(xShareUrl(eventShareText(event), page.url.href));
+// ?opened を付けずに貼る
+const cleanUrl = $derived(page.url.origin + page.url.pathname);
+const shareUrl = $derived(xShareUrl(eventShareText(event), cleanUrl));
 // 主催（本人か、管理しているハコ・団体）なら編集できる。取り込んだ会は元のカレンダーが正なので編集しない
 const canEdit = $derived(
 	!event.source && event.hosts.some((h) => data.managed.includes(h.handle)),
 );
+// 開けた直後（/new からの ?opened）。あとは貼るだけ、を先頭に出す
+const opened = $derived(
+	page.url.searchParams.has("opened") && event.status === "published",
+);
+let copied = $state(false);
+async function copyLink() {
+	await navigator.clipboard.writeText(cleanUrl);
+	copied = true;
+}
 // リンクカードの説明: 日時と場所を先頭に、続けて説明文
 const cardDescription = $derived(
 	[
@@ -34,7 +45,17 @@ const cardDescription = $derived(
 </svelte:head>
 
 <article class="mt-4">
-	<p class="text-sm text-muted"><a href="/" class="hover:text-accent-ink">これからの間</a> › {formatWhen(event).split(' ')[0]}</p>
+	<p class="text-sm text-muted"><a href="/home" class="hover:text-accent-ink">これからの間</a> › {formatWhen(event).split(' ')[0]}</p>
+
+	{#if opened}
+		<div class="panel mt-4 p-5">
+			<p class="font-serif text-lg font-bold">開けました。あとは貼るだけ。</p>
+			<div class="mt-3 flex flex-wrap gap-3">
+				<a href={shareUrl} class="btn btn-primary" rel="noopener">X に貼る</a>
+				<button type="button" class="btn" onclick={copyLink}>{copied ? 'コピーしました' : 'リンクをコピー'}</button>
+			</div>
+		</div>
+	{/if}
 
 	{#if event.status === 'cancelled'}
 		<p class="mt-4 rounded-sm bg-accent-soft px-4 py-2 text-sm text-accent-ink">この間は中止になりました。</p>
@@ -61,7 +82,7 @@ const cardDescription = $derived(
 			{#if event.tags.length}
 				<div class="mt-4 flex flex-wrap gap-1.5">
 					{#each event.tags as tag (tag)}
-						<span class="chip chip-tape">{tag}</span>
+						<span class="chip chip-plain">{tag}</span>
 					{/each}
 				</div>
 			{/if}

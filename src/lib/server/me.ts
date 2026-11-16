@@ -257,11 +257,15 @@ export async function createEvent(
 	input: EventValues,
 	hostActorId: string,
 	userId: string,
-): Promise<string> {
+	// 作成画面が先に決めた ID（画面で見たビラと同じ見た目にするため）。もう使われていたら null を返す
+	id?: string,
+): Promise<string | null> {
 	const [row] = await db
 		.insert(events)
-		.values({ ...input, createdByUserId: userId })
+		.values({ ...input, createdByUserId: userId, ...(id ? { id } : {}) })
+		.onConflictDoNothing()
 		.returning({ id: events.id });
+	if (!row) return null;
 	await db
 		.insert(eventHosts)
 		.values({ eventId: row.id, actorId: hostActorId, role: "host" });

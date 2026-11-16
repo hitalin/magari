@@ -8,6 +8,11 @@ export function shortId(length = 10): string {
 	return out;
 }
 
+// 会の ID（10 文字）の形か。作成画面が先に決めた ID を受け取るときに確かめる
+export function isShortId(id: string): boolean {
+	return id.length === 10 && [...id].every((c) => ALPHABET.includes(c));
+}
+
 export const HANDLE_PATTERN = /^[a-z0-9_]{3,20}$/;
 
 // 予約語。ルーティングや将来の AP エンドポイントと衝突する名前を弾く。

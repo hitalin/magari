@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isValidHandle, parseHandleInput, shortId } from "./id";
+import { isShortId, isValidHandle, parseHandleInput, shortId } from "./id";
 
 describe("shortId", () => {
 	it("既定で 10 文字、許可した文字だけを使う", () => {
@@ -10,6 +10,18 @@ describe("shortId", () => {
 
 	it("呼ぶたびに異なる", () => {
 		expect(shortId()).not.toBe(shortId());
+	});
+});
+
+describe("isShortId", () => {
+	it("shortId が作った 10 文字の ID を通す", () => {
+		expect(isShortId(shortId())).toBe(true);
+	});
+	it("長さや文字が違えば通さない", () => {
+		expect(isShortId("")).toBe(false);
+		expect(isShortId("abc")).toBe(false);
+		expect(isShortId("0000000000")).toBe(false);
+		expect(isShortId(`${shortId()}a`)).toBe(false);
 	});
 });
 
