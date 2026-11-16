@@ -15,6 +15,12 @@ describe("nameOnlyIfUnmanaged", () => {
 			hasManager: true,
 		});
 	});
+	it("見本を出す環境（開発）では、管理者がいなくてもそのまま返す", () => {
+		expect(nameOnlyIfUnmanaged({ ...a, hasManager: false }, true)).toEqual({
+			...a,
+			hasManager: false,
+		});
+	});
 	it("管理者がいなければ画像と紹介文を落とし、名前とリンクは残す", () => {
 		expect(nameOnlyIfUnmanaged({ ...a, hasManager: false })).toEqual({
 			name: "あるハコ",

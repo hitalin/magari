@@ -1,3 +1,4 @@
+import { env } from "cloudflare:workers";
 import { error, json } from "@sveltejs/kit";
 import { currentMonth, gridRange } from "#lib/calendar.ts";
 import { CACHE_PUBLIC } from "#lib/server/cache.ts";
@@ -7,7 +8,12 @@ import type { ActorPage } from "#lib/types.ts";
 import type { RequestHandler } from "./$types";
 
 export const GET: RequestHandler = async ({ locals, params }) => {
-	const actor = await getActorByHandle(locals.db, params.handle);
+	// 取り込みを有効にした環境（開発）では、見本のハコを写真つきで返す。本番には IMPORT_ENABLED が無い
+	const actor = await getActorByHandle(
+		locals.db,
+		params.handle,
+		env.IMPORT_ENABLED === "1",
+	);
 	if (!actor) error(404, "見つかりません");
 	// 今月のカレンダーも描くので、今月グリッドの先頭から先を返す
 	const { year, month } = currentMonth();

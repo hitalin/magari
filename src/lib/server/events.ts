@@ -214,6 +214,8 @@ export async function getEventForUser(
 export async function getActorByHandle(
 	db: Db,
 	handle: string,
+	// 開発環境で、取り込んだ見本のハコを写真つきで出す（nameOnlyIfUnmanaged）
+	showSamples = false,
 ): Promise<ActorProfile | null> {
 	const [row] = await db
 		.select({
@@ -249,9 +251,12 @@ export async function getActorByHandle(
 		.where(eq(actorMembers.actorId, row.id))
 		.limit(1);
 	const { headerKey, userId, ...rest } = row;
-	return nameOnlyIfUnmanaged({
-		...rest,
-		hasManager: userId !== null || member !== undefined,
-		headerUrl: mediaUrl(headerKey),
-	});
+	return nameOnlyIfUnmanaged(
+		{
+			...rest,
+			hasManager: userId !== null || member !== undefined,
+			headerUrl: mediaUrl(headerKey),
+		},
+		showSamples,
+	);
 }

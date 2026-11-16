@@ -66,7 +66,11 @@ export async function listPosts(
 }
 
 // ハコ一覧。エリア順（region の都道府県）、同じエリアでは今から先の間が多い順。
-export async function listSpaces(db: Db): Promise<SpaceSummary[]> {
+// showSamples: 開発環境で、取り込んだ見本のハコを写真つきで出す（nameOnlyIfUnmanaged）
+export async function listSpaces(
+	db: Db,
+	showSamples = false,
+): Promise<SpaceSummary[]> {
 	const upcoming = db
 		.select({ actorId: events.spaceActorId, n: count().as("n") })
 		.from(events)
@@ -102,13 +106,16 @@ export async function listSpaces(db: Db): Promise<SpaceSummary[]> {
 		.where(eq(actors.kind, "space"));
 	return rows
 		.map(({ region, headerKey, managerId, upcoming, ...r }) =>
-			nameOnlyIfUnmanaged({
-				...r,
-				area: detectArea(region),
-				headerUrl: mediaUrl(headerKey),
-				hasManager: managerId !== null,
-				upcoming: upcoming ?? 0,
-			}),
+			nameOnlyIfUnmanaged(
+				{
+					...r,
+					area: detectArea(region),
+					headerUrl: mediaUrl(headerKey),
+					hasManager: managerId !== null,
+					upcoming: upcoming ?? 0,
+				},
+				showSamples,
+			),
 		)
 		.sort(
 			(a, b) =>

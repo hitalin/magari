@@ -1,5 +1,4 @@
 <script lang="ts">
-import logo from "#lib/assets/logo.svg";
 import Empty from "#lib/components/Empty.svelte";
 import type { PageProps } from "./$types";
 
@@ -20,33 +19,56 @@ let { data }: PageProps = $props();
 	{#if data.spaces.length === 0}
 		<Empty title="ハコはまだありません。" />
 	{:else}
-		<!-- 段ボールの看板を壁に貼って並べる。上辺のテープがはみ出すので縦の間隔を広めに -->
-		<div class="grid gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
+		<!-- 段ボールの看板を壁に貼って並べる。上辺のテープがはみ出すので縦の間隔を広めに。写真の無い看板は低いので上で揃える -->
+		<div class="grid items-start gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
 			{#each data.spaces as s (s.handle)}
 				<a href="/@{s.handle}" class="cardboard group flex flex-col p-3 transition-transform hover:-translate-y-1" data-tape={s.area}>
-					<div class="relative">
-					{#if !s.hasManager}<span class="badge-unofficial absolute top-2 right-2 z-10" title="運営者がまだいない非公式のページ">非公式</span>{/if}
 					{#if s.headerUrl}
-						<img src={s.headerUrl} alt="" loading="lazy" class="aspect-[16/9] w-full rounded-[1px] object-cover shadow-[0_1px_2px_rgb(0_0_0/0.25)]" />
-					{:else}
-						<div class="grid aspect-[16/9] w-full place-items-center rounded-[1px] bg-[rgb(42_30_19/0.07)]">
-							{#if s.avatarUrl}
-								<img src={s.avatarUrl} alt="" loading="lazy" class="h-24 w-24 rounded-full border border-line object-cover shadow-[0_1px_3px_rgb(0_0_0/0.3)] sm:h-28 sm:w-28" />
-							{:else}
-								<img src={logo} alt="" class="h-12 w-12 opacity-35" />
+						<!-- 写真は焼いたプリントを貼ったように、白い縁を付ける -->
+						<img src={s.headerUrl} alt="" loading="lazy" class="space-photo aspect-[16/9] w-full object-cover" />
+					{/if}
+					<div class="px-1.5 {s.headerUrl ? 'pt-3' : 'pt-4'} pb-1.5">
+						<div class="min-w-0">
+							<h2 class="font-serif text-[1.15rem] leading-snug font-bold group-hover:text-accent-ink">{s.name}</h2>
+							{#if s.catch ?? s.summary}
+								<p class="mt-1 line-clamp-1 text-[0.8rem] leading-relaxed text-muted">{s.catch ?? s.summary}</p>
 							{/if}
 						</div>
-					{/if}
 					</div>
-					<div class="px-2 pt-3 pb-1">
-						<h2 class="font-serif text-[1.2rem] leading-snug font-bold group-hover:text-accent-ink">{s.name}</h2>
-						<p class="mt-1 text-sm">これからの間 <span class="font-mono font-bold">{s.upcoming}</span> 件</p>
-						{#if s.catch ?? s.summary}
-							<p class="mt-2 line-clamp-2 text-sm text-muted">{s.catch ?? s.summary}</p>
+					<!-- 下端: これからの間の数と、非公式の判 -->
+					<div class="mt-2 flex items-center justify-between gap-2 border-t border-dashed border-line px-1.5 pt-2 text-[0.8rem]">
+						{#if s.upcoming > 0}
+							<p><span class="font-mono text-base font-bold">{s.upcoming}</span> 件の間</p>
+						{:else}
+							<p class="text-dim">いまは予定なし</p>
 						{/if}
+						{#if !s.hasManager}<span class="stamp" title="運営者がまだいない非公式のページ">非公式</span>{/if}
 					</div>
 				</a>
 			{/each}
 		</div>
 	{/if}
 </section>
+
+<style>
+	/* 貼ったプリント: 白い縁と、紙の厚みの影 */
+	.space-photo {
+		border: 3px solid #f3eee2;
+		border-radius: 1px;
+		box-shadow:
+			0 1px 2px rgb(0 0 0 / 0.3),
+			0 0 0 1px rgb(42 30 19 / 0.12);
+	}
+	/* 判子: 枠だけの小さな字を少し傾けて押す */
+	.stamp {
+		padding: 0.05rem 0.4rem;
+		border: 1.5px solid currentColor;
+		border-radius: 2px;
+		color: #8a3a1c;
+		font-size: 0.68rem;
+		font-weight: 800;
+		letter-spacing: 0.14em;
+		transform: rotate(-3deg);
+		opacity: 0.85;
+	}
+</style>
