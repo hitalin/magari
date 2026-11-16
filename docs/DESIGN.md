@@ -149,7 +149,7 @@ UI/UX の型は「意識が低すぎる、しょぼい Luma」。Luma から借�
   - adapter-cloudflare は wrangler 設定の `main` の場所を毎回消して生成物を書くので、adapter には `wrangler.adapter.jsonc` を渡し、`wrangler.jsonc` の `main` は手書きの `worker.ts` にする。`worker.ts` は生成物の `fetch` をそのまま出し、`scheduled` で自分の `/api/admin/import` を叩く。
   - adapter は `pnpm dev` の bindings もこの設定から読む。`wrangler.adapter.jsonc` には D1・R2 が無いので、`platformProxy.configPath` で `wrangler.jsonc` を読ませる。
 - 取り込んだ会は `events.source` / `source_uid` を持つ。取り込み方法（Google カレンダーなど）は画面に出さない。
-- 取り込み元のハコは、名前・公式へのリンク・X の handle と、`sources.ts` の `area`（`actors.region`）、それに `IMPORT_SAMPLES=1` の環境では見本用の紹介文と画像を持つ。掲載拒否リスト（`blocked_handles`）にある handle の取り込み元は飛ばす。
+- 取り込み元のハコは、名前・公式へのリンク・X の handle と、`sources.ts` の `area`（`actors.region`）、それに `IMPORT_SAMPLES=1` の環境では見本用の紹介文と画像を持つ。掲載拒否リスト（`blocked_handles`）にある handle の取り込み元は飛ばす。引き取られて管理者のいるページは取り込みで書き換えず、会だけを写す。
 - ハコのページは、人のプロフィールと同じく名前の左に丸いアイコンを出し、上部のバナーは出さない。アイコンは `avatar_url`、無ければ `header_key` の写真の中央を丸く切り抜く。人と団体のページは今までどおり写真を上部のバナーにする。
 - フリカレ（freecalend.com）は iCal を出さないので `freecalend.ts` で読む。公開ページの JS が叩く `POST /open/data` を同じ形で呼ぶ。
   - 本文の `keys` は `{"data":[[キー, 版, 版, [["ok-{mem}-all-r-cald",true]], []], …]}` を 2 重に URL エンコードしたもの。キーは月 `cald-{mem}-{y}-{m}` と日 `cald-{mem}-{y}-{m}-{d}`。版に古い値を送ると、中身のある日だけ `set` で返る。

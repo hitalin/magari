@@ -3,7 +3,7 @@ import { and, eq, gte, inArray, lt } from "drizzle-orm";
 import { detectArea, ONLINE } from "#lib/area.ts";
 import { mediaUrl } from "#lib/types.ts";
 import type { Db } from "../db/index.ts";
-import { actors, eventHosts, events } from "../db/schema.ts";
+import { actorMembers, actors, eventHosts, events } from "../db/schema.ts";
 import { isBlockedHandle } from "../moderation.ts";
 import { setHeaderKey } from "../spaces.ts";
 import { fetchFreecalend, freecalendMemNo } from "./freecalend";
@@ -50,6 +50,17 @@ async function fetchCalendar(
 // 取り込み元のページは名前・公式へのリンク・エリアだけ。紹介文と画像（公式ページの写真、X のアイコン）は
 // 見本を出す環境（IMPORT_SAMPLES=1。開発だけ）でしか写さない
 const withSamples = () => env.IMPORT_SAMPLES === "1";
+
+// 引き取られたページ（管理者がいる）は本人のものなので、取り込みでは書き換えない。会だけを写す
+async function managedActorId(db: Db, handle: string): Promise<string | null> {
+	const [row] = await db
+		.select({ id: actors.id })
+		.from(actors)
+		.innerJoin(actorMembers, eq(actorMembers.actorId, actors.id))
+		.where(eq(actors.handle, handle))
+		.limit(1);
+	return row?.id ?? null;
+}
 
 async function upsertActor(
 	db: Db,
@@ -297,13 +308,16 @@ export async function runImports(
 	for (const src of SOURCES) {
 		// 掲載を断られた取り込み元は飛ばす
 		if (await isBlockedHandle(db, src.actor.handle)) continue;
-		const actor = await upsertActor(db, src);
-		const actorId = actor.id;
-		// 画像が取れなくても会の取り込みは続ける
-		if (withSamples())
-			await syncImages(db, src, actor).catch((e) =>
-				console.error(`images ${src.id}: ${e}`),
-			);
+		let actorId = await managedActorId(db, src.actor.handle);
+		if (!actorId) {
+			const actor = await upsertActor(db, src);
+			actorId = actor.id;
+			// 画像が取れなくても会の取り込みは続ける
+			if (withSamples())
+				await syncImages(db, src, actor).catch((e) =>
+					console.error(`images ${src.id}: ${e}`),
+				);
+		}
 		for (const cal of src.calendars) {
 			try {
 				results.push(await importCalendar(db, src, cal, actorId, from, to));
