@@ -20,13 +20,25 @@ onNavigate((navigation) => {
 	});
 });
 const nav = [
-	{ href: "/home", label: "イベント" },
-	{ href: "/calendar", label: "カレンダー" },
-	{ href: "/wall", label: "フライヤー" },
-	{ href: "/spaces", label: "ハコ" },
+	// icon は 24×24 の線画（svg の path）。イベントは切符、ハコは店先
+	{
+		href: "/home",
+		label: "イベント",
+		icon: "M3 9a3 3 0 0 0 0 6v2a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-2a3 3 0 0 0 0-6V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2zM14 5v2M14 11v2M14 17v2",
+	},
+	{
+		href: "/spaces",
+		label: "ハコ",
+		icon: "M3 10l2-6h14l2 6M3 10h18M5 10v10h14V10M10 20v-6h4v6",
+	},
 ];
 const REPO = "https://github.com/hitalin/magari";
-const isActive = (href: string) => page.url.pathname.startsWith(href);
+// 一覧・フライヤー・カレンダーはイベントの見せ方（EventViews）。どれにいてもナビは「イベント」
+const EVENT_VIEWS = ["/home", "/wall", "/calendar"];
+const isActive = (href: string) =>
+	(href === "/home" ? EVENT_VIEWS : [href]).some((p) =>
+		page.url.pathname.startsWith(p),
+	);
 </script>
 
 <svelte:head>
@@ -47,15 +59,19 @@ const isActive = (href: string) => page.url.pathname.startsWith(href);
 <header class="site-header fixed inset-x-0 top-0 z-50 h-header" style="view-transition-name: header">
 	<div class="flex h-full items-center gap-3 px-4 text-[0.8rem] sm:gap-6 sm:px-5 sm:text-sm">
 		<a href={data.loggedIn ? '/home' : '/'} class="flex shrink-0 items-center" aria-label="まがり"><img src={logo} alt="" class="h-7 w-7" /></a>
-		<!-- タブは中身の幅に揃えた元の位置（図像は左端、ログインは右端のまま）。狭い画面では図像のすぐ右 -->
-		<nav class="flex gap-3 font-medium whitespace-nowrap sm:gap-6" style="margin-left: max(0px, calc((100vw - var(--container-content)) / 2 - 4px))">
+		<!-- タブ（実体の「イベント」「ハコ」だけ）の左端を、本文の左端に揃える（図像は左端、ログインは右端のまま）。狭い画面では図像のすぐ右。
+		     % はこの行の中身の幅（ヘッダー幅 − 左右 2.5rem）。本文の左端 (ヘッダー幅 − content)/2 + 1rem から、左余白・図像・間の 4.5rem を引くと -2.25rem -->
+		<nav class="flex gap-3 font-medium whitespace-nowrap sm:gap-6" style="margin-left: max(0px, calc((100% - var(--container-content)) / 2 - 2.25rem))">
 			{#each nav as item (item.href)}
 				{@const active = isActive(item.href)}
-				<a href={item.href} class="transition hover:text-text {active ? 'text-text' : 'text-muted'}" aria-current={active ? 'page' : undefined}>{item.label}</a>
+				<a href={item.href} class="flex items-center gap-1.5 transition hover:text-text {active ? 'text-text' : 'text-muted'}" aria-current={active ? 'page' : undefined}>
+					<svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d={item.icon} /></svg>
+					{item.label}
+				</a>
 			{/each}
 		</nav>
 		<div class="ml-auto flex shrink-0 items-center gap-3 sm:gap-5">
-			<a href="/new" class="font-medium text-muted transition hover:text-text">開ける</a>
+			<a href="/new" class="font-medium text-muted transition hover:text-text">まがり</a>
 			{#if data.loggedIn}
 				<a href="/me" aria-label={data.me?.name ?? '自分'} title={data.me?.name ?? '自分'} aria-current={isActive('/me') ? 'page' : undefined}>
 					{#if data.me?.avatarUrl}

@@ -2,6 +2,7 @@
 import AreaFilter from "#lib/components/AreaFilter.svelte";
 import DayList from "#lib/components/DayList.svelte";
 import Empty from "#lib/components/Empty.svelte";
+import EventViews from "#lib/components/EventViews.svelte";
 import type { PageProps } from "./$types";
 
 let { data }: PageProps = $props();
@@ -18,7 +19,8 @@ const weekEvents = $derived(
 	<meta name="description" content="これから 7 日のあいだに開く間。間借り店舗・日替わり店長・ライブ・自助会・オフ会を一箇所で。" />
 </svelte:head>
 
-<div class="section-head mt-4">
+<EventViews />
+<div class="section-head">
 	<h1 class="section-title">これから7日の間</h1>
 </div>
 <div class="mb-8">

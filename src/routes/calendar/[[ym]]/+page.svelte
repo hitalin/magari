@@ -3,6 +3,7 @@ import { monthKey } from "#lib/calendar.ts";
 import AreaFilter from "#lib/components/AreaFilter.svelte";
 import DayList from "#lib/components/DayList.svelte";
 import Empty from "#lib/components/Empty.svelte";
+import EventViews from "#lib/components/EventViews.svelte";
 import MonthGrid from "#lib/components/MonthGrid.svelte";
 import { dayKey } from "#lib/date.ts";
 import type { PageProps } from "./$types";
@@ -26,7 +27,8 @@ const monthEvents = $derived(
 	<title>{data.year}年{data.month}月 | ◱</title>
 </svelte:head>
 
-<section class="mt-4 mb-6">
+<EventViews />
+<section class="mb-6">
 	<p class="label mb-2">エリアで絞る</p>
 	<AreaFilter events={data.events} bind:value={area} />
 </section>

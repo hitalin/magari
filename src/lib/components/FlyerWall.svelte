@@ -10,12 +10,9 @@ import Flyer from "./Flyer.svelte";
 let {
 	events,
 	collapse = true,
-	large = false,
 }: {
 	events: EventSummary[];
 	collapse?: boolean;
-	// 大きく貼る（フライヤーのページ）
-	large?: boolean;
 } = $props();
 
 const items = $derived.by(() => {
@@ -34,7 +31,7 @@ const items = $derived.by(() => {
 const place = (e: EventSummary) => e.space?.name ?? e.locationName ?? null;
 </script>
 
-<div class="wall" class:large>
+<div class="wall">
 	{#each items as { key, item } (item.kind === 'event' ? item.event.id : `g-${key}-${item.actor.handle}`)}
 		{#if item.kind === 'event'}
 			{@const e = item.event}
@@ -73,21 +70,5 @@ const place = (e: EventSummary) => e.space?.name ?? e.locationName ?? null;
 			columns: 180px;
 			column-gap: 2rem;
 		}
-	}
-	/* 大きく貼る（前の約 1.5 倍）。スマホは中央に 1 列、PC は 3 列 */
-	.wall.large {
-		columns: 1;
-		max-width: 16rem;
-		margin-inline: auto;
-	}
-	@media (min-width: 640px) {
-		.wall.large {
-			columns: 3;
-			column-gap: 1rem;
-			max-width: none;
-		}
-	}
-	.wall.large > :global(a) {
-		margin-bottom: 2.5rem;
 	}
 </style>

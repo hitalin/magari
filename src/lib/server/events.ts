@@ -168,8 +168,6 @@ export async function listUpcomingEvents(
 		limit?: number;
 		from?: Date;
 		to?: Date;
-		// 主催がフライヤー画像を上げた会だけ（壁）
-		withFlyer?: boolean;
 	} = {},
 ): Promise<EventSummary[]> {
 	const from = opts.from ?? new Date();
@@ -178,7 +176,6 @@ export async function listUpcomingEvents(
 		eq(events.visibility, "public"),
 		gte(events.startsAt, from),
 		opts.to ? lt(events.startsAt, opts.to) : undefined,
-		opts.withFlyer ? isNotNull(events.coverKey) : undefined,
 		notHidden(db),
 	);
 	// actorId 指定時は、その Actor が場または主催の会に絞る
