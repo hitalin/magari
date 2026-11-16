@@ -6,7 +6,7 @@ export const authClient = createAuthClient({ plugins: [passkeyClient()] });
 
 export async function startMiAuth(
 	host: string,
-	callbackURL = "/me",
+	callbackURL: string,
 ): Promise<string | null> {
 	const res = await authClient.$fetch<{ url: string }>("/sign-in/miauth", {
 		method: "POST",

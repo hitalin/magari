@@ -4,8 +4,8 @@ import { createManagedActor } from "#lib/server/spaces.ts";
 import { parseNewActorForm } from "#lib/space-form.ts";
 import type { Actions, PageServerLoad } from "./$types";
 
-export const load: PageServerLoad = ({ locals }) => {
-	requireActor(locals);
+export const load: PageServerLoad = ({ locals, url }) => {
+	requireActor(locals, url.pathname + url.search);
 	return {};
 };
 

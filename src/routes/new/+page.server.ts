@@ -2,6 +2,7 @@ import { fail, redirect } from "@sveltejs/kit";
 import {
 	EMPTY_EVENT_FORM,
 	type EventFormValues,
+	isSameSubmission,
 	parseEventForm,
 	readEventForm,
 } from "#lib/event-form.ts";
@@ -17,7 +18,7 @@ import {
 import type { Actions, PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ locals, url }) => {
-	const { session, actor } = requireActor(locals);
+	const { session, actor } = requireActor(locals, url.pathname + url.search);
 	const from = url.searchParams.get("from");
 	// ハコのページの「ここでまがりする」から来たら、ハコを入れておく
 	let values: EventFormValues = {
@@ -59,12 +60,24 @@ export const actions: Actions = {
 			session.user.id,
 			isShortId(wanted) ? wanted : undefined,
 		);
-		if (!id)
-			return fail(400, {
-				error: "保存できませんでした。ビラを刷り直して、もう一度お試しください",
-				values,
-			});
-		// 開けた直後は「貼る」（共有）を先頭に出す
-		redirect(303, parsed.event.status === "draft" ? "/me" : `/e/${id}?opened`);
+		const done = (id: string) =>
+			// 開けた直後は「貼る」（共有）を先頭に出す
+			redirect(
+				303,
+				parsed.event.status === "draft" ? "/me" : `/e/${id}?opened`,
+			);
+		if (id) done(id);
+		// その ID がもう使われている。二度押しで自分が今作った間なら、そのまま続きへ
+		const saved = await getEditableEvent(
+			locals.db,
+			wanted,
+			session.user.id,
+			[],
+		);
+		if (saved && isSameSubmission(saved, parsed.event)) done(saved.id);
+		return fail(400, {
+			error: "保存できませんでした。ビラを刷り直して、もう一度お試しください",
+			values,
+		});
 	},
 };

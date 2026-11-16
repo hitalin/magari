@@ -24,6 +24,10 @@ async function copyLink() {
 	await navigator.clipboard.writeText(cleanUrl);
 	copied = true;
 }
+// 中止は題の頭に出す（X のカードや検索結果でも分かるように）
+const cardTitle = $derived(
+	event.status === "cancelled" ? `【中止】${event.title}` : event.title,
+);
 // リンクカードの説明: 日時と場所を先頭に、続けて説明文
 const cardDescription = $derived(
 	[
@@ -36,8 +40,8 @@ const cardDescription = $derived(
 </script>
 
 <svelte:head>
-	<title>{event.title} | ◱</title>
-	<meta property="og:title" content={event.title} />
+	<title>{cardTitle} | ◱</title>
+	<meta property="og:title" content={cardTitle} />
 	<meta property="og:type" content="article" />
 	<meta name="description" content={cardDescription} />
 	<meta property="og:description" content={cardDescription} />
@@ -61,7 +65,7 @@ const cardDescription = $derived(
 		<p class="mt-4 rounded-sm bg-accent-soft px-4 py-2 text-sm text-accent-ink">運営が非表示にしています。あなたにだけ見えています。心当たりが無ければ<a href="/contact?kind=other&about=/e/{event.id}" class="ml-1 underline">運営に連絡</a>してください。</p>
 	{/if}
 	{#if event.status === 'cancelled'}
-		<p class="mt-4 rounded-sm bg-accent-soft px-4 py-2 text-sm text-accent-ink">この間は中止になりました。</p>
+		<p class="mt-4 rounded-sm bg-accent-soft px-4 py-2 text-sm text-accent-ink">中止になりました。</p>
 	{:else if event.status === 'draft'}
 		<p class="mt-4 rounded-sm bg-accent-soft px-4 py-2 text-sm text-accent-ink">下書きです。あなたにだけ見えています。<a href="/e/{event.id}/edit" class="ml-2 underline">編集 ›</a></p>
 	{/if}

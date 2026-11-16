@@ -19,13 +19,16 @@ const ERRORS: Record<string, string> = {
 
 async function x() {
 	busy = true;
-	await authClient.signIn.social({ provider: "twitter", callbackURL: "/me" });
+	await authClient.signIn.social({
+		provider: "twitter",
+		callbackURL: data.next,
+	});
 }
 async function misskey(e: SubmitEvent) {
 	e.preventDefault();
 	busy = true;
 	error = null;
-	const url = await startMiAuth(host);
+	const url = await startMiAuth(host, data.next);
 	if (url) location.href = url;
 	else {
 		busy = false;
@@ -41,7 +44,7 @@ async function passkey() {
 	if (res?.error)
 		error =
 			"パスキーでのログインに失敗しました。まだ作っていなければ、X か Misskey で入ってから作ってください。";
-	else await goto("/me");
+	else await goto(data.next);
 }
 </script>
 

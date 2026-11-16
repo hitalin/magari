@@ -2,6 +2,7 @@ import { redirect } from "@sveltejs/kit";
 import { and, asc, desc, eq, inArray, isNull, or } from "drizzle-orm";
 import { eventArea } from "#lib/area.ts";
 import type { ParsedEvent } from "#lib/event-form.ts";
+import { withNext } from "#lib/next.ts";
 import type { Db } from "./db/index.ts";
 import { actorMembers, actors, eventHosts, events } from "./db/schema.ts";
 import { isBlockedHandle } from "./moderation.ts";
@@ -65,7 +66,25 @@ export async function syncAvatar(
 	return { ...actor, avatarUrl: large };
 }
 
-// アカウント削除: 本人の場（主催・作成）と本人のアクターを消す。ユーザー本体は better-auth が消す
+// 主催が actorId だけの間。ほかに主催がいる間は含めない
+export function soleHostedEventIds(
+	rows: { eventId: string; actorId: string }[],
+	actorId: string,
+): string[] {
+	const shared = new Set(
+		rows.filter((r) => r.actorId !== actorId).map((r) => r.eventId),
+	);
+	return [
+		...new Set(
+			rows
+				.filter((r) => r.actorId === actorId && !shared.has(r.eventId))
+				.map((r) => r.eventId),
+		),
+	];
+}
+
+// アカウント削除: 本人が作った間、主催が本人だけの間、本人のアクターを消す。ユーザー本体は better-auth が消す。
+// ほかに主催のいる間は消さず、本人が主催から外れるだけ（event_hosts はアクターの削除で消える）
 export async function deleteMyData(
 	db: Db,
 	userId: string,
@@ -77,15 +96,16 @@ export async function deleteMyData(
 			.from(eventHosts)
 			.where(eq(eventHosts.actorId, actor.id));
 		for (let i = 0; i < hosted.length; i += 90) {
-			await db.delete(events).where(
-				and(
-					isNull(events.source),
-					inArray(
-						events.id,
-						hosted.slice(i, i + 90).map((h) => h.id),
-					),
-				),
-			);
+			const ids = hosted.slice(i, i + 90).map((h) => h.id);
+			const rows = await db
+				.select({ eventId: eventHosts.eventId, actorId: eventHosts.actorId })
+				.from(eventHosts)
+				.where(inArray(eventHosts.eventId, ids));
+			const sole = soleHostedEventIds(rows, actor.id);
+			if (sole.length)
+				await db
+					.delete(events)
+					.where(and(isNull(events.source), inArray(events.id, sole)));
 		}
 		await db.delete(actors).where(eq(actors.id, actor.id));
 	}
@@ -142,19 +162,24 @@ export async function listManagedActorIds(
 	return [...(self ? [self.id] : []), ...rows.map((r) => r.actorId)];
 }
 
+// next: ログイン（と初回登録）のあとに戻る先。ページの load が自分の URL を渡す
 export function requireLogin(
 	locals: App.Locals,
+	next?: string,
 ): NonNullable<App.Locals["session"]> {
-	if (!locals.session) redirect(303, "/login");
+	if (!locals.session) redirect(303, withNext("/login", next));
 	return locals.session;
 }
 
-export function requireActor(locals: App.Locals): {
+export function requireActor(
+	locals: App.Locals,
+	next?: string,
+): {
 	session: NonNullable<App.Locals["session"]>;
 	actor: MyActor;
 } {
-	const session = requireLogin(locals);
-	if (!locals.actor) redirect(303, "/welcome");
+	const session = requireLogin(locals, next);
+	if (!locals.actor) redirect(303, withNext("/welcome", next));
 	return { session, actor: locals.actor };
 }
 
@@ -275,7 +300,9 @@ export async function createEvent(
 export async function updateEvent(
 	db: Db,
 	id: string,
-	input: EventValues,
+	input: Omit<EventValues, "status"> & {
+		status: "draft" | "published" | "cancelled";
+	},
 ): Promise<void> {
 	await db
 		.update(events)

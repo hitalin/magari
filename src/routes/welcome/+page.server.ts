@@ -1,11 +1,12 @@
 import { fail, redirect } from "@sveltejs/kit";
 import { parseWelcomeForm } from "#lib/event-form.ts";
+import { safeNext } from "#lib/next.ts";
 import { createPersonActor, requireLogin } from "#lib/server/me.ts";
 import type { Actions, PageServerLoad } from "./$types";
 
-export const load: PageServerLoad = ({ locals }) => {
+export const load: PageServerLoad = ({ locals, url }) => {
 	const session = requireLogin(locals);
-	if (locals.actor) redirect(303, "/me");
+	if (locals.actor) redirect(303, safeNext(url.searchParams.get("next")));
 	return {
 		suggestedName: session.user.name || "",
 		image: session.user.image ?? null,
@@ -13,7 +14,7 @@ export const load: PageServerLoad = ({ locals }) => {
 };
 
 export const actions: Actions = {
-	default: async ({ request, locals }) => {
+	default: async ({ request, locals, url }) => {
 		const session = requireLogin(locals);
 		const form = await request.formData();
 		const parsed = parseWelcomeForm(
@@ -38,6 +39,7 @@ export const actions: Actions = {
 				handle: parsed.handle,
 				name: parsed.name,
 			});
-		redirect(303, "/me");
+		// form は action を指定しないので、?next= は POST の URL にも残っている
+		redirect(303, safeNext(url.searchParams.get("next")));
 	},
 };

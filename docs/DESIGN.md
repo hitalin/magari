@@ -90,6 +90,8 @@ UI/UX の型は「意識が低すぎる、しょぼい Luma」。Luma から借�
 
 ## 速さの規約
 
+1〜3 は目標で、まだ出来ていない（Worker の応答は CDN に載せておらず、purge も無い）。いまの公開 JSON は `max-age=0` で毎回取り直させ、`stale-while-revalidate` は付けない（中止や変更を直した直後に、古い内容が先に出てしまうため。`src/lib/server/cache.ts`）。
+
 1. **公開ページは CDN に HTML ごとキャッシュ**し、更新時に purge by URL。Worker は通さない。
 2. **クライアント遷移は Worker を通さない。** `+page.ts`（universal load）から CDN キャッシュ済みの JSON エンドポイントを fetch する。`__data.json` 経由にしない。
 3. **読み取りで D1 に触るのはキャッシュミス時だけ。** APAC primary でも東京から往復 70ms かかりうる。
@@ -180,6 +182,10 @@ UI/UX の型は「意識が低すぎる、しょぼい Luma」。Luma から借�
 
 - 掲載拒否リスト（`blocked_handles`）にある handle は、人・ハコ・団体のどれとしても作れない。取り下げの依頼を受けたら、まず非表示にし、確かめてからページを消して handle をここに入れる。
 - 運営による非表示（`events.hidden_at` / `actors.hidden_at`）: 消さずに隠す。会を隠すと一覧・カレンダー・会のページ（公開）から外れ、主催にだけ「運営が非表示にしています」と見える。ページ（人・ハコ・団体）を隠すと、そのページが 404 になり、ハコ一覧から外れ、そこで開かれる会と、その人・団体が主催の会も出なくなる（`notHidden`）。本人の編集画面にはその旨を出す。対象は `/admin/reports` で「@ID か会の URL」で指定する（`parseModerationTarget`）。
+- ログインが要るページ（`/new`、`/spaces/new`）に未ログインで来たら、`?next=` に元の場所を載せて `/login` へ送り、ログインと初回登録（`/welcome`）のあとにそこへ戻す。戻り先はサイト内のパスだけ通す（`src/lib/next.ts`）。
+- 中止した間は、編集して保存しても中止のまま（`statusAfterEdit`）。公開に戻すのは「中止を取り消す」だけ。中止は会のページの題と og:title の頭に「【中止】」と出す。
+- 作成の二度押しは、同じ ID・同じ題・開始・状態なら成功として続きへ送る（`isSameSubmission`）。内容が違えば保存しない。
+- アカウントを消すと、本人が作った間と、主催が本人だけの間が消える。ほかに主催のいる間は残り、本人が主催から外れる。
 - フォームの検証と JST → UTC 変換は `src/lib/event-form.ts`（純粋関数、テストあり）。終了が開始以前なら翌日扱い（深夜営業）。
 - 書き込みは SvelteKit の form action。`hooks.server.ts` が `locals.actor`（本人のアクター）を載せる。
 - ヘッダーのログイン状態は今は `+layout.server.ts` で出している。公開ページを CDN に載せる段階で、ここだけクライアント取得に切り替える（HTML を Cookie に依存させないため）。

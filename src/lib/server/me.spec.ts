@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { largeAvatarUrl } from "./me";
+import { largeAvatarUrl, soleHostedEventIds } from "./me";
 
 describe("largeAvatarUrl", () => {
 	it("X の _normal を 400x400 にする", () => {
@@ -19,5 +19,17 @@ describe("largeAvatarUrl", () => {
 			"https://example.com/x.png",
 		);
 		expect(largeAvatarUrl(null)).toBeNull();
+	});
+});
+
+describe("soleHostedEventIds", () => {
+	it("主催が自分だけの間を返し、ほかに主催のいる間は返さない", () => {
+		const rows = [
+			{ eventId: "mine", actorId: "me" },
+			{ eventId: "shared", actorId: "me" },
+			{ eventId: "shared", actorId: "other" },
+			{ eventId: "theirs", actorId: "other" },
+		];
+		expect(soleHostedEventIds(rows, "me")).toEqual(["mine"]);
 	});
 });

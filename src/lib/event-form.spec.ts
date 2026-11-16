@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
 	EMPTY_EVENT_FORM,
+	isSameSubmission,
 	parseEventForm,
 	parseWelcomeForm,
 	readEventForm,
+	statusAfterEdit,
 } from "./event-form";
 
 const base = { ...EMPTY_EVENT_FORM, title: "テスト会", date: "2026-11-08" };
@@ -67,6 +69,44 @@ describe("readEventForm", () => {
 			readEventForm((k) => (k === "visibility" ? visibility : null)).visibility;
 		expect(read("unlisted")).toBe("unlisted");
 		expect(read("private")).toBe("public");
+	});
+});
+
+describe("isSameSubmission", () => {
+	const parsed = parseEventForm({ ...base, startTime: "19:00" });
+	if (!parsed.ok) throw new Error("前提の解析に失敗");
+	const saved = {
+		title: "テスト会",
+		startsAt: new Date("2026-11-08T10:00:00.000Z"),
+		status: "published" as const,
+	};
+	it("題・開始・状態が同じなら、同じ送信の二度押し", () => {
+		expect(isSameSubmission(saved, parsed.event)).toBe(true);
+	});
+	it("どれかが違えば別の内容（戻って書き換えた送信を黙って捨てない）", () => {
+		expect(isSameSubmission({ ...saved, title: "別の会" }, parsed.event)).toBe(
+			false,
+		);
+		expect(isSameSubmission({ ...saved, status: "draft" }, parsed.event)).toBe(
+			false,
+		);
+		expect(
+			isSameSubmission(
+				{ ...saved, startsAt: new Date("2026-11-08T11:00:00.000Z") },
+				parsed.event,
+			),
+		).toBe(false);
+	});
+});
+
+describe("statusAfterEdit", () => {
+	it("中止した間は、編集して保存しても中止のまま", () => {
+		expect(statusAfterEdit("cancelled", "published")).toBe("cancelled");
+		expect(statusAfterEdit("cancelled", "draft")).toBe("cancelled");
+	});
+	it("中止していなければ、押したボタンの状態になる", () => {
+		expect(statusAfterEdit("draft", "published")).toBe("published");
+		expect(statusAfterEdit("published", "draft")).toBe("draft");
 	});
 });
 

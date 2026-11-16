@@ -160,6 +160,27 @@ export function parseEventForm(
 	};
 }
 
+// 同じ ID の間がもう在るとき、それが今の送信の二度押しかどうか。
+// 題・開始・状態が同じときだけ同じとみなす（戻って書き換えた送信を、成功に見せて捨てないため）
+export function isSameSubmission(
+	saved: { title: string; startsAt: Date; status: string },
+	submitted: Pick<ParsedEvent, "title" | "startsAt" | "status">,
+): boolean {
+	return (
+		saved.title === submitted.title &&
+		saved.startsAt.getTime() === submitted.startsAt.getTime() &&
+		saved.status === submitted.status
+	);
+}
+
+// 編集して保存したあとの状態。中止した間は内容を直しても中止のまま（戻すのは「中止を取り消す」だけ）
+export function statusAfterEdit(
+	current: "draft" | "published" | "cancelled",
+	submitted: EventFormValues["status"],
+): "draft" | "published" | "cancelled" {
+	return current === "cancelled" ? "cancelled" : submitted;
+}
+
 // handle と表示名（はじめての登録）
 export function parseWelcomeForm(
 	handle: string,

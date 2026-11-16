@@ -1,6 +1,10 @@
 import { env } from "cloudflare:workers";
 import { error, fail, redirect } from "@sveltejs/kit";
-import { parseEventForm, readEventForm } from "#lib/event-form.ts";
+import {
+	parseEventForm,
+	readEventForm,
+	statusAfterEdit,
+} from "#lib/event-form.ts";
 import { shortId } from "#lib/id.ts";
 import { toFormValues } from "#lib/server/event-values.ts";
 import {
@@ -94,15 +98,16 @@ export const actions: Actions = {
 		return { hostRemoved: true };
 	},
 	save: async ({ request, locals, params }) => {
-		await editable(locals, params.id);
+		const current = await editable(locals, params.id);
 		const form = await request.formData();
 		const values = readEventForm((k) => (form.get(k) as string | null) ?? null);
 		const parsed = parseEventForm(values);
 		if (!parsed.ok) return fail(400, { error: parsed.error, values });
 		const ev = await toEventValues(locals.db, parsed.event);
 		if ("error" in ev) return fail(400, { error: ev.error, values });
-		await updateEvent(locals.db, params.id, ev);
-		redirect(303, parsed.event.status === "draft" ? "/me" : `/e/${params.id}`);
+		const status = statusAfterEdit(current.status, parsed.event.status);
+		await updateEvent(locals.db, params.id, { ...ev, status });
+		redirect(303, status === "draft" ? "/me" : `/e/${params.id}`);
 	},
 	cancel: async ({ locals, params }) => {
 		await editable(locals, params.id);
