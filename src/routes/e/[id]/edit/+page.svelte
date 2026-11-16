@@ -44,7 +44,7 @@ let { data, form }: PageProps = $props();
 
 	<section class="mt-12 border-t border-line pt-6">
 		<h2 class="section-title text-[1.25rem]">主催</h2>
-		<p class="mt-4 mb-4 text-sm text-muted">主催は間のページに並んで出て、全員がこの間を編集できます。まがりにログインしたことのある人を @handle で足せます。</p>
+		<p class="mt-4 mb-4 text-sm text-muted">主催は間のページに並んで出て、全員がこの間を編集できます。</p>
 		{#if form && 'hostError' in form}<p class="mb-4 rounded-sm bg-accent-soft px-4 py-2 text-sm text-accent-ink">{form.hostError}</p>{/if}
 		<div class="rule-list">
 			{#each data.hosts as h (h.actorId)}
@@ -64,10 +64,6 @@ let { data, form }: PageProps = $props();
 				</div>
 			{/each}
 		</div>
-		<form method="POST" action="?/addHost" class="mt-4 flex flex-wrap items-center gap-2">
-			<input name="handle" required class="input max-w-xs" placeholder="@handle" autocomplete="off" />
-			<button type="submit" class="btn">主催に足す</button>
-		</form>
 	</section>
 
 	<div class="mt-12 flex flex-wrap gap-3 border-t border-line pt-6">

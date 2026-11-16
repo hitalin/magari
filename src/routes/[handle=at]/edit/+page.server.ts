@@ -1,9 +1,8 @@
 import { env } from "cloudflare:workers";
 import { error, fail, redirect } from "@sveltejs/kit";
-import { parseHandleInput, shortId } from "#lib/id.ts";
-import { findPersonByHandle, requireActor } from "#lib/server/me.ts";
+import { shortId } from "#lib/id.ts";
+import { requireActor } from "#lib/server/me.ts";
 import {
-	addMember,
 	createPlan,
 	createPost,
 	deletePlan,
@@ -82,22 +81,6 @@ const IMAGE_TYPES: Record<string, string> = {
 const MAX_IMAGE = 5 * 1024 * 1024;
 
 export const actions: Actions = {
-	// 管理者を @handle で足す。管理者は全員がページを編集できる
-	addMember: async ({ request, locals, params }) => {
-		const actor = await managed(locals, params.handle);
-		if (actor.kind === "person") error(400, "管理者を足せるのはハコと団体だけ");
-		const form = await request.formData();
-		const handle = parseHandleInput(str(form, "handle"));
-		const person = handle ? await findPersonByHandle(locals.db, handle) : null;
-		if (!person)
-			return fail(400, {
-				section: "members",
-				error:
-					"その @handle の人は見つかりません。まがりにログインしたことのある人だけ足せます",
-			});
-		await addMember(locals.db, actor.id, person.userId);
-		return { section: "members", ok: true };
-	},
 	removeMember: async ({ request, locals, params }) => {
 		const actor = await managed(locals, params.handle);
 		const form = await request.formData();

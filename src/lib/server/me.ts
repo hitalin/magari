@@ -298,19 +298,6 @@ export async function deleteEvent(db: Db, id: string): Promise<void> {
 	await db.delete(events).where(eq(events.id, id));
 }
 
-// 人の @handle を引く。共同主催・管理者に足せるのは、まがりにログインしたことのある人（ユーザーの付いた person）だけ
-export async function findPersonByHandle(
-	db: Db,
-	handle: string,
-): Promise<{ id: string; userId: string } | null> {
-	const [row] = await db
-		.select({ id: actors.id, userId: actors.userId })
-		.from(actors)
-		.where(and(eq(actors.handle, handle), eq(actors.kind, "person")))
-		.limit(1);
-	return row?.userId ? { id: row.id, userId: row.userId } : null;
-}
-
 export type EventHost = {
 	actorId: string;
 	handle: string;
@@ -333,17 +320,6 @@ export async function listEventHosts(
 		.innerJoin(actors, eq(eventHosts.actorId, actors.id))
 		.where(eq(eventHosts.eventId, eventId))
 		.orderBy(asc(eventHosts.role));
-}
-
-export async function addEventHost(
-	db: Db,
-	eventId: string,
-	actorId: string,
-): Promise<void> {
-	await db
-		.insert(eventHosts)
-		.values({ eventId, actorId, role: "cohost" })
-		.onConflictDoNothing();
 }
 
 // 主催を外す。最後の 1 人は外せない（外せたら true）

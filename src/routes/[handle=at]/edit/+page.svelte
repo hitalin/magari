@@ -171,7 +171,7 @@ let newPlan = $state(false);
 {#if data.kind !== 'person'}
 	<section class="mb-12">
 		<div class="section-head"><h2 class="section-title text-[1.25rem]">管理者</h2></div>
-		<p class="mb-4 text-sm text-muted">管理者は全員、このページを編集できます。まがりにログインしたことのある人を @handle で足せます。</p>
+		<p class="mb-4 text-sm text-muted">管理者は全員、このページを編集できます。</p>
 		{@render error('members')}
 		<div class="rule-list">
 			{#each data.members as m (m.userId)}
@@ -191,9 +191,5 @@ let newPlan = $state(false);
 				</div>
 			{/each}
 		</div>
-		<form method="POST" action="?/addMember" class="mt-4 flex flex-wrap items-center gap-2">
-			<input name="handle" required class="input max-w-xs" placeholder="@handle" autocomplete="off" />
-			<button type="submit" class="btn">管理者に足す</button>
-		</form>
 	</section>
 {/if}

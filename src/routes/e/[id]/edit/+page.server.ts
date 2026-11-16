@@ -1,12 +1,10 @@
 import { env } from "cloudflare:workers";
 import { error, fail, redirect } from "@sveltejs/kit";
 import { parseEventForm, readEventForm } from "#lib/event-form.ts";
-import { parseHandleInput, shortId } from "#lib/id.ts";
+import { shortId } from "#lib/id.ts";
 import { toFormValues } from "#lib/server/event-values.ts";
 import {
-	addEventHost,
 	deleteEvent,
-	findPersonByHandle,
 	getEditableEvent,
 	listEventHosts,
 	listManagedActorIds,
@@ -84,20 +82,6 @@ export const actions: Actions = {
 			await env.MEDIA.delete(ev.coverKey);
 		}
 		return { flyerSaved: true };
-	},
-	// 共同主催を @handle で足す。主催は全員がこの間を編集できる
-	addHost: async ({ request, locals, params }) => {
-		await editable(locals, params.id);
-		const form = await request.formData();
-		const handle = parseHandleInput(String(form.get("handle") ?? ""));
-		const person = handle ? await findPersonByHandle(locals.db, handle) : null;
-		if (!person)
-			return fail(400, {
-				hostError:
-					"その @handle の人は見つかりません。まがりにログインしたことのある人だけ足せます",
-			});
-		await addEventHost(locals.db, params.id, person.id);
-		return { hostAdded: true };
 	},
 	removeHost: async ({ request, locals, params }) => {
 		await editable(locals, params.id);

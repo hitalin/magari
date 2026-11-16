@@ -302,17 +302,6 @@ export async function listMembers(db: Db, actorId: string): Promise<Member[]> {
 		.orderBy(asc(actorMembers.createdAt));
 }
 
-export async function addMember(
-	db: Db,
-	actorId: string,
-	userId: string,
-): Promise<void> {
-	await db
-		.insert(actorMembers)
-		.values({ actorId, userId, role: "editor" })
-		.onConflictDoNothing();
-}
-
 // 管理者を外す。最後の 1 人は外せない（外せたら true）
 export async function removeMember(
 	db: Db,
