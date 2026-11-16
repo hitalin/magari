@@ -26,9 +26,6 @@ const byArea = <T extends { area: string | null }>(list: T[]) =>
 		: list;
 const monthEvents = $derived(byArea(data.calendar.events));
 const weekEvents = $derived(byArea(data.events));
-const areaCount = $derived(
-	new Set(data.calendar.events.map((e) => e.area).filter(Boolean)).size,
-);
 const WORDS = [
 	"間借り店舗",
 	"日替わり店長",
@@ -42,7 +39,7 @@ const WORDS = [
 
 <svelte:head>
 	<title>これからの間 | まがり</title>
-	<meta name="description" content="間借り店舗・日替わり店長・レンタル○○・プロ○○ヤー・ライブ・自助会・オフ会の間を一箇所で。" />
+	<meta name="description" content="今日もどこかで誰かが開けている。行ってもいいし、自分が開けてもいい。間借り店舗・日替わり店長・ライブ・自助会・オフ会を一箇所で。" />
 </svelte:head>
 
 <section class="dots hero -mx-4 px-4 pt-6">
@@ -58,16 +55,11 @@ const WORDS = [
 	<div class="mt-10 text-center sm:mt-12">
 		<img src={logo} alt="まがり" class="mx-auto mb-6 h-32 w-32 drop-shadow-[0_8px_16px_rgba(0,0,0,0.5)] sm:h-40 sm:w-40" />
 		<h1 class="text-[clamp(1.9rem,6vw,3.4rem)] leading-[1.25]">
-			誰でも、<br />その日の<span class="tape mx-1 px-3 leading-[1.15]">主催者</span>に。
+			今日も、どこかで<br /><span class="tape mx-1 px-3 leading-[1.15]">誰か</span>が開けている。
 		</h1>
 		<p class="mt-6 text-[0.95rem] leading-loose tracking-[0.12em] text-muted">
-			ハコを持たない人の間と、<br class="sm:hidden" />ハコを貸す人の空き枠を、<br />ここに集める。
+			行ってもいいし、<br class="sm:hidden" />自分が開けてもいい。
 		</p>
-		<div class="stats mt-8 justify-center">
-			<div><span class="stat-num">{data.events.length}</span><span class="label">7日の間</span></div>
-			<div><span class="stat-num">{data.calendar.events.length}</span><span class="label">今月の間</span></div>
-			<div><span class="stat-num">{areaCount}</span><span class="label">エリア</span></div>
-		</div>
 	</div>
 	<div class="mt-8">
 		<AreaFilter events={data.calendar.events} bind:value={area} center />

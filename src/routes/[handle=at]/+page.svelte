@@ -124,6 +124,17 @@ const description = $derived(actor.catch ?? actor.summary ?? undefined);
 			{#each actor.facilities as f (f)}<span class="chip chip-plain">{f}</span>{/each}
 		</div>
 	{/if}
+	{#if actor.kind === 'space' && !unofficial}
+		<!-- 料金表より先に、誰に声をかければいいか -->
+		<div class="mt-5 border-t border-line pt-4">
+			<p class="text-sm font-semibold">ここで開けたい人は、まず声をかけてみてください。</p>
+			<div class="pills mt-3">
+				{#if actor.xHandle}<a href="https://x.com/{actor.xHandle}" class="chip chip-tape" rel="noopener">X で @{actor.xHandle} に声をかける ›</a>{/if}
+				{#if canInquire}<a href="#contact" class="chip">フォームで送る ›</a>{/if}
+				<a href="/new?space={actor.handle}" class="chip">日が決まっていたら、ここでまがりする ›</a>
+			</div>
+		</div>
+	{/if}
 	{#if sections.length > 1}
 		<nav class="mt-5 flex flex-wrap gap-x-4 gap-y-1 text-sm font-semibold" aria-label="このページ">
 			{#each sections as s (s.id)}<a href="#{s.id}" class="hover:text-accent-ink">{s.label} ›</a>{/each}

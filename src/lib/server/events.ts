@@ -57,12 +57,14 @@ async function hostsByEvent(
 				handle: actors.handle,
 				name: actors.name,
 				kind: actors.kind,
+				avatarUrl: actors.avatarUrl,
 			})
 			.from(eventHosts)
 			.innerJoin(actors, eq(eventHosts.actorId, actors.id))
 			.where(inArray(eventHosts.eventId, eventIds.slice(i, i + CHUNK)));
-		for (const { eventId, ...actor } of rows) {
-			map.set(eventId, [...(map.get(eventId) ?? []), actor]);
+		for (const { eventId, avatarUrl, ...actor } of rows) {
+			const host = actor.kind === "person" ? { ...actor, avatarUrl } : actor;
+			map.set(eventId, [...(map.get(eventId) ?? []), host]);
 		}
 	}
 	return map;

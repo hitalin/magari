@@ -693,25 +693,6 @@ h4 {
 		z-index: 1;
 	}
 
-	/* 数字: 明朝で大きく、桁をそろえる（liblib の統計行） */
-	.stats {
-		display: flex;
-		gap: 1.75rem 2.5rem;
-		flex-wrap: wrap;
-	}
-	.stats > div {
-		display: flex;
-		align-items: baseline;
-		gap: 0.4rem;
-	}
-	.stat-num {
-		font-family: var(--font-serif);
-		font-weight: 700;
-		font-size: 1.8rem;
-		line-height: 1;
-		font-variant-numeric: tabular-nums;
-	}
-
 	/* 流れるラベル: ヒーロー上端の pill に、テープのラベル + マーキー（notedeck の tickers）。装飾なので aria-hidden */
 	.ticker {
 		display: flex;

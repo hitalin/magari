@@ -9,6 +9,6 @@ let { data, form }: PageProps = $props();
 
 <section class="mx-auto mt-4 max-w-2xl">
 	<p class="label">まがりする</p>
-	<h1 class="mt-2 mb-8 text-2xl">その日の主催者になる</h1>
+	<h1 class="mt-2 mb-8 text-2xl">とりあえず開ける</h1>
 	<EventForm values={form?.values ?? data.values} error={form?.error} />
 </section>

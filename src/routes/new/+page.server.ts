@@ -18,7 +18,11 @@ import type { Actions, PageServerLoad } from "./$types";
 export const load: PageServerLoad = async ({ locals, url }) => {
 	const { session, actor } = requireActor(locals);
 	const from = url.searchParams.get("from");
-	let values: EventFormValues = { ...EMPTY_EVENT_FORM };
+	// ハコのページの「ここでまがりする」から来たら、ハコを入れておく
+	let values: EventFormValues = {
+		...EMPTY_EVENT_FORM,
+		space: url.searchParams.get("space") ?? "",
+	};
 	if (from) {
 		const actorIds = await listManagedActorIds(
 			locals.db,
