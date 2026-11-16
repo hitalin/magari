@@ -1,11 +1,7 @@
 <script lang="ts">
 import Field from "#lib/components/Field.svelte";
 import { formatDay, formatTime } from "#lib/date.ts";
-import {
-	INQUIRY_KIND_LABEL,
-	PLAN_KIND_LABEL,
-	PLAN_KINDS,
-} from "#lib/space-form.ts";
+import { PLAN_KIND_LABEL, PLAN_KINDS } from "#lib/space-form.ts";
 import type { PageProps } from "./$types";
 
 let { data, form }: PageProps = $props();
@@ -174,7 +170,7 @@ let newPlan = $state(false);
 {#if data.kind !== 'person'}
 	<section class="mb-12">
 		<div class="section-head"><h2 class="section-title text-[1.25rem]">管理者</h2></div>
-		<p class="mb-4 text-sm text-muted">管理者は全員、このページの編集と問い合わせの受信箱を使えます。まがりにログインしたことのある人を @handle で足せます。</p>
+		<p class="mb-4 text-sm text-muted">管理者は全員、このページを編集できます。まがりにログインしたことのある人を @handle で足せます。</p>
 		{@render error('members')}
 		<div class="rule-list">
 			{#each data.members as m (m.userId)}
@@ -198,36 +194,5 @@ let newPlan = $state(false);
 			<input name="handle" required class="input max-w-xs" placeholder="@handle" autocomplete="off" />
 			<button type="submit" class="btn">管理者に足す</button>
 		</form>
-	</section>
-
-	<section class="mb-12">
-		<div class="section-head">
-			<h2 class="section-title text-[1.25rem]">問い合わせ</h2>
-			<span class="chip">{data.inquiries.length} 件</span>
-		</div>
-		<p class="mb-4 text-sm text-muted">ページのフォームから届いたもの。返事はメールか電話で直接どうぞ。まがりからは通知しません。ときどきここを見てください。</p>
-		{#if data.inquiries.length === 0}
-			<p class="text-sm text-dim">まだありません。</p>
-		{:else}
-			<div class="space-y-4">
-				{#each data.inquiries as q (q.id)}
-					<article class="panel p-5">
-						<div class="flex flex-wrap items-baseline justify-between gap-2">
-							<p class="label">{INQUIRY_KIND_LABEL[q.kind]} · {formatDay(q.createdAt)} {formatTime(q.createdAt)}</p>
-							<form method="POST" action="?/deleteInquiry" onsubmit={(e) => { if (!confirm('この問い合わせを消しますか？')) e.preventDefault(); }}>
-								<input type="hidden" name="id" value={q.id} />
-								<button type="submit" class="text-xs text-muted hover:text-accent-ink">消す</button>
-							</form>
-						</div>
-						<p class="mt-2 font-serif font-bold">{q.name}</p>
-						<p class="text-sm">
-							<a href="mailto:{q.email}" class="text-accent-ink hover:underline">{q.email}</a>
-							{#if q.phone}<span class="ml-3">{q.phone}</span>{/if}
-						</p>
-						<p class="mt-3 whitespace-pre-line text-[0.95rem] leading-[1.8]">{q.body}</p>
-					</article>
-				{/each}
-			</div>
-		{/if}
 	</section>
 {/if}

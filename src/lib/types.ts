@@ -38,7 +38,7 @@ export type EventDetail = EventSummary & {
 
 export type ActorProfile = ActorRef & {
 	id: string;
-	// 管理者（人なら本人、ハコ・団体なら actor_members）がいるか。いなければ問い合わせを受けない
+	// 管理者（人なら本人、ハコ・団体なら actor_members）がいるか。いなければ非公式のページとして名前だけを出す
 	hasManager: boolean;
 	avatarUrl: string | null;
 	headerUrl: string | null;

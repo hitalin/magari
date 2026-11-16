@@ -249,26 +249,6 @@ export const posts = sqliteTable(
 	(t) => [index("posts_actor_idx").on(t.actorId, t.status, t.publishedAt)],
 );
 
-// 場への問い合わせ（出店相談・イベント利用・来店・取材）。
-export const inquiries = sqliteTable(
-	"inquiries",
-	{
-		id: text("id").primaryKey().$defaultFn(shortId),
-		actorId: text("actor_id")
-			.notNull()
-			.references(() => actors.id, { onDelete: "cascade" }),
-		kind: text("kind", {
-			enum: ["rental", "event", "visit", "press", "other"],
-		}).notNull(),
-		name: text("name").notNull(),
-		email: text("email").notNull(),
-		phone: text("phone"),
-		body: text("body").notNull(),
-		createdAt: timestamp("created_at").notNull().$defaultFn(now),
-	},
-	(t) => [index("inquiries_actor_idx").on(t.actorId, t.createdAt)],
-);
-
 // 運営への連絡（掲載の取り下げ、ページの引き取りなど）。ログイン不要で送れる。
 export const reports = sqliteTable(
 	"reports",

@@ -1,12 +1,8 @@
-// 場（ハコ）・団体のページ: 作成、管理者判定、プロフィール・プラン・お知らせ・問い合わせの読み書き。
+// 場（ハコ）・団体のページ: 作成、管理者判定、プロフィール・プラン・お知らせの読み書き。
 import { and, asc, count, desc, eq, gte } from "drizzle-orm";
 import { nameOnlyIfUnmanaged } from "#lib/actor.ts";
 import { compareArea, detectArea } from "#lib/area.ts";
-import type {
-	ParsedInquiry,
-	ParsedPlan,
-	ParsedSpace,
-} from "#lib/space-form.ts";
+import type { ParsedPlan, ParsedSpace } from "#lib/space-form.ts";
 import {
 	mediaUrl,
 	type Post,
@@ -18,7 +14,6 @@ import {
 	actorMembers,
 	actors,
 	events,
-	inquiries,
 	posts,
 	spacePlans,
 } from "./db/schema.ts";
@@ -266,39 +261,6 @@ export async function deletePost(
 		.where(and(eq(posts.id, id), eq(posts.actorId, actorId)));
 }
 
-export async function createInquiry(
-	db: Db,
-	actorId: string,
-	values: ParsedInquiry,
-) {
-	await db.insert(inquiries).values({ ...values, actorId });
-}
-
-export type Inquiry = typeof inquiries.$inferSelect;
-
-export async function listInquiries(
-	db: Db,
-	actorId: string,
-	limit = 100,
-): Promise<Inquiry[]> {
-	return db
-		.select()
-		.from(inquiries)
-		.where(eq(inquiries.actorId, actorId))
-		.orderBy(desc(inquiries.createdAt))
-		.limit(limit);
-}
-
-export async function deleteInquiry(
-	db: Db,
-	actorId: string,
-	id: string,
-): Promise<void> {
-	await db
-		.delete(inquiries)
-		.where(and(eq(inquiries.id, id), eq(inquiries.actorId, actorId)));
-}
-
 // 会をハコに紐づけるときの解決。handle が空なら null、場でなければ error
 export async function resolveSpace(
 	db: Db,
@@ -315,7 +277,7 @@ export async function resolveSpace(
 	return { id: row.id, region: row.region };
 }
 
-// ハコ・団体の管理者。全員が同じ権限（ページの編集と問い合わせの受信箱）を持つ
+// ハコ・団体の管理者。全員が同じ権限（ページの編集）を持つ
 export type Member = {
 	userId: string;
 	handle: string;

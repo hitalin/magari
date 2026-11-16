@@ -6,11 +6,9 @@ import {
 	addMember,
 	createPlan,
 	createPost,
-	deleteInquiry,
 	deletePlan,
 	deletePost,
 	getManagedActor,
-	listInquiries,
 	listMembers,
 	listPlans,
 	listPosts,
@@ -40,10 +38,9 @@ const str = (form: FormData, k: string) => String(form.get(k) ?? "");
 
 export const load: PageServerLoad = async ({ locals, params }) => {
 	const actor = await managed(locals, params.handle);
-	const [plans, posts, inquiries, members] = await Promise.all([
+	const [plans, posts, members] = await Promise.all([
 		actor.kind === "space" ? listPlans(locals.db, actor.id) : [],
 		listPosts(locals.db, actor.id, 50),
-		actor.kind === "person" ? [] : listInquiries(locals.db, actor.id),
 		actor.kind === "person" ? [] : listMembers(locals.db, actor.id),
 	]);
 	const values: SpaceFormValues = {
@@ -72,10 +69,6 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 		posts,
 		members,
 		myUserId: locals.session?.user.id ?? null,
-		inquiries: inquiries.map((i) => ({
-			...i,
-			createdAt: i.createdAt.toISOString(),
-		})),
 	};
 };
 
@@ -87,7 +80,7 @@ const IMAGE_TYPES: Record<string, string> = {
 const MAX_IMAGE = 5 * 1024 * 1024;
 
 export const actions: Actions = {
-	// 管理者を @handle で足す。管理者は全員がページの編集と問い合わせの受信箱を使える
+	// 管理者を @handle で足す。管理者は全員がページを編集できる
 	addMember: async ({ request, locals, params }) => {
 		const actor = await managed(locals, params.handle);
 		if (actor.kind === "person") error(400, "管理者を足せるのはハコと団体だけ");
@@ -192,11 +185,5 @@ export const actions: Actions = {
 		const form = await request.formData();
 		await deletePost(locals.db, actor.id, str(form, "id"));
 		return { section: "post", ok: true };
-	},
-	deleteInquiry: async ({ request, locals, params }) => {
-		const actor = await managed(locals, params.handle);
-		const form = await request.formData();
-		await deleteInquiry(locals.db, actor.id, str(form, "id"));
-		return { section: "inquiry", ok: true };
 	},
 };

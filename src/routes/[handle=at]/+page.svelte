@@ -3,20 +3,15 @@ import { fullAddress } from "#lib/area.ts";
 import Blocks from "#lib/components/Blocks.svelte";
 import DayList from "#lib/components/DayList.svelte";
 import Empty from "#lib/components/Empty.svelte";
-import Field from "#lib/components/Field.svelte";
 import MonthGrid from "#lib/components/MonthGrid.svelte";
 import { formatDay } from "#lib/date.ts";
 import { filterTags } from "#lib/group.ts";
-import {
-	INQUIRY_KIND_LABEL,
-	INQUIRY_KINDS,
-	PLAN_KIND_LABEL,
-} from "#lib/space-form.ts";
+import { PLAN_KIND_LABEL } from "#lib/space-form.ts";
 import { KIND_LABEL } from "#lib/types.ts";
 import { page } from "$app/state";
 import type { PageProps } from "./$types";
 
-let { data, form }: PageProps = $props();
+let { data }: PageProps = $props();
 const actor = $derived(data.actor);
 const tags = $derived(filterTags(data.events));
 // 選んだタグのどれかを持つ間を出す（複数は OR）
@@ -47,7 +42,6 @@ const hasAccess = $derived(
 		actor.operator
 	),
 );
-const canInquire = $derived(actor.kind !== "person" && actor.hasManager);
 // 管理者のいないハコ・団体は、店や団体の公式ページではない。名前とリンクだけを出す（画像と紹介文はサーバーが落とす）
 const unofficial = $derived(actor.kind !== "person" && !actor.hasManager);
 // ハコはバナーを出さず、人のプロフィールと同じく丸いアイコンにする。X アイコンが無ければ写真を丸く切り抜く
@@ -74,7 +68,6 @@ const sections = $derived(
 		data.plans.length && { id: "plans", label: "出店プラン" },
 		{ id: "events", label: "これからの間" },
 		hasAccess && { id: "access", label: "アクセス" },
-		canInquire && { id: "contact", label: "お問い合わせ" },
 	].filter((s): s is { id: string; label: string } => !!s),
 );
 const description = $derived(actor.catch ?? actor.summary ?? undefined);
@@ -130,7 +123,6 @@ const description = $derived(actor.catch ?? actor.summary ?? undefined);
 			<p class="text-sm font-semibold">ここで開けたい人は、まず声をかけてみてください。</p>
 			<div class="pills mt-3">
 				{#if actor.xHandle}<a href="https://x.com/{actor.xHandle}" class="chip chip-tape" rel="noopener">X で @{actor.xHandle} に声をかける ›</a>{/if}
-				{#if canInquire}<a href="#contact" class="chip">フォームで送る ›</a>{/if}
 				<a href="/new?space={actor.handle}" class="chip">日が決まっていたら、ここでまがりする ›</a>
 			</div>
 		</div>
@@ -170,7 +162,6 @@ const description = $derived(actor.catch ?? actor.summary ?? undefined);
 	<section id="plans" class="mb-12 scroll-mt-20">
 		<div class="section-head">
 			<h2 class="section-title">出店プラン</h2>
-			{#if canInquire}<a href="#contact" class="more">出店の相談をする ›</a>{/if}
 		</div>
 		<div class="grid gap-4 sm:grid-cols-2">
 			{#each data.plans as plan (plan.id)}
@@ -233,36 +224,5 @@ const description = $derived(actor.catch ?? actor.summary ?? undefined);
 		<div class="pills">
 			{#each actor.links as l (l.url)}<a href={l.url} class="chip" rel="noopener">{l.label} ›</a>{/each}
 		</div>
-	</section>
-{/if}
-
-{#if canInquire}
-	<section id="contact" class="mt-12 mb-8 max-w-[36em] scroll-mt-20">
-		<div class="section-head"><h2 class="section-title">お問い合わせ</h2></div>
-		{#if form?.sent}
-			<p class="rounded-sm bg-accent-soft px-4 py-3 text-sm text-accent-ink">送信しました。{actor.name} から返事をお待ちください。</p>
-		{:else}
-			<p class="mb-4 text-sm text-muted">出店・間借りの相談、イベント利用、ご来店、取材など。{actor.name} に直接届きます。</p>
-			<form method="POST" action="?/inquire" class="panel space-y-5 p-6">
-				{#if form?.error}<p class="text-sm text-accent-ink">{form.error}</p>{/if}
-				<Field label="種別">
-					<select name="kind" class="input">
-						{#each INQUIRY_KINDS as k (k)}
-							<option value={k} selected={(form?.values?.kind ?? 'rental') === k}>{INQUIRY_KIND_LABEL[k]}</option>
-						{/each}
-					</select>
-				</Field>
-				<div class="grid gap-4 sm:grid-cols-2">
-					<Field label="お名前"><input name="name" value={form?.values?.name ?? ''} required maxlength="50" class="input" /></Field>
-					<Field label="メールアドレス"><input type="email" name="email" value={form?.values?.email ?? ''} required class="input" /></Field>
-				</div>
-				<Field label="電話番号" hint="任意"><input type="tel" name="phone" value={form?.values?.phone ?? ''} class="input" /></Field>
-				<Field label="内容"><textarea name="body" rows="6" required class="input">{form?.values?.body ?? ''}</textarea></Field>
-				<div class="absolute -left-[9999px]" aria-hidden="true">
-					<label>ウェブサイト（入力しないでください）<input name="website" tabindex="-1" autocomplete="off" /></label>
-				</div>
-				<button type="submit" class="btn btn-primary">送信する</button>
-			</form>
-		{/if}
 	</section>
 {/if}

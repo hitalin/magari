@@ -1,4 +1,4 @@
-// 場（ハコ）のページ・出店プラン・お知らせ・問い合わせのフォーム検証（純粋関数）。
+// 場（ハコ）のページ・出店プラン・お知らせのフォーム検証（純粋関数）。
 import { isValidHandle } from "./id";
 
 const nullable = (s: string) => (s.trim() ? s.trim() : null);
@@ -220,64 +220,6 @@ export function parsePostForm(
 	const e = tooLong("題", title, 100) ?? tooLong("本文", v.body, 10000);
 	if (e) return { ok: false, error: e };
 	return { ok: true, values: { title, body: nullable(v.body) } };
-}
-
-export const INQUIRY_KINDS = [
-	"rental",
-	"event",
-	"visit",
-	"press",
-	"other",
-] as const;
-export type InquiryKind = (typeof INQUIRY_KINDS)[number];
-export const INQUIRY_KIND_LABEL: Record<InquiryKind, string> = {
-	rental: "出店・間借りの相談",
-	event: "イベント利用の相談",
-	visit: "ご来店について",
-	press: "取材・掲載のご依頼",
-	other: "その他",
-};
-
-export type InquiryFormValues = {
-	kind: string;
-	name: string;
-	email: string;
-	phone: string;
-	body: string;
-	website: string; // ハニーポット。人は入力しない
-};
-export type ParsedInquiry = {
-	kind: InquiryKind;
-	name: string;
-	email: string;
-	phone: string | null;
-	body: string;
-};
-
-export function parseInquiryForm(
-	v: InquiryFormValues,
-): { ok: true; values: ParsedInquiry } | { ok: false; error: string } {
-	if (v.website.trim()) return { ok: false, error: "bot" };
-	const name = v.name.trim();
-	const email = v.email.trim();
-	const body = v.body.trim();
-	if (!name) return { ok: false, error: "お名前を入れてください" };
-	if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
-		return { ok: false, error: "メールアドレスが正しくありません" };
-	if (!body) return { ok: false, error: "内容を入れてください" };
-	const e =
-		tooLong("お名前", name, 50) ??
-		tooLong("メールアドレス", email, 200) ??
-		tooLong("電話番号", v.phone, 30) ??
-		tooLong("内容", body, 5000);
-	if (e) return { ok: false, error: e };
-	const kind = (INQUIRY_KINDS as readonly string[]).includes(v.kind)
-		? (v.kind as InquiryKind)
-		: "other";
-	return {
-		ok: true,
-		values: { kind, name, email, phone: nullable(v.phone), body },
-	};
 }
 
 // 場・団体の新規登録

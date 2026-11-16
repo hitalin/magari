@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
 	EMPTY_SPACE_FORM,
-	parseInquiryForm,
 	parseLinks,
 	parseNewActorForm,
 	parsePlanForm,
@@ -80,26 +79,6 @@ describe("parsePostForm", () => {
 	it("題が必須", () => {
 		expect(parsePostForm({ title: "オープン", body: "" }).ok).toBe(true);
 		expect(parsePostForm({ title: "", body: "x" }).ok).toBe(false);
-	});
-});
-
-describe("parseInquiryForm", () => {
-	const v = {
-		kind: "rental",
-		name: "山田",
-		email: "a@example.com",
-		phone: "",
-		body: "間借りしたい",
-		website: "",
-	};
-	it("必須項目とメールの形を見る", () => {
-		expect(parseInquiryForm(v).ok).toBe(true);
-		expect(parseInquiryForm({ ...v, email: "nope" }).ok).toBe(false);
-		expect(parseInquiryForm({ ...v, body: "" }).ok).toBe(false);
-	});
-	it("ハニーポットに入力があれば bot として弾く", () => {
-		const r = parseInquiryForm({ ...v, website: "http://spam" });
-		expect(!r.ok && r.error).toBe("bot");
 	});
 });
 

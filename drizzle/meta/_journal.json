@@ -43,6 +43,13 @@
       "when": 1794803818270,
       "tag": "0005_moderation",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1794823438279,
+      "tag": "0006_drop_inquiries",
+      "breakpoints": true
     }
   ]
 }

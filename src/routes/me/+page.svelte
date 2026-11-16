@@ -102,7 +102,7 @@ const STATUS: Record<string, string> = {
 		<a href="/spaces/new" class="btn">ハコを登録する</a>
 	</div>
 	{#if data.managed.length === 0}
-		<p class="text-sm text-muted">店や会場のページを作ると、紹介・出店プラン・アクセス・お知らせ・問い合わせフォームを載せられます。</p>
+		<p class="text-sm text-muted">店や会場のページを作ると、紹介・出店プラン・アクセス・お知らせを載せられます。</p>
 	{:else}
 		<div class="rule-list">
 			{#each data.managed as a (a.id)}
