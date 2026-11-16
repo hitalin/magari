@@ -126,7 +126,6 @@ const cardDescription = $derived(
 			</p>
 			<div class="mt-4 flex flex-wrap gap-3">
 				<a href={shareUrl} class="btn btn-primary" rel="noopener">X で共有</a>
-				{#if event.hosts[0]}<a href="/@{event.hosts[0].handle}" class="btn">{event.hosts[0].name} のページ ›</a>{/if}
 			</div>
 		</div>
 	</div>
