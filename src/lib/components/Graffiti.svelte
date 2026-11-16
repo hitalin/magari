@@ -18,7 +18,6 @@ import {
 // 地面（アスファルト）の落書き。どのページでも同じ 1 枚の地面で、ページの中身はその上に載っている。
 // 右下のチョークを持つと、画面のどこでも描ける。描いた線は少し置いてから勝手に残る（残すボタンは無い）。
 // 線は中身の後ろ（z-index: -1 の canvas）に描く。canvas は画面の大きさだけで、スクロールのたびに見える所を描き直す。
-let { admin = false }: { admin?: boolean } = $props();
 
 // 道具ごとの線。太さ（px）、縁のぼけ（px。スプレーだけ）、濃さ
 const BRUSH: Record<Tool, { width: number; blur: number; alpha: number }> = {
@@ -26,29 +25,27 @@ const BRUSH: Record<Tool, { width: number; blur: number; alpha: number }> = {
 	marker: { width: 7, blur: 0, alpha: 1 },
 	paint: { width: 18, blur: 0, alpha: 1 },
 	spray: { width: 9, blur: 12, alpha: 0.9 },
+	eraser: { width: 28, blur: 0, alpha: 1 },
 };
 const TOOLS: [Tool, string][] = [
 	["chalk", "チョーク"],
 	["marker", "マーカー"],
 	["paint", "ペンキ"],
 	["spray", "スプレー"],
+	["eraser", "消しゴム"],
 ];
-// 消すときに、押した所からこの距離までの線を探す
-const ERASE_REACH = 30;
 // 描き終えてから残すまでの間（続けて描いた線をまとめて送る）
 const SAVE_AFTER_MS = 2500;
 
 let canvas: HTMLCanvasElement;
 let ctx: CanvasRenderingContext2D | null = null;
 let holding = $state(false);
-let tool = $state<Tool | "erase">("chalk");
+let tool = $state<Tool>("chalk");
 let color = $state(0);
 let dpr = 1;
 let scribbles = $state.raw<Scribble[]>([]);
 // まだ残していない線
 let pending = $state.raw<Stroke[]>([]);
-// 運営者が消したもの（読み直すまでの間、手元で引く）
-let removed = $state.raw<string[]>([]);
 let notice = $state("");
 // いま引いている線
 let current: Stroke | null = null;
@@ -57,16 +54,14 @@ let saveTimer: ReturnType<typeof setTimeout> | undefined;
 let saving = false;
 
 const visible = $derived(
-	scribbles
-		.filter((s) => !removed.includes(s.id))
-		.flatMap((s) => {
-			const strokes = parseStrokes(s.d);
-			if (!strokes) return [];
-			const ys = strokes.flatMap((st) => st.points.map((p) => p[1]));
-			return [
-				{ id: s.id, strokes, top: Math.min(...ys), bottom: Math.max(...ys) },
-			];
-		}),
+	scribbles.flatMap((s) => {
+		const strokes = parseStrokes(s.d);
+		if (!strokes) return [];
+		const ys = strokes.flatMap((st) => st.points.map((p) => p[1]));
+		return [
+			{ id: s.id, strokes, top: Math.min(...ys), bottom: Math.max(...ys) },
+		];
+	}),
 );
 
 // fade: 古さによる薄さ（1 がそのまま）
@@ -78,7 +73,10 @@ function drawStroke(
 	const brush = BRUSH[tool];
 	c.lineWidth = brush.width;
 	c.strokeStyle = COLORS[color];
-	c.globalAlpha = brush.alpha * fade;
+	// 消しゴムは色を塗らず、それまでに描いた線を抜く（古さで薄くはしない）
+	const erasing = tool === "eraser";
+	c.globalCompositeOperation = erasing ? "destination-out" : "source-over";
+	c.globalAlpha = erasing ? 1 : brush.alpha * fade;
 	// スプレーの縁は、同じ色の影でぼかす（影のぼけは transform の外なので dpr を掛ける）
 	c.shadowColor = COLORS[color];
 	c.shadowBlur = brush.blur * dpr;
@@ -169,10 +167,6 @@ function at(e: PointerEvent): [number, number] {
 function down(e: PointerEvent) {
 	if (!e.isPrimary || !ctx) return;
 	const p = at(e);
-	if (tool === "erase") {
-		erase(p);
-		return;
-	}
 	(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
 	clearTimeout(saveTimer);
 	notice = "";
@@ -244,22 +238,6 @@ function toggle() {
 	notice = "";
 	if (!holding) save();
 }
-
-// 運営者だけ: 押した所にいちばん近い落書きを、1 回ぶんまるごと消す
-async function erase([x, y]: [number, number]) {
-	let nearest: { id: string; dist: number } | null = null;
-	for (const s of visible)
-		for (const stroke of s.strokes)
-			for (const [px, py] of stroke.points) {
-				const dist = Math.hypot(px - x, py - y);
-				if (dist <= ERASE_REACH && (!nearest || dist < nearest.dist))
-					nearest = { id: s.id, dist };
-			}
-	if (!nearest || !confirm("この落書きを消しますか？")) return;
-	const res = await fetch(`/api/graffiti/${nearest.id}`, { method: "DELETE" });
-	if (res.ok) removed = [...removed, nearest.id];
-	else notice = "消せませんでした。";
-}
 </script>
 
 <svelte:window onkeydown={(e) => e.key === 'Escape' && holding && toggle()} />
@@ -278,9 +256,6 @@ async function erase([x, y]: [number, number]) {
 			{#each TOOLS as [t, label] (t)}
 				<button type="button" class="chip {tool === t ? 'chip-tape' : 'chip-plain'}" aria-pressed={tool === t} onclick={() => (tool = t)}>{label}</button>
 			{/each}
-			{#if admin}
-				<button type="button" class="chip {tool === 'erase' ? 'chip-tape' : 'chip-plain'}" aria-pressed={tool === 'erase'} onclick={() => (tool = 'erase')}>消す</button>
-			{/if}
 			<div class="colors" role="group" aria-label="色">
 				{#each COLORS as c, i (c)}
 					<button type="button" class:on={color === i} style="background: {c}" aria-pressed={color === i} aria-label="色 {i + 1}" onclick={() => (color = i)}></button>

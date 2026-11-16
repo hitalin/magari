@@ -11,8 +11,9 @@ export const VISIBLE = 500;
 export const MAX_STROKES = 60;
 export const MAX_POINTS = 2000;
 
-// 道具: チョーク（細くかすれる）、マーカー（くっきり）、ペンキ（刷毛の幅）、スプレー（縁がぼける）
-export type Tool = "chalk" | "marker" | "paint" | "spray";
+// 道具: チョーク（細くかすれる）、マーカー（くっきり）、ペンキ（刷毛の幅）、スプレー（縁がぼける）、
+// 消しゴム（それより前に描かれた線を、なぞった所だけ消す。これも 1 本の線として残す）
+export type Tool = "chalk" | "marker" | "paint" | "spray" | "eraser";
 // 色は番号（COLORS の何番目か）で持つ。保存した落書きの色が変わるので、並びは変えずに後ろへ足す
 export const COLORS = [
 	"#edeae3",
@@ -33,12 +34,14 @@ const LETTER: Record<Tool, string> = {
 	marker: "m",
 	paint: "p",
 	spray: "s",
+	eraser: "e",
 };
 const TOOL: Record<string, Tool> = {
 	c: "chalk",
 	m: "marker",
 	p: "paint",
 	s: "spray",
+	e: "eraser",
 };
 
 const clamp = (n: number, max: number) =>

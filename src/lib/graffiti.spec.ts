@@ -41,6 +41,21 @@ describe("encodeStrokes / parseStrokes", () => {
 		expect(parseStrokes(d)).toEqual(strokes);
 	});
 
+	it("消しゴムも線として往復する", () => {
+		const strokes = [
+			{
+				tool: "eraser" as const,
+				color: 0,
+				points: [
+					[5, 6],
+					[7, 8],
+				] as [number, number][],
+			},
+		];
+		expect(encodeStrokes(strokes)).toBe("e0 5,6 7,8");
+		expect(parseStrokes("e0 5,6 7,8")).toEqual(strokes);
+	});
+
 	it("座標は整数に丸め、壁の中に収める", () => {
 		expect(
 			encodeStrokes([

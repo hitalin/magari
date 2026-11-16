@@ -87,7 +87,7 @@ const isActive = (href: string) =>
 	</div>
 </header>
 
-<Graffiti admin={data.admin} />
+<Graffiti />
 
 <main id="main" class="mx-auto max-w-content px-4 pt-6 pb-20">
 	{@render children()}
