@@ -5,7 +5,7 @@ import type { PageProps } from "./$types";
 let { form }: PageProps = $props();
 </script>
 
-<svelte:head><title>ハコを登録する | まがり</title></svelte:head>
+<svelte:head><title>ハコを登録する | ◱</title></svelte:head>
 
 <section class="mx-auto mt-6 max-w-md">
 	<p class="label">ハコを登録する</p>

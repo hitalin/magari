@@ -26,7 +26,7 @@ const weekEvents = $derived(
 </script>
 
 <svelte:head>
-	<title>これからの間 | まがり</title>
+	<title>これからの間 | ◱</title>
 	<meta name="description" content="これから 7 日のあいだに開く間。間借り店舗・日替わり店長・ライブ・自助会・オフ会を一箇所で。" />
 </svelte:head>
 

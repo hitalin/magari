@@ -74,7 +74,7 @@ const description = $derived(actor.catch ?? actor.summary ?? undefined);
 </script>
 
 <svelte:head>
-	<title>{actor.name} | まがり</title>
+	<title>{actor.name} | ◱</title>
 	{#if description}<meta name="description" content={description} />{/if}
 	<meta property="og:title" content={actor.name} />
 	{#if description}<meta property="og:description" content={description} />{/if}

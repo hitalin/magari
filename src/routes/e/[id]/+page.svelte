@@ -36,7 +36,7 @@ const cardDescription = $derived(
 </script>
 
 <svelte:head>
-	<title>{event.title} | まがり</title>
+	<title>{event.title} | ◱</title>
 	<meta property="og:title" content={event.title} />
 	<meta property="og:type" content="article" />
 	<meta name="description" content={cardDescription} />

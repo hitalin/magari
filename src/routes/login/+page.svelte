@@ -45,7 +45,7 @@ async function passkey() {
 }
 </script>
 
-<svelte:head><title>ログイン | まがり</title></svelte:head>
+<svelte:head><title>ログイン | ◱</title></svelte:head>
 
 <section class="mx-auto mt-6 max-w-md">
 	<p class="label">ログイン</p>

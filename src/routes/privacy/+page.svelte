@@ -1,10 +1,10 @@
 <svelte:head>
-	<title>プライバシーポリシー | まがり</title>
+	<title>プライバシーポリシー | ◱</title>
 	<meta name="description" content="まがり（magari.cc）が預かる情報と、その扱い。" />
 </svelte:head>
 
 <article class="doc mx-auto mt-6 max-w-[40em]">
-	<p class="label">まがり</p>
+	<p class="label">◱</p>
 	<h1>プライバシーポリシー</h1>
 	<p class="doc-lead">まがりが何を預かり、何に使うかを書きます。預かる情報は、できるだけ少なくしています。</p>
 

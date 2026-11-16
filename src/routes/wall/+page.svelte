@@ -7,7 +7,7 @@ let { data }: PageProps = $props();
 </script>
 
 <svelte:head>
-	<title>フライヤー | まがり</title>
+	<title>フライヤー | ◱</title>
 	<meta name="description" content="これからの間のフライヤーを貼った壁。" />
 </svelte:head>
 

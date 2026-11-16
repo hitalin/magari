@@ -32,7 +32,7 @@ const isActive = (href: string) => page.url.pathname.startsWith(href);
 	<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 	<link rel="manifest" href="/manifest.webmanifest" />
 	<meta name="theme-color" content="#151617" />
-	<meta property="og:site_name" content="まがり" />
+	<meta property="og:site_name" content="◱" />
 	<!-- ページが ogImage（会のフライヤー、ハコの写真）を返せばそれを、無ければ既定の画像 -->
 	<meta property="og:image" content="{page.url.origin}{page.data.ogImage ?? '/og.png'}" />
 	<meta name="twitter:card" content="summary_large_image" />
@@ -76,7 +76,7 @@ const isActive = (href: string) => page.url.pathname.startsWith(href);
 <!-- ナビと同じものは繰り返さない。ここにしか無い入口（壁、運営への連絡、ソース）だけを 1 行で -->
 <footer class="border-t border-line">
 	<div class="mx-auto flex max-w-content flex-wrap items-center justify-between gap-x-6 gap-y-2 px-4 py-6 text-xs text-dim">
-		<p>© {year} まがり</p>
+		<p>© {year} ◱</p>
 		<nav aria-label="フッター" class="flex flex-wrap gap-x-5 gap-y-1">
 			<a href="/wall" class="hover:text-text">フライヤーの壁</a>
 			<a href="/terms" class="hover:text-text">利用規約</a>

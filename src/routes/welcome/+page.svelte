@@ -14,7 +14,7 @@ async function addPasskey() {
 }
 </script>
 
-<svelte:head><title>はじめまして | まがり</title></svelte:head>
+<svelte:head><title>はじめまして | ◱</title></svelte:head>
 
 <section class="mx-auto mt-6 max-w-md">
 	<p class="label">はじめまして</p>

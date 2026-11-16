@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" aria-label="まがり">
-  <!-- 「間」= 門の中の日。日をガムテープに置き換えて「間借り」。 -->
+  <!-- ◱ = 四角の一隅だけ仕切った形。人の場所の一角を借りる「間借り」。借りた一角にガムテープを貼る。 -->
   <defs>
     <linearGradient id="tape" x1="0" y1="0" x2="1" y2="0">
       <stop offset="0" stop-color="#d49a5a"/>
@@ -11,26 +11,22 @@
       <path d="M0 3h6" stroke="#000" stroke-opacity="0.10" stroke-width="1"/>
       <path d="M3 0v6" stroke="#fff" stroke-opacity="0.12" stroke-width="1"/>
     </pattern>
-    <filter id="shadow" x="-10%" y="-20%" width="120%" height="160%">
-      <feDropShadow dx="0" dy="6" stdDeviation="6" flood-color="#000" flood-opacity="0.55"/>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="5" stdDeviation="5" flood-color="#000" flood-opacity="0.5"/>
     </filter>
   </defs>
 
-  <!-- 門（左右の柱と、内側に向く短い庇） -->
-  <g fill="#f1efe9">
-    <rect x="104" y="92" width="54" height="332" rx="10"/>
-    <rect x="104" y="92" width="118" height="48" rx="10"/>
-    <rect x="354" y="92" width="54" height="332" rx="10"/>
-    <rect x="290" y="92" width="118" height="48" rx="10"/>
+  <!-- ハコ（外枠）と、左下の一角の仕切り -->
+  <g fill="none" stroke="#f1efe9" stroke-linejoin="round">
+    <rect x="114" y="114" width="284" height="284" rx="6" stroke-width="40"/>
+    <path d="M114 256H256V398" stroke-width="28"/>
   </g>
 
-  <!-- ガムテープ（日の位置に斜めに貼る） -->
-  <g transform="rotate(-8 256 270)" filter="url(#shadow)">
-    <polygon points="96,232 416,226 422,238 414,256 421,276 413,296 420,312 96,318 90,300 98,282 90,262 97,246"
-             fill="url(#tape)"/>
-    <polygon points="96,232 416,226 422,238 414,256 421,276 413,296 420,312 96,318 90,300 98,282 90,262 97,246"
-             fill="url(#weave)"/>
+  <!-- ガムテープ（借りた一角に斜めに貼る） -->
+  <g transform="rotate(-8 197 322)" filter="url(#shadow)">
+    <polygon points="150,282 244,278 250,290 243,304 250,318 243,332 250,346 244,362 150,366 144,352 151,338 144,324 151,310 144,296" fill="url(#tape)"/>
+    <polygon points="150,282 244,278 250,290 243,304 250,318 243,332 250,346 244,362 150,366 144,352 151,338 144,324 151,310 144,296" fill="url(#weave)"/>
     <!-- 光の反射 -->
-    <polygon points="96,232 416,226 418,244 98,250" fill="#fff" fill-opacity="0.12"/>
+    <polygon points="150,282 244,278 246,292 152,296" fill="#fff" fill-opacity="0.12"/>
   </g>
 </svg>

@@ -4,7 +4,7 @@ import { page } from "$app/state";
 const notFound = $derived(page.status === 404);
 </script>
 
-<svelte:head><title>{notFound ? '道がくねくねしすぎました' : 'つまずきました'} | まがり</title></svelte:head>
+<svelte:head><title>{notFound ? '道がくねくねしすぎました' : 'つまずきました'} | ◱</title></svelte:head>
 
 <section class="dots -mx-4 mt-10 px-4 py-20 text-center">
 	<p class="label">{page.status}</p>

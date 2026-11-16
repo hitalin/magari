@@ -5,7 +5,7 @@ import type { PageProps } from "./$types";
 let { data, form }: PageProps = $props();
 </script>
 
-<svelte:head><title>まがりする | まがり</title></svelte:head>
+<svelte:head><title>まがりする | ◱</title></svelte:head>
 
 <section class="mt-4">
 	<p class="label">まがりする</p>

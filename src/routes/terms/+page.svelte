@@ -1,10 +1,10 @@
 <svelte:head>
-	<title>利用規約 | まがり</title>
+	<title>利用規約 | ◱</title>
 	<meta name="description" content="まがり（magari.cc）の利用規約。" />
 </svelte:head>
 
 <article class="doc mx-auto mt-6 max-w-[40em]">
-	<p class="label">まがり</p>
+	<p class="label">◱</p>
 	<h1>利用規約</h1>
 	<p class="doc-lead">まがり（magari.cc）を使うときの約束です。ページを作る、間を開く（会を載せる）ときは、この規約に同意したものとします。</p>
 

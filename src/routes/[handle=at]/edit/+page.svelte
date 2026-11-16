@@ -18,7 +18,7 @@ const KIND_WORD: Record<string, string> = {
 let newPlan = $state(false);
 </script>
 
-<svelte:head><title>{data.values.name} を編集 | まがり</title></svelte:head>
+<svelte:head><title>{data.values.name} を編集 | ◱</title></svelte:head>
 
 <div class="mt-4 mb-8 flex flex-wrap items-end justify-between gap-3">
 	<div>

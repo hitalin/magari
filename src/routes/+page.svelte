@@ -25,7 +25,7 @@ const WORDS = [
 </script>
 
 <svelte:head>
-	<title>まがり | 今日も、どこかで誰かが開けている。</title>
+	<title>◱ | 今日も、どこかで誰かが開けている。</title>
 	<meta name="description" content="今日もどこかで誰かが開けている。行ってもいいし、自分が開けてもいい。間借り店舗・日替わり店長・ライブ・自助会・オフ会を一箇所で。" />
 </svelte:head>
 

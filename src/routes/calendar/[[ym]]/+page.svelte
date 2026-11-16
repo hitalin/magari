@@ -23,7 +23,7 @@ const monthEvents = $derived(
 </script>
 
 <svelte:head>
-	<title>{data.year}年{data.month}月 | まがり</title>
+	<title>{data.year}年{data.month}月 | ◱</title>
 </svelte:head>
 
 <section class="mt-4 mb-6">

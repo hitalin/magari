@@ -6,7 +6,7 @@ import type { PageProps } from "./$types";
 let { data, form }: PageProps = $props();
 </script>
 
-<svelte:head><title>間を編集 | まがり</title></svelte:head>
+<svelte:head><title>間を編集 | ◱</title></svelte:head>
 
 <section class="mx-auto mt-4 max-w-2xl">
 	<p class="label">間を編集</p>

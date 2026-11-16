@@ -6,7 +6,7 @@ import type { PageProps } from "./$types";
 let { data, form }: PageProps = $props();
 </script>
 
-<svelte:head><title>掲載の取り下げ・連絡 | まがり</title></svelte:head>
+<svelte:head><title>掲載の取り下げ・連絡 | ◱</title></svelte:head>
 
 <section class="mx-auto mt-6 max-w-xl">
 	<p class="label">運営への連絡</p>

@@ -41,7 +41,7 @@ const STATUS: Record<string, string> = {
 };
 </script>
 
-<svelte:head><title>自分 | まがり</title></svelte:head>
+<svelte:head><title>自分 | ◱</title></svelte:head>
 
 <header class="panel mt-4 mb-8 p-6 sm:p-8">
 	<div class="flex items-start gap-5">

@@ -6,7 +6,7 @@ let { data }: PageProps = $props();
 </script>
 
 <svelte:head>
-	<title>ハコ | まがり</title>
+	<title>ハコ | ◱</title>
 	<meta name="description" content="間が開かれる店や会場（ハコ）の一覧。" />
 </svelte:head>
 

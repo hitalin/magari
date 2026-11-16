@@ -13,7 +13,7 @@ const fmt = new Intl.DateTimeFormat("ja-JP", {
 </script>
 
 <svelte:head>
-	<title>運営への連絡 | まがり</title>
+	<title>運営への連絡 | ◱</title>
 	<meta name="robots" content="noindex" />
 </svelte:head>
 
