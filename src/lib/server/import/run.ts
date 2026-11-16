@@ -47,7 +47,7 @@ async function fetchCalendar(
 	return parseIcs(await res.text());
 }
 
-// 取り込み元のページは名前・公式へのリンク・エリアだけ。紹介文と画像（公式ページの写真、X のアイコン）は
+// 取り込み元のページは名前・公式へのリンク・エリアと、公式ページの店の写真。紹介文と X のアイコンは
 // 見本を出す環境（IMPORT_SAMPLES=1。開発だけ）でしか写さない
 const withSamples = () => env.IMPORT_SAMPLES === "1";
 
@@ -126,7 +126,7 @@ async function syncImages(
 			await setHeaderKey(db, actor.id, key);
 		}
 	}
-	if (icon) {
+	if (icon && withSamples()) {
 		const key = await imageKey("avatars", actor.id, icon);
 		if (actor.avatarUrl !== mediaUrl(key)) {
 			await copyImage(key, icon);
@@ -313,10 +313,9 @@ export async function runImports(
 			const actor = await upsertActor(db, src);
 			actorId = actor.id;
 			// 画像が取れなくても会の取り込みは続ける
-			if (withSamples())
-				await syncImages(db, src, actor).catch((e) =>
-					console.error(`images ${src.id}: ${e}`),
-				);
+			await syncImages(db, src, actor).catch((e) =>
+				console.error(`images ${src.id}: ${e}`),
+			);
 		}
 		for (const cal of src.calendars) {
 			try {

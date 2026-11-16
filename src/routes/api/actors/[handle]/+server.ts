@@ -7,7 +7,7 @@ import type { ActorPage } from "#lib/types.ts";
 import type { RequestHandler } from "./$types";
 
 export const GET: RequestHandler = async ({ locals, params }) => {
-	// 見本を出す環境（開発）では、取り込んだハコを写真つきで返す。本番には IMPORT_SAMPLES を置かない
+	// 見本を出す環境（開発）では、取り込んだハコをアイコンと紹介文つきで返す。本番には IMPORT_SAMPLES を置かない
 	const actor = await getActorByHandle(
 		locals.db,
 		params.handle,

@@ -26,7 +26,7 @@ const hasAccess = $derived(
 		actor.operator
 	),
 );
-// 管理者のいないハコ・団体は、店や団体の公式ページではない。名前とリンクだけを出す（画像と紹介文はサーバーが落とす）
+// 管理者のいないハコ・団体は、店や団体の公式ページではない。名前とリンクと店の写真だけを出す（アイコンと紹介文はサーバーが落とす）
 const unofficial = $derived(actor.kind !== "person" && !actor.hasManager);
 // ハコはバナーを出さず、人のプロフィールと同じく丸いアイコンにする。X アイコンが無ければ写真を丸く切り抜く
 const icon = $derived(
@@ -83,7 +83,7 @@ const description = $derived(actor.catch ?? actor.summary ?? undefined);
 	{#if actor.summary}<p class="mt-3 max-w-[34em] text-muted">{actor.summary}</p>{/if}
 	{#if unofficial}
 		<p class="mt-3 max-w-[34em] text-xs text-muted">
-			運営者がまだいない非公式のページで、名前とリンクだけを載せています。運営者の方は、<a href="/contact?kind=claim&about=@{actor.handle}" class="underline underline-offset-2 hover:text-accent-ink">ページの引き取り</a>か<a href="/contact?kind=takedown&about=@{actor.handle}" class="underline underline-offset-2 hover:text-accent-ink">掲載の取り下げ</a>をご連絡ください。
+			運営者がまだいない非公式のページで、名前とリンクと、公式ページの店の写真だけを載せています。運営者の方は、<a href="/contact?kind=claim&about=@{actor.handle}" class="underline underline-offset-2 hover:text-accent-ink">ページの引き取り</a>か<a href="/contact?kind=takedown&about=@{actor.handle}" class="underline underline-offset-2 hover:text-accent-ink">掲載の取り下げ</a>をご連絡ください。
 		</p>
 	{/if}
 	<div class="pills mt-5">

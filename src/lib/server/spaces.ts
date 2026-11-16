@@ -17,7 +17,7 @@ export type ManagedRef = {
 };
 
 // ハコ一覧。エリア順（region の都道府県）、同じエリアでは今から先の間が多い順。
-// showSamples: 開発環境で、取り込んだ見本のハコを写真つきで出す（nameOnlyIfUnmanaged）
+// showSamples: 開発環境で、取り込んだ見本のハコをアイコンと紹介文つきで出す（nameOnlyIfUnmanaged）
 export async function listSpaces(
 	db: Db,
 	showSamples = false,

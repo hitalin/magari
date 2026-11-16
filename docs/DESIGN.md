@@ -138,7 +138,8 @@ UI/UX の型は「意識が低すぎる、しょぼい Luma」。Luma から借�
 各団体は今まで通り Google カレンダーで運用し、まがりが公開 iCal を定期的に読んで鏡写しにする。Google の API や認証は使わない（iCal は標準形式なので、別のカレンダーに移っても同じ経路で読める）。
 
 - **写すのは題・日時・場所・元へのリンクと、説明文の頭 120 字だけ**（`normalize.ts` の `excerpt`）。全文は元の告知で読んでもらう。説明文に告知ページが無い会は、取り込み元の公式ページ（`sources.ts` の `url`）を告知のリンクにする。会のページには「予定表から写した情報で、本人が載せたものではない」と出す。
-- **開発環境の見本**: `IMPORT_SAMPLES=1` の環境だけ、見本として紹介文と画像（公式ページの写真、X のアイコン）も R2 に写し（`sources.ts` の `summary` / `photo` / `icon`）、見た目の確認用にそのまま出す（`nameOnlyIfUnmanaged` の `showSamples`。API の `/api/spaces` と `/api/actors/{handle}` が渡す）。取り込みの有無（`IMPORT_ENABLED`）とは別の旗なので、本番で取り込みを有効にしても画像と紹介文は写さず、出さない。
+- **店の写真**: 取り込み元の公式ページにある店の写真（`sources.ts` の `photo`）は、本番でも R2 に写して、ハコの一覧とページに出す。
+- **開発環境の見本**: `IMPORT_SAMPLES=1` の環境だけ、見本として紹介文と X のアイコンも写し（`sources.ts` の `summary` / `icon`。アイコンは R2 へ）、見た目の確認用にそのまま出す（`nameOnlyIfUnmanaged` の `showSamples`。API の `/api/spaces` と `/api/actors/{handle}` が渡す）。取り込みの有無（`IMPORT_ENABLED`）とは別の旗なので、本番で取り込みを有効にしても紹介文と X のアイコンは写さず、出さない。
 - **取り込んだ会は、まがりの中で広げない。** 編集はできない（元のカレンダーが正）。この先、会への反応（参加表明など）や ActivityPub の配送を足すときも、取り込んだ会（`events.source` あり）は対象にしない。
 - **取り込みはオプトイン。** `IMPORT_ENABLED=1` の環境でだけ `POST /api/admin/import` と `scheduled` が動く（無ければ 404 / 何もしない）。開発は `.dev.vars`、本番は `wrangler.jsonc` の vars に置き、本番は Cron（`triggers.crons`）で毎時走る。掲載の合意はまだ取れていないので、申し出があればすぐ外す（掲載拒否リスト）。止めるときは vars と Cron を消す。
 - 取り込み元は `src/lib/server/import/sources.ts`。1 取り込み元 = 1 Actor（場または団体）+ 複数カレンダー。
@@ -149,7 +150,7 @@ UI/UX の型は「意識が低すぎる、しょぼい Luma」。Luma から借�
   - adapter-cloudflare は wrangler 設定の `main` の場所を毎回消して生成物を書くので、adapter には `wrangler.adapter.jsonc` を渡し、`wrangler.jsonc` の `main` は手書きの `worker.ts` にする。`worker.ts` は生成物の `fetch` をそのまま出し、`scheduled` で自分の `/api/admin/import` を叩く。
   - adapter は `pnpm dev` の bindings もこの設定から読む。`wrangler.adapter.jsonc` には D1・R2 が無いので、`platformProxy.configPath` で `wrangler.jsonc` を読ませる。
 - 取り込んだ会は `events.source` / `source_uid` を持つ。取り込み方法（Google カレンダーなど）は画面に出さない。
-- 取り込み元のハコは、名前・公式へのリンク・X の handle と、`sources.ts` の `area`（`actors.region`）、それに `IMPORT_SAMPLES=1` の環境では見本用の紹介文と画像を持つ。掲載拒否リスト（`blocked_handles`）にある handle の取り込み元は飛ばす。引き取られて管理者のいるページは取り込みで書き換えず、会だけを写す。
+- 取り込み元のハコは、名前・公式へのリンク・X の handle と、`sources.ts` の `area`（`actors.region`）、店の写真、それに `IMPORT_SAMPLES=1` の環境では見本用の紹介文と X のアイコンを持つ。掲載拒否リスト（`blocked_handles`）にある handle の取り込み元は飛ばす。引き取られて管理者のいるページは取り込みで書き換えず、会だけを写す。
 - ハコのページは、人のプロフィールと同じく名前の左に丸いアイコンを出し、上部のバナーは出さない。アイコンは `avatar_url`、無ければ `header_key` の写真の中央を丸く切り抜く。人と団体のページは今までどおり写真を上部のバナーにする。
 - フリカレ（freecalend.com）は iCal を出さないので `freecalend.ts` で読む。公開ページの JS が叩く `POST /open/data` を同じ形で呼ぶ。
   - 本文の `keys` は `{"data":[[キー, 版, 版, [["ok-{mem}-all-r-cald",true]], []], …]}` を 2 重に URL エンコードしたもの。キーは月 `cald-{mem}-{y}-{m}` と日 `cald-{mem}-{y}-{m}-{d}`。版に古い値を送ると、中身のある日だけ `set` で返る。
@@ -214,7 +215,7 @@ UI/UX の型は「意識が低すぎる、しょぼい Luma」。Luma から借�
 | SNS（X、Instagram）、会社概要、関連サイト | `x_handle` / `instagram` / `operator` / `links` |
 | オープンイベントなどの催し | 会（Event）。「ハコ」に自分の場を指定して開く |
 
-- 管理者のいないハコ・団体は、名前・エリア・公式へのリンクだけを出す。画像と紹介文は、載せた本人がいないのでサーバーが落とす（`nameOnlyIfUnmanaged`。DB に残っていても出さない）。一覧とページに「非公式」の印を出す。看板から `/contact` へ、ページの引き取りと掲載の取り下げの連絡ができる。
+- 管理者のいないハコ・団体は、名前・エリア・公式へのリンクと、取り込みで写した店の写真だけを出す。アイコンと紹介文は、載せた本人がいないのでサーバーが落とす（`nameOnlyIfUnmanaged`。DB に残っていても出さない）。一覧とページに「非公式」の印を出す。看板から `/contact` へ、ページの引き取りと掲載の取り下げの連絡ができる。
 - **ハコへの問い合わせフォームは持たない。** 名前・メールアドレス・電話番号を他人から預かる機能は権利や個人情報の問題に発展しやすく、間借りの相談は X の DM などで足りる。`inquiries` テーブルは `0006_drop_inquiries` で消す。
 - 画像は R2 に生のまま置く（変換なし）。JPEG / PNG / WebP、5MB まで。
 

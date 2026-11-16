@@ -236,7 +236,7 @@ export async function getEventForUser(
 export async function getActorByHandle(
 	db: Db,
 	handle: string,
-	// 開発環境で、取り込んだ見本のハコを写真つきで出す（nameOnlyIfUnmanaged）
+	// 開発環境で、取り込んだ見本のハコをアイコンと紹介文つきで出す（nameOnlyIfUnmanaged）
 	showSamples = false,
 ): Promise<ActorProfile | null> {
 	const [row] = await db
