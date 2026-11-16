@@ -5,7 +5,7 @@ import { runImports } from "#lib/server/import/run.ts";
 import type { RequestHandler } from "./$types";
 
 // 手動で取り込みを走らせる（Cron と同じ処理）。Authorization: Bearer <IMPORT_TOKEN>
-// 取り込みはオプトイン。IMPORT_ENABLED=1 の環境（開発）でだけ動き、本番には無い
+// 取り込みはオプトイン。IMPORT_ENABLED=1 の環境でだけ動く
 export const POST: RequestHandler = async ({ request }) => {
 	if (env.IMPORT_ENABLED !== "1") error(404, "not found");
 	const token = request.headers

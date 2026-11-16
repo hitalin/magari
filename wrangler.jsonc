@@ -11,9 +11,9 @@
 	"observability": { "enabled": true },
 	// 本番ドメイン。Workers のカスタムドメインとして割り当てる（DNS も自動）
 	"routes": [{ "pattern": "magari.cc", "custom_domain": true }],
-	// 外部カレンダーの取り込みは本番では止めている（掲載の合意が無いため）。
-	// 合意を得た取り込み元ができたら、IMPORT_ENABLED=1 と Cron を足す:
-	// "triggers": { "crons": ["15 * * * *"] },
+	// 外部カレンダーの取り込み（vars の IMPORT_ENABLED=1 とセット）。毎時 15 分に worker.ts の scheduled が走る。
+	// 止めるときは、この triggers を "crons": [] にし、IMPORT_ENABLED を消す
+	"triggers": { "crons": ["15 * * * *"] },
 	// 読み取りが東京 PoP に近くなるよう primary は apac に置く（wrangler d1 create --location apac）
 	"d1_databases": [
 		{
@@ -34,6 +34,8 @@
 	],
 	"vars": {
 		"PUBLIC_ORIGIN": "https://magari.cc",
+		// 外部カレンダーの取り込みを動かす。見本用の IMPORT_SAMPLES は本番に置かない（画像と紹介文は写さない）
+		"IMPORT_ENABLED": "1",
 		// 運営者の handle。/admin/reports（連絡の受信箱と掲載拒否リスト）を見られる
 		"ADMIN_HANDLE": "hitalin"
 	}

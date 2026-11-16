@@ -5,7 +5,7 @@ import generated from "#kit-worker";
 
 export default {
 	fetch: generated.fetch,
-	// 毎時の取り込み（wrangler.jsonc の triggers.crons。今は外してある）。手動用の POST /api/admin/import と同じ処理を、
+	// 毎時の取り込み（wrangler.jsonc の triggers.crons）。手動用の POST /api/admin/import と同じ処理を、
 	// Worker 内で自分の fetch に投げて走らせる。
 	async scheduled(_controller, env, ctx) {
 		if (!generated.fetch || env.IMPORT_ENABLED !== "1") return;
