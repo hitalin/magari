@@ -34,6 +34,8 @@ export type EventDetail = EventSummary & {
 	feeText: string | null;
 	status: "draft" | "published" | "cancelled";
 	visibility: "public" | "unlisted" | "private";
+	// 運営が非表示にしている（主催にだけ見える）
+	hidden: boolean;
 };
 
 export type ActorProfile = ActorRef & {

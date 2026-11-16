@@ -7,3 +7,5 @@ X_CLIENT_SECRET=
 IMPORT_ENABLED=1
 # 取り込みを手で走らせるときのトークン
 IMPORT_TOKEN=
+# 運営への連絡（/contact）が届いたら知らせる Webhook（Discord / Slack など）。無ければ知らせない
+REPORT_WEBHOOK_URL=

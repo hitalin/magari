@@ -48,6 +48,8 @@ export const actors = sqliteTable(
 		access: text("access"),
 		operator: text("operator"),
 		instagram: text("instagram"),
+		// 運営が非表示にした時刻。入っている間は、ページも、そこで開かれる会も公開しない
+		hiddenAt: timestamp("hidden_at"),
 		links: text("links", { mode: "json" })
 			.$type<{ label: string; url: string }[]>()
 			.notNull()
@@ -145,6 +147,8 @@ export const events = sqliteTable(
 		// 外部カレンダーから取り込んだ会。source は取り込み元の識別子、sourceUid は元の UID
 		source: text("source"),
 		sourceUid: text("source_uid"),
+		// 運営が非表示にした時刻。入っている間は公開しない（主催には見える）
+		hiddenAt: timestamp("hidden_at"),
 		createdAt: timestamp("created_at").notNull().$defaultFn(now),
 		updatedAt: timestamp("updated_at").notNull().$defaultFn(now),
 	},
@@ -258,8 +262,12 @@ export const reports = sqliteTable(
 		// 対象のページや会（@handle や URL）。自由記述
 		about: text("about"),
 		name: text("name").notNull(),
-		email: text("email").notNull(),
+		// 返信先。X や Misskey の ID（メールアドレスでもよい）
+		contact: text("contact").notNull().default(""),
 		body: text("body").notNull(),
+		// 対応の記録: いつ対応したかと、何をしたかのメモ
+		handledAt: timestamp("handled_at"),
+		note: text("note"),
 		createdAt: timestamp("created_at").notNull().$defaultFn(now),
 	},
 	(t) => [index("reports_created_idx").on(t.createdAt)],

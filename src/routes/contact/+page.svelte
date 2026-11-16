@@ -14,10 +14,11 @@ let { data, form }: PageProps = $props();
 	<p class="mt-3 text-sm text-muted">
 		まがりに載っているページや会について、掲載の取り下げ、ページの管理の引き取り、そのほかの連絡を受け付けます。ログインは要りません。
 		取り下げたページの ID は、以後だれも使えないようにします。
+		申し出があった掲載は、まず非表示にしてから内容を確認します（<a href="/policy" class="underline underline-offset-2 hover:text-accent-ink">掲載と削除の方針</a>）。
 	</p>
 
 	{#if form?.sent}
-		<p class="panel mt-8 p-6">送信しました。内容を確認して、メールでお返事します。</p>
+		<p class="panel mt-8 p-6">送信しました。内容を確認して、いただいた返信先にお返事します。</p>
 	{:else}
 		<form method="POST" class="panel mt-8 space-y-5 p-6">
 			{#if form?.error}<p class="text-sm text-accent-ink">{form.error}</p>{/if}
@@ -33,7 +34,7 @@ let { data, form }: PageProps = $props();
 			</Field>
 			<div class="grid gap-4 sm:grid-cols-2">
 				<Field label="お名前"><input name="name" value={form?.values?.name ?? ''} required maxlength="50" class="input" /></Field>
-				<Field label="メールアドレス"><input type="email" name="email" value={form?.values?.email ?? ''} required class="input" /></Field>
+				<Field label="返信先" hint="X か Misskey の ID（@name、@name@server）。メールでも可"><input name="contact" value={form?.values?.contact ?? ''} required maxlength="200" class="input" autocapitalize="off" placeholder="@example" /></Field>
 			</div>
 			<Field label="内容" hint="運営者ご本人と分かる情報（公式サイトや X のアカウントなど）があると早く対応できます">
 				<textarea name="body" rows="6" required class="input">{form?.values?.body ?? ''}</textarea>

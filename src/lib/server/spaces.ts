@@ -1,5 +1,5 @@
 // 場（ハコ）・団体のページ: 作成、管理者判定、プロフィール・プラン・お知らせの読み書き。
-import { and, asc, count, desc, eq, gte } from "drizzle-orm";
+import { and, asc, count, desc, eq, gte, isNull } from "drizzle-orm";
 import { nameOnlyIfUnmanaged } from "#lib/actor.ts";
 import { compareArea, detectArea } from "#lib/area.ts";
 import type { ParsedPlan, ParsedSpace } from "#lib/space-form.ts";
@@ -98,7 +98,7 @@ export async function listSpaces(
 		.from(actors)
 		.leftJoin(upcoming, eq(upcoming.actorId, actors.id))
 		.leftJoin(managers, eq(managers.actorId, actors.id))
-		.where(eq(actors.kind, "space"));
+		.where(and(eq(actors.kind, "space"), isNull(actors.hiddenAt)));
 	return rows
 		.map(({ region, headerKey, managerId, upcoming, ...r }) =>
 			nameOnlyIfUnmanaged(

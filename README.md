@@ -31,6 +31,7 @@ curl -X POST -H "Authorization: Bearer $IMPORT_TOKEN" http://localhost:5173/api/
 pnpm exec wrangler d1 create magari --location apac   # 初回のみ。ID を wrangler.jsonc に
 pnpm db:migrate:remote
 pnpm exec wrangler secret put BETTER_AUTH_SECRET      # ほか X_CLIENT_ID, X_CLIENT_SECRET
+pnpm exec wrangler secret put REPORT_WEBHOOK_URL      # 任意。運営への連絡が届いたら知らせる Webhook（Discord / Slack など）
 pnpm deploy
 ```
 

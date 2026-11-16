@@ -1,4 +1,15 @@
-import { and, asc, eq, gte, inArray, isNotNull, lt, or } from "drizzle-orm";
+import {
+	and,
+	asc,
+	eq,
+	gte,
+	inArray,
+	isNotNull,
+	isNull,
+	lt,
+	notInArray,
+	or,
+} from "drizzle-orm";
 import { nameOnlyIfUnmanaged } from "#lib/actor.ts";
 import {
 	type ActorProfile,
@@ -33,6 +44,7 @@ function selectEvents(db: Db) {
 			feeText: events.feeText,
 			tags: events.tags,
 			coverKey: events.coverKey,
+			hiddenAt: events.hiddenAt,
 			spaceHandle: actors.handle,
 			spaceName: actors.name,
 			spaceKind: actors.kind,
@@ -42,6 +54,22 @@ function selectEvents(db: Db) {
 		.$dynamic();
 }
 type Row = Awaited<ReturnType<typeof selectEvents>>[number];
+
+// 運営が非表示にしていない会。会そのもの、ハコ（selectEvents が join している actors）、主催のどれかが
+// 非表示なら公開しない
+const notHidden = (db: Db) =>
+	and(
+		isNull(events.hiddenAt),
+		isNull(actors.hiddenAt),
+		notInArray(
+			events.id,
+			db
+				.select({ id: eventHosts.eventId })
+				.from(eventHosts)
+				.innerJoin(actors, eq(eventHosts.actorId, actors.id))
+				.where(isNotNull(actors.hiddenAt)),
+		),
+	);
 
 async function hostsByEvent(
 	db: Db,
@@ -83,6 +111,7 @@ function toDetail(row: Row, hosts: ActorRef[]): EventDetail {
 		source: row.source,
 		status: row.status,
 		visibility: row.visibility,
+		hidden: row.hiddenAt !== null,
 		locationName: row.locationName,
 		// 参加者限定の場所は API に出さない
 		locationAddress:
@@ -150,6 +179,7 @@ export async function listUpcomingEvents(
 		gte(events.startsAt, from),
 		opts.to ? lt(events.startsAt, opts.to) : undefined,
 		opts.withFlyer ? isNotNull(events.coverKey) : undefined,
+		notHidden(db),
 	);
 	// actorId 指定時は、その Actor が場または主催の会に絞る
 	const where = opts.actorId
@@ -183,7 +213,9 @@ export async function getEvent(
 	db: Db,
 	id: string,
 ): Promise<EventDetail | null> {
-	const [row] = await selectEvents(db).where(eq(events.id, id)).limit(1);
+	const [row] = await selectEvents(db)
+		.where(and(eq(events.id, id), notHidden(db)))
+		.limit(1);
 	if (!row || row.status === "draft" || row.visibility === "private")
 		return null;
 	const hosts = await hostsByEvent(db, [row.id]);
@@ -242,7 +274,8 @@ export async function getActorByHandle(
 			links: actors.links,
 		})
 		.from(actors)
-		.where(eq(actors.handle, handle))
+		// 運営が非表示にしたページは、無いものとして扱う
+		.where(and(eq(actors.handle, handle), isNull(actors.hiddenAt)))
 		.limit(1);
 	if (!row) return null;
 	const [member] = await db

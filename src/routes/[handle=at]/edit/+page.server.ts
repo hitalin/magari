@@ -64,6 +64,8 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 		handle: actor.handle,
 		kind: actor.kind,
 		headerUrl: mediaUrl(actor.headerKey),
+		// 運営が非表示にしている（公開のページは出ていない）
+		hidden: actor.hiddenAt !== null,
 		values,
 		plans,
 		posts,

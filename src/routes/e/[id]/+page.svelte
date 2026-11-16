@@ -57,6 +57,9 @@ const cardDescription = $derived(
 		</div>
 	{/if}
 
+	{#if event.hidden}
+		<p class="mt-4 rounded-sm bg-accent-soft px-4 py-2 text-sm text-accent-ink">運営が非表示にしています。あなたにだけ見えています。心当たりが無ければ<a href="/contact?kind=other&about=/e/{event.id}" class="ml-1 underline">運営に連絡</a>してください。</p>
+	{/if}
 	{#if event.status === 'cancelled'}
 		<p class="mt-4 rounded-sm bg-accent-soft px-4 py-2 text-sm text-accent-ink">この間は中止になりました。</p>
 	{:else if event.status === 'draft'}
@@ -125,7 +128,12 @@ const cardDescription = $derived(
 			{#if event.description}
 				<div class="mt-8 whitespace-pre-line text-[1.05rem] leading-[2]">{event.description}</div>
 			{/if}
-			<div class="mt-8 flex flex-wrap gap-3">
+			<!-- まがりは載せる場所で、内容を確かめてはいない。行く前の確認先を必ず出す -->
+			<p class="mt-8 text-xs leading-relaxed text-dim">
+				載せた人が書いた内容です。日時や場所は変わることがあるので、行く前に{#if event.url}<a href={event.url} class="underline underline-offset-2 hover:text-accent-ink" rel="noopener">主催の告知</a>{:else}主催の告知{/if}で確かめてください。
+				この掲載に問題があれば<a href="/contact?kind=takedown&about=/e/{event.id}" class="underline underline-offset-2 hover:text-accent-ink">運営に連絡</a>できます。
+			</p>
+			<div class="mt-4 flex flex-wrap gap-3">
 				<a href={shareUrl} class="btn btn-primary" rel="noopener">X で共有</a>
 				{#if event.hosts[0]}<a href="/@{event.hosts[0].handle}" class="btn">{event.hosts[0].name} のページ ›</a>{/if}
 			</div>

@@ -24,6 +24,7 @@ let newPlan = $state(false);
 	<div>
 		<p class="label">{KIND_WORD[data.kind]}のページを編集 · @{data.handle}</p>
 		<h1 class="mt-2 text-2xl">{data.values.name}</h1>
+		{#if data.hidden}<p class="mt-4 rounded-sm bg-accent-soft px-4 py-2 text-sm text-accent-ink">運営がこのページを非表示にしています。公開のページと、ここで開かれる会は出ていません。心当たりが無ければ<a href="/contact?kind=other&about=@{data.handle}" class="ml-1 underline">運営に連絡</a>してください。</p>{/if}
 	</div>
 	<a href="/@{data.handle}" class="btn">ページを見る ›</a>
 </div>
