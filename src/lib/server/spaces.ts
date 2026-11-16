@@ -1,5 +1,6 @@
 // 場（ハコ）・団体のページ: 作成、管理者判定、プロフィール・プラン・お知らせ・問い合わせの読み書き。
 import { and, asc, count, desc, eq, gte } from "drizzle-orm";
+import { nameOnlyIfUnmanaged } from "#lib/actor.ts";
 import { compareArea, detectArea } from "#lib/area.ts";
 import type {
 	ParsedInquiry,
@@ -21,6 +22,7 @@ import {
 	posts,
 	spacePlans,
 } from "./db/schema.ts";
+import { isBlockedHandle } from "./moderation.ts";
 
 export type ManagedActor = typeof actors.$inferSelect;
 export type ManagedRef = {
@@ -99,13 +101,15 @@ export async function listSpaces(db: Db): Promise<SpaceSummary[]> {
 		.leftJoin(managers, eq(managers.actorId, actors.id))
 		.where(eq(actors.kind, "space"));
 	return rows
-		.map(({ region, headerKey, managerId, upcoming, ...r }) => ({
-			...r,
-			area: detectArea(region),
-			headerUrl: mediaUrl(headerKey),
-			hasManager: managerId !== null,
-			upcoming: upcoming ?? 0,
-		}))
+		.map(({ region, headerKey, managerId, upcoming, ...r }) =>
+			nameOnlyIfUnmanaged({
+				...r,
+				area: detectArea(region),
+				headerUrl: mediaUrl(headerKey),
+				hasManager: managerId !== null,
+				upcoming: upcoming ?? 0,
+			}),
+		)
 		.sort(
 			(a, b) =>
 				compareArea(a.area, b.area) ||
@@ -170,6 +174,8 @@ export async function createManagedActor(
 		.where(eq(actors.handle, input.handle))
 		.limit(1);
 	if (taken) return { error: "その ID は使われています" };
+	if (await isBlockedHandle(db, input.handle))
+		return { error: "その ID は使えません" };
 	const [row] = await db
 		.insert(actors)
 		.values({ handle: input.handle, kind: input.kind, name: input.name })

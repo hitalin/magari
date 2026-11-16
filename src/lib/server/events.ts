@@ -1,4 +1,5 @@
 import { and, asc, eq, gte, inArray, isNotNull, lt, or } from "drizzle-orm";
+import { nameOnlyIfUnmanaged } from "#lib/actor.ts";
 import {
 	type ActorProfile,
 	type ActorRef,
@@ -246,9 +247,9 @@ export async function getActorByHandle(
 		.where(eq(actorMembers.actorId, row.id))
 		.limit(1);
 	const { headerKey, userId, ...rest } = row;
-	return {
+	return nameOnlyIfUnmanaged({
 		...rest,
 		hasManager: userId !== null || member !== undefined,
 		headerUrl: mediaUrl(headerKey),
-	};
+	});
 }

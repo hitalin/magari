@@ -114,6 +114,7 @@ const isActive = (href: string) =>
 			{:else}
 				<a href="/login" class="hover:text-accent-ink">ログイン</a>
 			{/if}
+			<a href="/contact" class="hover:text-accent-ink">掲載の取り下げ・連絡</a>
 			<a href={REPO} class="hover:text-accent-ink" rel="noopener">GitHub ›</a>
 		</nav>
 	</div>

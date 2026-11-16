@@ -4,6 +4,7 @@ import { eventArea } from "#lib/area.ts";
 import type { ParsedEvent } from "#lib/event-form.ts";
 import type { Db } from "./db/index.ts";
 import { actorMembers, actors, eventHosts, events } from "./db/schema.ts";
+import { isBlockedHandle } from "./moderation.ts";
 import { resolveSpace } from "./spaces.ts";
 
 export type MyActor = {
@@ -108,6 +109,8 @@ export async function createPersonActor(
 		.where(eq(actors.handle, input.handle))
 		.limit(1);
 	if (taken) return { error: "その ID は使われています" };
+	if (await isBlockedHandle(db, input.handle))
+		return { error: "その ID は使えません" };
 	const [row] = await db
 		.insert(actors)
 		.values({

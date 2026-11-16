@@ -268,3 +268,26 @@ export const inquiries = sqliteTable(
 	},
 	(t) => [index("inquiries_actor_idx").on(t.actorId, t.createdAt)],
 );
+
+// 運営への連絡（掲載の取り下げ、ページの引き取りなど）。ログイン不要で送れる。
+export const reports = sqliteTable(
+	"reports",
+	{
+		id: text("id").primaryKey().$defaultFn(shortId),
+		kind: text("kind", { enum: ["takedown", "claim", "other"] }).notNull(),
+		// 対象のページや会（@handle や URL）。自由記述
+		about: text("about"),
+		name: text("name").notNull(),
+		email: text("email").notNull(),
+		body: text("body").notNull(),
+		createdAt: timestamp("created_at").notNull().$defaultFn(now),
+	},
+	(t) => [index("reports_created_idx").on(t.createdAt)],
+);
+
+// 掲載を断られた handle。誰もこの handle のページを作れず、取り込みも飛ばす。
+export const blockedHandles = sqliteTable("blocked_handles", {
+	handle: text("handle").primaryKey(),
+	note: text("note"),
+	createdAt: timestamp("created_at").notNull().$defaultFn(now),
+});

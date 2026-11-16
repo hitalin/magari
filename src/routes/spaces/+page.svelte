@@ -25,7 +25,7 @@ let { data }: PageProps = $props();
 			{#each data.spaces as s (s.handle)}
 				<a href="/@{s.handle}" class="cardboard group flex flex-col p-3 transition-transform hover:-translate-y-1" data-tape={s.area}>
 					<div class="relative">
-					{#if !s.hasManager}<span class="badge-unofficial absolute top-2 right-2 z-10" title="まがりが公開情報からまとめた非公式のページ">非公式</span>{/if}
+					{#if !s.hasManager}<span class="badge-unofficial absolute top-2 right-2 z-10" title="運営者がまだいない非公式のページ">非公式</span>{/if}
 					{#if s.headerUrl}
 						<img src={s.headerUrl} alt="" loading="lazy" class="aspect-[16/9] w-full rounded-[1px] object-cover shadow-[0_1px_2px_rgb(0_0_0/0.25)]" />
 					{:else}

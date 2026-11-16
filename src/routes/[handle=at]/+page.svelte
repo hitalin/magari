@@ -48,7 +48,7 @@ const hasAccess = $derived(
 	),
 );
 const canInquire = $derived(actor.kind !== "person" && actor.hasManager);
-// 管理者のいないハコ・団体（取り込み元など）は、店や団体の公式ページではない
+// 管理者のいないハコ・団体は、店や団体の公式ページではない。名前とリンクだけを出す（画像と紹介文はサーバーが落とす）
 const unofficial = $derived(actor.kind !== "person" && !actor.hasManager);
 // ハコはバナーを出さず、人のプロフィールと同じく丸いアイコンにする。X アイコンが無ければ写真を丸く切り抜く
 const icon = $derived(
@@ -95,14 +95,11 @@ const description = $derived(actor.catch ?? actor.summary ?? undefined);
 <header class="{actor.kind === 'space' ? 'cardboard mt-8' : 'panel mt-4'} mb-8 p-6 sm:p-8">
 	<div class="flex items-start gap-5">
 		{#if icon}
-			<div class="relative shrink-0">
-				<img src={icon} alt="" class="h-20 w-20 rounded-full border border-line object-cover sm:h-24 sm:w-24" />
-				{#if unofficial}<span class="badge-unofficial absolute -bottom-1.5 left-1/2 -translate-x-1/2">非公式</span>{/if}
-			</div>
+			<img src={icon} alt="" class="h-20 w-20 shrink-0 rounded-full border border-line object-cover sm:h-24 sm:w-24" />
 		{/if}
 		<div class="min-w-0">
 			<p class="label">
-				{#if unofficial && !icon}<span class="badge-unofficial mr-2 align-middle">非公式</span>{/if}{KIND_LABEL[actor.kind]} · @{actor.handle}
+				{#if unofficial}<span class="badge-unofficial mr-2 align-middle">非公式</span>{/if}{KIND_LABEL[actor.kind]} · @{actor.handle}
 			</p>
 			<h1 class="mt-2 text-[clamp(1.8rem,3.5vw,2.6rem)]">{actor.name}</h1>
 			{#if actor.catch}<p class="mt-2 font-serif text-lg text-accent-ink">{actor.catch}</p>{/if}
@@ -111,7 +108,7 @@ const description = $derived(actor.catch ?? actor.summary ?? undefined);
 	{#if actor.summary}<p class="mt-3 max-w-[34em] text-muted">{actor.summary}</p>{/if}
 	{#if unofficial}
 		<p class="mt-3 max-w-[34em] text-xs text-muted">
-			まがりが公開情報からまとめた非公式のページです。運営者の方で、掲載の取り下げや管理をご希望の場合は<a href="https://github.com/hitalin/magari/issues" class="underline underline-offset-2 hover:text-accent-ink" rel="noopener">こちら</a>へご連絡ください。
+			運営者がまだいない非公式のページで、名前とリンクだけを載せています。運営者の方は、<a href="/contact?kind=claim&about=@{actor.handle}" class="underline underline-offset-2 hover:text-accent-ink">ページの引き取り</a>か<a href="/contact?kind=takedown&about=@{actor.handle}" class="underline underline-offset-2 hover:text-accent-ink">掲載の取り下げ</a>をご連絡ください。
 		</p>
 	{/if}
 	<div class="pills mt-5">

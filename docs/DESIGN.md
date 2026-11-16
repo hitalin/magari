@@ -111,8 +111,8 @@
   - adapter-cloudflare は wrangler 設定の `main` の場所を毎回消して生成物を書くので、adapter には `wrangler.adapter.jsonc` を渡し、`wrangler.jsonc` の `main` は手書きの `worker.ts` にする。`worker.ts` は生成物の `fetch` をそのまま出し、`scheduled` で自分の `/api/admin/import` を叩く。
   - adapter は `pnpm dev` の bindings もこの設定から読む。`wrangler.adapter.jsonc` には D1・R2 が無いので、`platformProxy.configPath` で `wrangler.jsonc` を読ませる。
 - 取り込んだ会は `events.source` / `source_uid` を持つ。取り込み方法（Google カレンダーなど）は画面に出さない。
-- 取り込み元のハコは、`sources.ts` の `area` を `actors.region` に写す。画像は R2 に写す: `photo`（ハコ一覧のバナー。公式ページの og:image など）は `header_key`、`icon`（X のアイコン）は `avatar_url`（人のアイコンと同じ列）。R2 のキーは画像 URL のハッシュで決めるので、同じ画像は二度取らない。画像が取れなくても会の取り込みは続ける。
-- ハコのページは、人のプロフィールと同じく名前の左に丸いアイコンを出し、上部のバナーは出さない。アイコンは `avatar_url`（取り込み元の X アイコン）、無ければ `header_key` の写真の中央を丸く切り抜く。人と団体のページは今までどおり写真を上部のバナーにする。
+- 取り込み元のハコは、名前・公式へのリンク・X の handle と、`sources.ts` の `area`（`actors.region`）だけを持つ。画像や紹介文は写さない。掲載拒否リスト（`blocked_handles`）にある handle の取り込み元は飛ばす。
+- ハコのページは、人のプロフィールと同じく名前の左に丸いアイコンを出し、上部のバナーは出さない。アイコンは `avatar_url`、無ければ `header_key` の写真の中央を丸く切り抜く。人と団体のページは今までどおり写真を上部のバナーにする。
 - フリカレ（freecalend.com）は iCal を出さないので `freecalend.ts` で読む。公開ページの JS が叩く `POST /open/data` を同じ形で呼ぶ。
   - 本文の `keys` は `{"data":[[キー, 版, 版, [["ok-{mem}-all-r-cald",true]], []], …]}` を 2 重に URL エンコードしたもの。キーは月 `cald-{mem}-{y}-{m}` と日 `cald-{mem}-{y}-{m}-{d}`。版に古い値を送ると、中身のある日だけ `set` で返る。
   - 1 日 1 枠で題しかないので、JST の終日予定に見立てて返し、題の時刻（「16-21時」など）は iCal の取り込み元と同じく `parseEdenTitle` で読む。空・「休み」・「仮予約」は会にしない。
@@ -139,7 +139,10 @@
 | `/spaces/new` | ハコ（場）か団体を登録する。作った人が `actor_members` の owner になる |
 | `/@{handle}/edit` | ページの編集。本人の person か、管理している場・団体だけ。紹介・アクセス・リンク、写真（R2）、出店プラン、お知らせ、問い合わせの受信箱 |
 | `/i/{key}` | R2（MEDIA）の画像。キーは乱数なので immutable でキャッシュ |
+| `/contact` | 運営への連絡（掲載の取り下げ、ページの引き取り、その他）。ログイン不要、ハニーポット付き。`reports` に入る |
+| `/admin/reports` | 運営者（`ADMIN_HANDLE` の本人）だけ。連絡の受信箱と掲載拒否リスト。ほかの人には 404 |
 
+- 掲載拒否リスト（`blocked_handles`）にある handle は、人・ハコ・団体のどれとしても作れない。取り下げの依頼を受けたら、ページを消してから handle をここに入れる。連絡は問い合わせと同じく通知しないので、運営者が `/admin/reports` を見に行く。
 - フォームの検証と JST → UTC 変換は `src/lib/event-form.ts`（純粋関数、テストあり）。終了が開始以前なら翌日扱い（深夜営業）。
 - 書き込みは SvelteKit の form action。`hooks.server.ts` が `locals.actor`（本人のアクター）を載せる。
 - ヘッダーのログイン状態は今は `+layout.server.ts` で出している。公開ページを CDN に載せる段階で、ここだけクライアント取得に切り替える（HTML を Cookie に依存させないため）。
@@ -166,7 +169,7 @@
 | SNS（X、Instagram）、会社概要、関連サイト | `x_handle` / `instagram` / `operator` / `links` |
 | オープンイベントなどの催し | 会（Event）。「ハコ」に自分の場を指定して開く |
 
-- 管理者のいないハコ・団体（取り込み元など）は、一覧のバナーとページのアイコンに「非公式」バッジを重ね、看板に「非公式のページ」と出し、問い合わせフォームを出さない（受け取っても読む人がいないため。サーバー側でも 403）。掲載の取り下げや管理の連絡先は当面 GitHub の Issues。
+- 管理者のいないハコ・団体は、名前・エリア・公式へのリンクだけを出す。画像と紹介文は、載せた本人がいないのでサーバーが落とす（`nameOnlyIfUnmanaged`。DB に残っていても出さない）。一覧とページに「非公式」バッジを出し、問い合わせフォームは出さない（受け取っても読む人がいないため。サーバー側でも 403）。看板から `/contact` へ、ページの引き取りと掲載の取り下げの連絡ができる。
 - 問い合わせは脱メールの原則どおり通知しない。受信箱の件数を `/@handle/edit` に出すだけ。将来 Web Push で知らせる。
 - 画像は R2 に生のまま置く（変換なし）。JPEG / PNG / WebP、5MB まで。
 
