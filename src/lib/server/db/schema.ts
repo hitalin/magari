@@ -26,7 +26,7 @@ export const actors = sqliteTable(
 		userId: text("user_id").references(() => user.id, { onDelete: "set null" }),
 		name: text("name").notNull(),
 		summary: text("summary"),
-		// 外部（X / Misskey）のアイコン URL。ログイン時に写す
+		// 外部（X）のアイコン URL。ログイン時に写す
 		avatarUrl: text("avatar_url"),
 		headerKey: text("header_key"),
 		url: text("url"),
@@ -181,7 +181,7 @@ export const reports = sqliteTable(
 		// 対象のページや会（@handle や URL）。自由記述
 		about: text("about"),
 		name: text("name").notNull(),
-		// 返信先。X や Misskey の ID（メールアドレスでもよい）
+		// 返信先。X の ID（メールアドレスでもよい）
 		contact: text("contact").notNull().default(""),
 		body: text("body").notNull(),
 		// 対応の記録: いつ対応したかと、何をしたかのメモ

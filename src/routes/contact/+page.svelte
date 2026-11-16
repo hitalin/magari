@@ -34,7 +34,7 @@ let { data, form }: PageProps = $props();
 			</Field>
 			<div class="grid gap-4 sm:grid-cols-2">
 				<Field label="お名前"><input name="name" value={form?.values?.name ?? ''} required maxlength="50" class="input" /></Field>
-				<Field label="返信先" hint="X か Misskey の ID（@name、@name@server）。メールでも可"><input name="contact" value={form?.values?.contact ?? ''} required maxlength="200" class="input" autocapitalize="off" placeholder="@example" /></Field>
+				<Field label="返信先" hint="X の ID（@name）。メールでも可"><input name="contact" value={form?.values?.contact ?? ''} required maxlength="200" class="input" autocapitalize="off" placeholder="@example" /></Field>
 			</div>
 			<Field label="内容" hint="運営者ご本人と分かる情報（公式サイトや X のアカウントなど）があると早く対応できます">
 				<textarea name="body" rows="6" required class="input">{form?.values?.body ?? ''}</textarea>

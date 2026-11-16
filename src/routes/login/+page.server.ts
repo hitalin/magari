@@ -9,7 +9,6 @@ export const load: PageServerLoad = ({ locals, url }) => {
 	if (locals.session) redirect(303, next);
 	return {
 		xEnabled: !!env.X_CLIENT_ID,
-		error: url.searchParams.get("error"),
 		next,
 	};
 };

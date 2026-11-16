@@ -92,6 +92,13 @@
       "when": 1794829563858,
       "tag": "0012_drop_unused",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "6",
+      "when": 1794830224740,
+      "tag": "0013_drop_miauth_accounts",
+      "breakpoints": true
     }
   ]
 }

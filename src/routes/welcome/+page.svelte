@@ -41,7 +41,7 @@ async function addPasskey() {
 
 	<div class="panel mt-6 p-6">
 		<p class="label">ついでに</p>
-		<p class="mt-2 text-sm text-muted">パスキーを作っておくと、次回から X や Misskey を経由せず、指紋や顔でログインできます。</p>
+		<p class="mt-2 text-sm text-muted">パスキーを作っておくと、次回から X を経由せず、指紋や顔でログインできます。</p>
 		<button type="button" class="btn mt-3" onclick={addPasskey}>パスキーを作る</button>
 		{#if passkeyMsg}<p class="mt-3 text-sm text-accent-ink">{passkeyMsg}</p>{/if}
 	</div>

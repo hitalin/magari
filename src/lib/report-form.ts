@@ -13,7 +13,7 @@ export type ReportFormValues = {
 	kind: string;
 	about: string;
 	name: string;
-	// 返信先。X や Misskey の ID（メールアドレスでもよい）
+	// 返信先。X の ID（メールアドレスでもよい）
 	contact: string;
 	body: string;
 	website: string; // ハニーポット。人は入力しない

@@ -6,18 +6,18 @@ describe("parseReportForm", () => {
 		kind: "takedown",
 		about: "@some_space",
 		name: "山田",
-		contact: "@yamada@misskey.example",
+		contact: "@yamada",
 		body: "掲載を取り下げてください",
 		website: "",
 	};
-	it("必須項目を見る。返信先はメールでなくてよい（X や Misskey の ID）", () => {
+	it("必須項目を見る。返信先はメールでなくてよい（X の ID）", () => {
 		expect(parseReportForm(v)).toEqual({
 			ok: true,
 			values: {
 				kind: "takedown",
 				about: "@some_space",
 				name: "山田",
-				contact: "@yamada@misskey.example",
+				contact: "@yamada",
 				body: "掲載を取り下げてください",
 			},
 		});

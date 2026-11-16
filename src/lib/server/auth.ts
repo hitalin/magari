@@ -3,7 +3,6 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import type { Db } from "./db";
 import * as schema from "./db/schema";
-import { miauth } from "./miauth.ts";
 
 export type AuthEnv = {
 	PUBLIC_ORIGIN: string;
@@ -12,7 +11,7 @@ export type AuthEnv = {
 	X_CLIENT_SECRET?: string;
 };
 
-// ログインは X と Misskey（MiAuth）だけ。メールは使わない（確認メールの配送が要るため）。
+// ログインは X だけ。メールは使わない（確認メールの配送が要るため）。
 export function createAuth(db: Db, env: AuthEnv) {
 	const origin = new URL(env.PUBLIC_ORIGIN);
 	return betterAuth({
@@ -22,12 +21,12 @@ export function createAuth(db: Db, env: AuthEnv) {
 		emailAndPassword: { enabled: false },
 		// 本人によるアカウント削除（メール確認なしで即時）
 		user: { deleteUser: { enabled: true } },
-		// ログイン中の本人が X / Misskey をつなぐ。メールは使っていないので、メール不一致を理由に拒まない
+		// ログイン中の本人が X をつなぐ。メールは使っていないので、メール不一致を理由に拒まない
 		account: {
 			accountLinking: {
 				enabled: true,
 				allowDifferentEmails: true,
-				trustedProviders: ["twitter", "miauth"],
+				trustedProviders: ["twitter"],
 			},
 		},
 		socialProviders:
@@ -56,7 +55,6 @@ export function createAuth(db: Db, env: AuthEnv) {
 				rpName: "まがり",
 				origin: env.PUBLIC_ORIGIN,
 			}),
-			miauth({ appName: "まがり" }),
 		],
 	});
 }

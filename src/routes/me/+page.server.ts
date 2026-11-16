@@ -12,7 +12,6 @@ import type { Actions, PageServerLoad } from "./$types";
 
 const PROVIDER_LABEL: Record<string, string> = {
 	twitter: "X",
-	miauth: "Misskey",
 };
 
 export const load: PageServerLoad = async ({ locals, request }) => {
@@ -41,8 +40,6 @@ export const load: PageServerLoad = async ({ locals, request }) => {
 			providerId: a.providerId,
 			accountId: a.accountId,
 			label: PROVIDER_LABEL[a.providerId] ?? a.providerId,
-			// Misskey は "host:id" で保存しているので host を見せる
-			detail: a.providerId === "miauth" ? a.accountId.split(":")[0] : null,
 		})),
 		drafts: all.filter((e) => e.status === "draft").map(toItem),
 		upcoming: all

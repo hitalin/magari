@@ -33,18 +33,11 @@ export async function getActorForUser(
 	return row ?? null;
 }
 
-// 小さなアイコン URL を大きいものに。X は _normal（48px）→ _400x400、Misskey のプロキシ縮小は元画像に。
+// 小さなアイコン URL を大きいものに。X は _normal（48px）→ _400x400。
 export function largeAvatarUrl(url: string | null | undefined): string | null {
 	if (!url) return null;
 	if (/pbs\.twimg\.com/.test(url))
 		return url.replace(/_normal(\.[a-z]+)$/i, "_400x400$1");
-	try {
-		const u = new URL(url);
-		const original = u.searchParams.get("url");
-		if (u.pathname.startsWith("/proxy/") && original) return original;
-	} catch {
-		return url;
-	}
 	return url;
 }
 

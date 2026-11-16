@@ -1,5 +1,5 @@
 <script lang="ts">
-import { authClient, startMiAuth } from "#lib/auth-client.ts";
+import { authClient } from "#lib/auth-client.ts";
 import Empty from "#lib/components/Empty.svelte";
 import { formatWhen } from "#lib/date.ts";
 import { invalidateAll } from "$app/navigation";
@@ -7,7 +7,6 @@ import type { PageProps } from "./$types";
 
 let { data }: PageProps = $props();
 let passkeyMsg = $state<string | null>(null);
-let linkHost = $state("");
 let linkMsg = $state<string | null>(null);
 
 async function addPasskey() {
@@ -18,12 +17,6 @@ async function addPasskey() {
 }
 async function linkX() {
 	await authClient.linkSocial({ provider: "twitter", callbackURL: "/me" });
-}
-async function linkMisskey(e: SubmitEvent) {
-	e.preventDefault();
-	const url = await startMiAuth(linkHost, "/me");
-	if (url) location.href = url;
-	else linkMsg = "サーバー名が正しくありません";
 }
 async function unlink(accountId: string) {
 	if (!confirm("このログイン方法を外しますか？")) return;
@@ -121,13 +114,12 @@ const STATUS: Record<string, string> = {
 
 <section class="mb-10">
 	<div class="section-head"><h2 class="section-title text-[1.25rem]">ログイン方法</h2></div>
-	<p class="mb-3 text-sm text-muted">X と Misskey を両方つないでおくと、どちらからでも同じ ID で入れます。</p>
 	<div class="rule-list">
 		{#each data.accounts as a (a.providerId + a.accountId)}
 			<div class="row items-center">
 				<span class="font-mono text-xs text-muted">{a.label}</span>
 				<span class="flex flex-wrap items-center gap-3 text-sm">
-					<span>{a.detail ?? 'つながっています'}</span>
+					<span>つながっています</span>
 					{#if data.accounts.length > 1}
 						<button type="button" class="text-xs text-muted hover:text-accent-ink" onclick={() => unlink(a.accountId)}>外す</button>
 					{/if}
@@ -139,10 +131,6 @@ const STATUS: Record<string, string> = {
 		{#if data.xEnabled && !data.accounts.some((a) => a.providerId === 'twitter')}
 			<button type="button" class="btn" onclick={linkX}>X をつなぐ</button>
 		{/if}
-		<form class="flex gap-2" onsubmit={linkMisskey}>
-			<input bind:value={linkHost} class="input" placeholder="Misskey サーバーのドメイン" autocapitalize="off" autocomplete="off" required />
-			<button type="submit" class="btn shrink-0">Misskey をつなぐ</button>
-		</form>
 	</div>
 	{#if linkMsg}<p class="mt-3 text-sm text-accent-ink">{linkMsg}</p>{/if}
 </section>
