@@ -279,3 +279,14 @@ export const blockedHandles = sqliteTable("blocked_handles", {
 	note: text("note"),
 	createdAt: timestamp("created_at").notNull().$defaultFn(now),
 });
+
+// 地面の落書き。1 行 = 1 回ぶんの線（src/lib/graffiti.ts の形）。誰が描いたかは持たない。
+export const graffiti = sqliteTable(
+	"graffiti",
+	{
+		id: text("id").primaryKey().$defaultFn(shortId),
+		d: text("d").notNull(),
+		createdAt: timestamp("created_at").notNull().$defaultFn(now),
+	},
+	(t) => [index("graffiti_created_idx").on(t.createdAt)],
+);

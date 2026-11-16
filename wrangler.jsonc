@@ -24,6 +24,14 @@
 		}
 	],
 	"r2_buckets": [{ "binding": "MEDIA", "bucket_name": "magari-media" }],
+	// 落書き（POST /api/graffiti）は誰でも送れるので、同じ IP からは 1 分に 20 回まで。IP は保存しない
+	"ratelimits": [
+		{
+			"name": "GRAFFITI_LIMIT",
+			"namespace_id": "1001",
+			"simple": { "limit": 20, "period": 60 }
+		}
+	],
 	"vars": {
 		"PUBLIC_ORIGIN": "https://magari.cc",
 		// 運営者の handle。/admin/reports（連絡の受信箱と掲載拒否リスト）を見られる

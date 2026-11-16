@@ -1,6 +1,7 @@
 <script lang="ts">
 import favicon from "#lib/assets/favicon.svg";
 import logo from "#lib/assets/logo.svg";
+import Graffiti from "#lib/components/Graffiti.svelte";
 import { onNavigate } from "$app/navigation";
 import { navigating, page } from "$app/state";
 import type { LayoutProps } from "./$types";
@@ -21,6 +22,7 @@ onNavigate((navigation) => {
 const nav = [
 	{ href: "/home", label: "イベント" },
 	{ href: "/calendar", label: "カレンダー" },
+	{ href: "/wall", label: "フライヤー" },
 	{ href: "/spaces", label: "ハコ" },
 ];
 const REPO = "https://github.com/hitalin/magari";
@@ -69,16 +71,17 @@ const isActive = (href: string) => page.url.pathname.startsWith(href);
 	</div>
 </header>
 
+<Graffiti admin={data.admin} />
+
 <main id="main" class="mx-auto max-w-content px-4 pt-6 pb-20">
 	{@render children()}
 </main>
 
-<!-- ナビと同じものは繰り返さない。ここにしか無い入口（壁、運営への連絡、ソース）だけを 1 行で -->
+<!-- ナビと同じものは繰り返さない。ここにしか無い入口（運営への連絡、ソース）だけを 1 行で -->
 <footer class="border-t border-line">
 	<div class="mx-auto flex max-w-content flex-wrap items-center justify-between gap-x-6 gap-y-2 px-4 py-6 text-xs text-dim">
 		<p>© {year} ◱</p>
 		<nav aria-label="フッター" class="flex flex-wrap gap-x-5 gap-y-1">
-			<a href="/wall" class="hover:text-text">フライヤーの壁</a>
 			<a href="/terms" class="hover:text-text">利用規約</a>
 			<a href="/privacy" class="hover:text-text">プライバシー</a>
 			<a href="/policy" class="hover:text-text">掲載と削除の方針</a>
