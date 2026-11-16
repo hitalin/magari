@@ -19,8 +19,14 @@ const canEdit = $derived(
 const opened = $derived(
 	page.url.searchParams.has("opened") && event.status === "published",
 );
+// 共有する前にカード画像を作らせておく（撮るのに数秒かかり、X のクローラは待ってくれない）。
+// 同じタブで X へ移るので、keepalive で取りに行かせたままにする
+function warmCard() {
+	if (data.ogImage) fetch(data.ogImage, { keepalive: true });
+}
 let copied = $state(false);
 async function copyLink() {
+	warmCard();
 	await navigator.clipboard.writeText(cleanUrl);
 	copied = true;
 }
@@ -55,7 +61,7 @@ const cardDescription = $derived(
 		<div class="panel mt-4 p-5">
 			<p class="font-serif text-lg font-bold">開けました。あとは貼るだけ。</p>
 			<div class="mt-3 flex flex-wrap gap-3">
-				<a href={shareUrl} class="btn btn-primary" rel="noopener">X に貼る</a>
+				<a href={shareUrl} class="btn btn-primary" rel="noopener" onclick={warmCard}>X に貼る</a>
 				<button type="button" class="btn" onclick={copyLink}>{copied ? 'コピーしました' : 'リンクをコピー'}</button>
 			</div>
 		</div>
@@ -125,7 +131,7 @@ const cardDescription = $derived(
 				この掲載に問題があれば<a href="/contact?kind=takedown&about=/e/{event.id}" class="underline underline-offset-2 hover:text-accent-ink">運営に連絡</a>できます。
 			</p>
 			<div class="mt-4 flex flex-wrap gap-3">
-				<a href={shareUrl} class="btn btn-primary" rel="noopener">X で共有</a>
+				<a href={shareUrl} class="btn btn-primary" rel="noopener" onclick={warmCard}>X で共有</a>
 			</div>
 		</div>
 	</div>
