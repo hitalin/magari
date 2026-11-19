@@ -2,7 +2,12 @@
 import Flyer from "#lib/components/Flyer.svelte";
 import { formatWhen } from "#lib/date.ts";
 import { flyerStyle } from "#lib/flyer.ts";
-import { eventPlace, eventShareText, xShareUrl } from "#lib/share.ts";
+import {
+	eventPlace,
+	eventShareText,
+	misskeyShareUrl,
+	xShareUrl,
+} from "#lib/share.ts";
 import { page } from "$app/state";
 import type { PageProps } from "./$types";
 
@@ -11,6 +16,7 @@ const event = $derived(data.event);
 // ?opened を付けずに貼る
 const cleanUrl = $derived(page.url.origin + page.url.pathname);
 const shareUrl = $derived(xShareUrl(eventShareText(event), cleanUrl));
+const misskeyUrl = $derived(misskeyShareUrl(eventShareText(event), cleanUrl));
 // 主催（本人か、管理しているハコ・団体）なら編集できる。取り込んだ会は元のカレンダーが正なので編集しない
 const canEdit = $derived(
 	!event.source && event.hosts.some((h) => data.managed.includes(h.handle)),
@@ -62,6 +68,7 @@ const cardDescription = $derived(
 			<p class="font-serif text-lg font-bold">開けました。あとは貼るだけ。</p>
 			<div class="mt-3 flex flex-wrap gap-3">
 				<a href={shareUrl} class="btn btn-primary" rel="noopener" onclick={warmCard}>X に貼る</a>
+				<a href={misskeyUrl} class="btn" rel="noopener" onclick={warmCard}>Misskey に貼る</a>
 				<button type="button" class="btn" onclick={copyLink}>{copied ? 'コピーしました' : 'リンクをコピー'}</button>
 			</div>
 		</div>
@@ -132,6 +139,7 @@ const cardDescription = $derived(
 			</p>
 			<div class="mt-4 flex flex-wrap gap-3">
 				<a href={shareUrl} class="btn btn-primary" rel="noopener" onclick={warmCard}>X で共有</a>
+				<a href={misskeyUrl} class="btn" rel="noopener" onclick={warmCard}>Misskey で共有</a>
 			</div>
 		</div>
 	</div>

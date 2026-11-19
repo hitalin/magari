@@ -1,4 +1,4 @@
-// X での共有文とリンクカードの説明。題・日時・場所（ハコ）を必ず入れる。
+// X・Misskey での共有文とリンクカードの説明。題・日時・場所（ハコ）を必ず入れる。
 import { formatWhen } from "./date";
 import type { EventSummary } from "./types";
 
@@ -28,4 +28,9 @@ export function eventShareText(e: ShareEvent): string {
 // URLSearchParams は空白を + にするので使わない（X の投稿画面に + が残ることがある）
 export function xShareUrl(text: string, url: string): string {
 	return `https://x.com/intent/post?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
+}
+
+// Misskey はサーバーが人ごとに違うので、Misskey Hub の共有ページでサーバーを選んでもらう
+export function misskeyShareUrl(text: string, url: string): string {
+	return `https://misskey-hub.net/share/?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
 }

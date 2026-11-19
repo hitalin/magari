@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { eventPlace, eventShareText, xShareUrl } from "./share";
+import {
+	eventPlace,
+	eventShareText,
+	misskeyShareUrl,
+	xShareUrl,
+} from "./share";
 
 const base = {
 	title: "こーじろーさん",
@@ -49,6 +54,15 @@ describe("xShareUrl", () => {
 		const url = xShareUrl("a b\nc", "https://magari.cc/e/x");
 		expect(url).toBe(
 			"https://x.com/intent/post?text=a%20b%0Ac&url=https%3A%2F%2Fmagari.cc%2Fe%2Fx",
+		);
+	});
+});
+
+describe("misskeyShareUrl", () => {
+	it("Misskey Hub の共有ページへ、X と同じ符号化で渡す", () => {
+		const url = misskeyShareUrl("a b\nc", "https://magari.cc/e/x");
+		expect(url).toBe(
+			"https://misskey-hub.net/share/?text=a%20b%0Ac&url=https%3A%2F%2Fmagari.cc%2Fe%2Fx",
 		);
 	});
 });
