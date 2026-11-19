@@ -26,6 +26,15 @@ export type EventSummary = {
 	flyerLook: FlyerLook | null;
 };
 
+// 題などに書かれた @name のうち、まがりにいる人。Misskey で共有するときの宛先に使う
+export type ShareMention = {
+	handle: string;
+	// X の ID（@ なし）
+	x: string | null;
+	// @name@host
+	fediverse: string | null;
+};
+
 export type EventDetail = EventSummary & {
 	description: string | null;
 	url: string | null;
@@ -37,6 +46,7 @@ export type EventDetail = EventSummary & {
 	visibility: "public" | "unlisted";
 	// 運営が非表示にしている（主催にだけ見える）
 	hidden: boolean;
+	mentions: ShareMention[];
 };
 
 export type ActorProfile = ActorRef & {

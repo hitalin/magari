@@ -13,12 +13,15 @@ import {
 } from "drizzle-orm";
 import { nameOnlyIfUnmanaged } from "#lib/actor.ts";
 import { parseFlyerLook } from "#lib/flyer.ts";
+import { mentionHandles } from "#lib/share.ts";
+import { actorSns } from "#lib/sns.ts";
 import {
 	type ActorProfile,
 	type ActorRef,
 	type EventDetail,
 	type EventSummary,
 	mediaUrl,
+	type ShareMention,
 } from "#lib/types.ts";
 import type { Db } from "./db/index.ts";
 import { actorMembers, actors, eventHosts, events } from "./db/schema.ts";
@@ -100,7 +103,11 @@ async function hostsByEvent(
 	return map;
 }
 
-function toDetail(row: Row, hosts: ActorRef[]): EventDetail {
+function toDetail(
+	row: Row,
+	hosts: ActorRef[],
+	mentions: ShareMention[] = [],
+): EventDetail {
 	return {
 		id: row.id,
 		title: row.title,
@@ -133,7 +140,31 @@ function toDetail(row: Row, hosts: ActorRef[]): EventDetail {
 					}
 				: null,
 		hosts,
+		mentions,
 	};
+}
+
+// 共有文（題・場所）に書かれた @name のうち、まがりにいる人の、ページに出している X と Fediverse
+async function mentionsOf(db: Db, row: Row): Promise<ShareMention[]> {
+	const handles = mentionHandles(
+		[row.title, row.spaceName, row.locationName].filter(Boolean).join("\n"),
+	);
+	if (!handles.length) return [];
+	const rows = await db
+		.select({
+			handle: actors.handle,
+			xHandle: actors.xHandle,
+			instagram: actors.instagram,
+			links: actors.links,
+		})
+		.from(actors)
+		.where(and(inArray(actors.handle, handles), isNull(actors.hiddenAt)));
+	return rows.map((a) => ({
+		handle: a.handle,
+		x: a.xHandle,
+		fediverse:
+			actorSns(a).sns.find((s) => s.kind === "fediverse")?.label ?? null,
+	}));
 }
 
 function toSummary(detail: EventDetail): EventSummary {
@@ -247,7 +278,7 @@ export async function getEvent(
 		.limit(1);
 	if (!row || row.status === "draft") return null;
 	const hosts = await hostsByEvent(db, [row.id]);
-	return toDetail(row, hosts.get(row.id) ?? []);
+	return toDetail(row, hosts.get(row.id) ?? [], await mentionsOf(db, row));
 }
 
 // 下書き・非公開も含めて、作成者か主催者（管理している Actor を含む）なら返す
@@ -268,7 +299,7 @@ export async function getEventForUser(
 		hostRows.some((h) => actorIds.includes(h.actorId));
 	if (!mine) return null;
 	const hosts = await hostsByEvent(db, [row.id]);
-	return toDetail(row, hosts.get(row.id) ?? []);
+	return toDetail(row, hosts.get(row.id) ?? [], await mentionsOf(db, row));
 }
 
 export async function getActorByHandle(

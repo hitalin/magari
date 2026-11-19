@@ -5,6 +5,7 @@ import { flyerStyle } from "#lib/flyer.ts";
 import {
 	eventPlace,
 	eventShareText,
+	misskeyShareText,
 	misskeyShareUrl,
 	xShareUrl,
 } from "#lib/share.ts";
@@ -17,7 +18,12 @@ const event = $derived(data.event);
 // ?opened を付けずに貼る
 const cleanUrl = $derived(page.url.origin + page.url.pathname);
 const shareUrl = $derived(xShareUrl(eventShareText(event), cleanUrl));
-const misskeyUrl = $derived(misskeyShareUrl(eventShareText(event), cleanUrl));
+const misskeyUrl = $derived(
+	misskeyShareUrl(
+		misskeyShareText(eventShareText(event), event.mentions),
+		cleanUrl,
+	),
+);
 // 主催（本人か、管理しているハコ・団体）なら編集できる。取り込んだ会は元のカレンダーが正なので編集しない
 const canEdit = $derived(
 	!event.source && event.hosts.some((h) => data.managed.includes(h.handle)),
