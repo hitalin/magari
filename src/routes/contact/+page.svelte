@@ -12,9 +12,8 @@ let { data, form }: PageProps = $props();
 	<p class="label">運営への連絡</p>
 	<h1 class="mt-2 text-2xl">掲載の取り下げ・ページの引き取り</h1>
 	<p class="mt-3 text-sm text-muted">
-		まがりに載っているページや会について、掲載の取り下げ、ページの管理の引き取り、そのほかの連絡を受け付けます。ログインは要りません。
-		取り下げたページの ID は、以後だれも使えないようにします。
-		申し出があった掲載は、まず非表示にしてから内容を確認します（<a href="/policy" class="underline underline-offset-2 hover:text-accent-ink">掲載と削除の方針</a>）。
+		掲載の取り下げ、ページの引き取り、そのほかの連絡を受け付けます。ログインは要りません。
+		取り下げの申し出があった掲載は、まず非表示にしてから確かめます。取り下げたページの ID は、以後だれも使えません（<a href="/policy" class="underline underline-offset-2 hover:text-accent-ink">掲載と削除の方針</a>）。
 	</p>
 
 	{#if form?.sent}
