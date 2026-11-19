@@ -8,6 +8,7 @@ import {
 	misskeyShareUrl,
 	xShareUrl,
 } from "#lib/share.ts";
+import { MISSKEY_ICON, SNS_ICON } from "#lib/sns.ts";
 import { page } from "$app/state";
 import type { PageProps } from "./$types";
 
@@ -67,8 +68,8 @@ const cardDescription = $derived(
 		<div class="panel mt-4 p-5">
 			<p class="font-serif text-lg font-bold">開けました。あとは貼るだけ。</p>
 			<div class="mt-3 flex flex-wrap gap-3">
-				<a href={shareUrl} class="btn btn-primary" rel="noopener" onclick={warmCard}>X に貼る</a>
-				<a href={misskeyUrl} class="btn" rel="noopener" onclick={warmCard}>Misskey に貼る</a>
+				<a href={shareUrl} class="btn btn-primary" rel="noopener" onclick={warmCard} aria-label="X に貼る"><svg viewBox="0 0 24 24" class="h-4 w-4 shrink-0" fill="currentColor" aria-hidden="true"><path d={SNS_ICON.x} /></svg>に貼る</a>
+				<a href={misskeyUrl} class="btn" rel="noopener" onclick={warmCard} aria-label="Misskey に貼る"><svg viewBox="0 0 24 24" class="h-4 w-4 shrink-0" fill="currentColor" aria-hidden="true"><path d={MISSKEY_ICON} /></svg>に貼る</a>
 				<button type="button" class="btn" onclick={copyLink}>{copied ? 'コピーしました' : 'リンクをコピー'}</button>
 			</div>
 		</div>
@@ -138,8 +139,8 @@ const cardDescription = $derived(
 				この掲載に問題があれば<a href="/contact?kind=takedown&about=/e/{event.id}" class="underline underline-offset-2 hover:text-accent-ink">運営に連絡</a>できます。
 			</p>
 			<div class="mt-4 flex flex-wrap gap-3">
-				<a href={shareUrl} class="btn btn-primary" rel="noopener" onclick={warmCard}>X で共有</a>
-				<a href={misskeyUrl} class="btn" rel="noopener" onclick={warmCard}>Misskey で共有</a>
+				<a href={shareUrl} class="btn btn-primary" rel="noopener" onclick={warmCard} aria-label="X で共有"><svg viewBox="0 0 24 24" class="h-4 w-4 shrink-0" fill="currentColor" aria-hidden="true"><path d={SNS_ICON.x} /></svg>で共有</a>
+				<a href={misskeyUrl} class="btn" rel="noopener" onclick={warmCard} aria-label="Misskey で共有"><svg viewBox="0 0 24 24" class="h-4 w-4 shrink-0" fill="currentColor" aria-hidden="true"><path d={MISSKEY_ICON} /></svg>で共有</a>
 			</div>
 		</div>
 	</div>
