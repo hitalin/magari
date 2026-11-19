@@ -50,7 +50,7 @@ export function mentionHandles(text: string): string[] {
 
 // Misskey はホストの無い @name を自分のサーバーの人へのメンションにしてしまう。
 // まがりにいる人なら、その人の Fediverse のアカウントへのメンションか、X へのリンクに置き換える。
-// 分からなければ @ の後ろにゼロ幅スペースを入れて、ただの文字にする
+// 分からなければ、いちばん人の多い misskey.io の人とみなす
 export function misskeyShareText(
 	text: string,
 	mentions: ShareMention[],
@@ -60,6 +60,6 @@ export function misskeyShareText(
 		const to = mentions.find((m) => m.handle === name.toLowerCase());
 		if (to?.fediverse) return to.fediverse;
 		if (to?.x) return `[@\u200B${to.x}](https://x.com/${to.x})`;
-		return `@\u200B${name}`;
+		return `@${name}@misskey.io`;
 	});
 }

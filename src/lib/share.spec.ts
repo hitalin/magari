@@ -96,9 +96,9 @@ describe("misskeyShareText", () => {
 			"[@\u200Beden_kanda](https://x.com/eden_kanda) にて",
 		);
 	});
-	it("まがりにいない、または SNS の分からない @name はメンションにしない", () => {
+	it("まがりにいない、または SNS の分からない @name は misskey.io の人とみなす", () => {
 		expect(misskeyShareText("かほ@03skybar28 と @nosns", mentions)).toBe(
-			"かほ@\u200B03skybar28 と @\u200Bnosns",
+			"かほ@03skybar28@misskey.io と @nosns@misskey.io",
 		);
 	});
 	it("@name@host はそのまま", () => {
