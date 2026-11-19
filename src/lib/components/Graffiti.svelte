@@ -33,12 +33,13 @@ const WIDTH: Record<Tool, number> = {
 	spray: 15,
 	eraser: 28,
 };
-const TOOLS: [Tool, string][] = [
-	["chalk", "チョーク"],
-	["marker", "マーカー"],
-	["paint", "ペンキ"],
-	["spray", "スプレー"],
-	["eraser", "消しゴム"],
+// 道具箱に並べる順。3 つ目は絵（24px の線画）
+const TOOLS: [Tool, string, string][] = [
+	["chalk", "チョーク", "M5 19h3L19 8l-3-3L5 16z"],
+	["marker", "マーカー", "M4 20h5l2-2-5-5-2 2zM8 11l7-7 5 5-7 7"],
+	["paint", "ペンキ", "M4 4h13v5H4zM17 6.5h3V12h-8v3M10.5 15h3v6h-3z"],
+	["spray", "スプレー", "M9 10h7v11H9zM11 10V7h3v3M5 4h.01M5 8h.01M7.5 6h.01"],
+	["eraser", "消しゴム", "M8 19l-4-4L14 5l6 6-8 8zM9 10l6 6M8 19h12"],
 ];
 // canvas は画面より上下に PAD 倍ずつ広く描いて、ページの中に置く（スクロールはブラウザが滑らかに流す）
 const PAD = 0.5;
@@ -62,6 +63,10 @@ let scribbles = $state.raw<Scribble[]>([]);
 // まだ残していない線
 let pending = $state.raw<Stroke[]>([]);
 let notice = $state("");
+// マウスの位置に、いまの太さの輪を出す（お絵描きアプリの筆先）
+let tip = $state<[number, number] | null>(null);
+const tipSize = $derived(Math.max(WIDTH[tool] * SIZES[size], 6));
+const toolLabel = $derived(TOOLS.find(([t]) => t === tool)?.[1]);
 // いま引いている線
 let current: Stroke | null = null;
 let frame = 0;
@@ -527,26 +532,50 @@ function toggle() {
 
 {#if holding}
 	<!-- チョークを持っている間だけ、画面全体で指やマウスを受ける（ヘッダーはこの上にあるので、持ったままページを移れる） -->
-	<div class="catch" role="presentation" onpointerdown={down} onpointermove={move} onpointerup={up} onpointercancel={up}></div>
+	<div
+		class="catch"
+		role="presentation"
+		onpointerdown={down}
+		onpointermove={(e) => {
+			tip = e.pointerType === 'mouse' ? [e.clientX, e.clientY] : null;
+			move(e);
+		}}
+		onpointerleave={() => (tip = null)}
+		onpointerup={up}
+		onpointercancel={up}
+	></div>
+	{#if tip}
+		<span class="tip" style="left: {tip[0]}px; top: {tip[1]}px; width: {tipSize}px; height: {tipSize}px; border-color: {tool === 'eraser' ? 'var(--color-text)' : COLORS[color]}"></span>
+	{/if}
 {/if}
 
 <div class="hand">
 	{#if holding}
+		<!-- 道具箱。上から道具・色・太さ、いちばん下に一言（お絵描きアプリの並び） -->
 		<div class="tools" role="toolbar" aria-label="落書きの道具">
-			<p class="w-full text-xs {notice ? 'text-accent-ink' : 'text-muted'}" role="status">{notice || 'どこにでも描けます。描いた線はそのまま残ります。'}{#if !notice}<span class="touch">指 2 本で地面を動かせます。</span>{/if}</p>
-			{#each TOOLS as [t, label] (t)}
-				<button type="button" class="chip {tool === t ? 'chip-tape' : 'chip-plain'}" aria-pressed={tool === t} onclick={() => (tool = t)}>{label}</button>
-			{/each}
-			<div class="colors" role="group" aria-label="色">
-				{#each COLORS as c, i (c)}
-					<button type="button" class:on={color === i} style="background: {c}" aria-pressed={color === i} aria-label="色 {i + 1}" onclick={() => (color = i)}></button>
+			<div class="tool-row" role="group" aria-label="道具">
+				{#each TOOLS as [t, label, icon] (t)}
+					<button type="button" class:on={tool === t} aria-pressed={tool === t} aria-label={label} title={label} onclick={() => (tool = t)}>
+						<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d={icon} /></svg>
+					</button>
 				{/each}
+			</div>
+			<div class="color-row" class:off={tool === 'eraser'}>
+				<span class="now" style="background: {COLORS[color]}" aria-hidden="true"></span>
+				<div class="colors" role="group" aria-label="色">
+					{#each COLORS as c, i (c)}
+						<button type="button" class:on={color === i} style="background: {c}" aria-pressed={color === i} aria-label="色 {i + 1}" onclick={() => (color = i)}></button>
+					{/each}
+				</div>
 			</div>
 			<div class="sizes" role="group" aria-label="太さ">
 				{#each ['細い', '中くらい', '太い'] as label, i (label)}
-					<button type="button" class:on={size === i} aria-pressed={size === i} aria-label={label} title={label} onclick={() => (size = i)}><span style="width: {0.3 + i * 0.3}rem; height: {0.3 + i * 0.3}rem"></span></button>
+					<button type="button" class:on={size === i} aria-pressed={size === i} aria-label={label} title={label} onclick={() => (size = i)}>
+						<span style="height: {3 + i * 5}px; background: {tool === 'eraser' ? 'var(--color-dim)' : COLORS[color]}"></span>
+					</button>
 				{/each}
 			</div>
+			<p class="status {notice ? 'text-accent-ink' : 'text-muted'}" role="status">{notice || `${toolLabel}。描いた線はそのまま残ります。`}{#if !notice}<span class="touch">指 2 本で地面を動かせます。</span>{/if}</p>
 		</div>
 	{/if}
 	<button type="button" class="chalk" class:holding aria-pressed={holding} aria-label={holding ? 'チョークを置く' : '落書きする'} title={holding ? 'チョークを置く' : '落書きする'} onclick={toggle}>
@@ -597,49 +626,108 @@ function toggle() {
 	.hand > * {
 		pointer-events: auto;
 	}
+	/* 筆先の輪。いまの太さと色 */
+	.tip {
+		position: fixed;
+		z-index: 46;
+		border: 1.5px solid;
+		border-radius: 9999px;
+		box-shadow: 0 0 0 1px rgb(0 0 0 / 0.5);
+		transform: translate(-50%, -50%);
+		pointer-events: none;
+	}
 	.tools {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: center;
-		gap: 0.5rem;
-		max-width: min(20.5rem, calc(100vw - 5.5rem));
-		padding: 0.6rem 0.8rem;
+		display: grid;
+		width: min(15rem, calc(100vw - 5.5rem));
 		border: 1px solid var(--color-line);
 		border-radius: var(--radius-md);
 		background: var(--color-surface);
 	}
-	.colors {
+	.tools > * {
+		padding: 0.5rem 0.6rem;
+	}
+	.tools > * + * {
+		border-top: 1px solid var(--color-line);
+	}
+	.tool-row {
+		display: grid;
+		grid-template-columns: repeat(5, 1fr);
+		gap: 0.25rem;
+	}
+	.tool-row button {
+		display: grid;
+		place-items: center;
+		aspect-ratio: 1;
+		border-radius: 4px;
+		color: var(--color-muted);
+	}
+	.tool-row button:hover {
+		background: var(--color-surface-2);
+		color: var(--color-text);
+	}
+	.tool-row button.on {
+		background: var(--color-accent);
+		color: #1a1206;
+	}
+	.tool-row svg {
+		width: 1.35rem;
+		height: 1.35rem;
+	}
+	.color-row {
 		display: flex;
-		gap: 0.45rem;
-		width: 100%;
+		align-items: center;
+		gap: 0.6rem;
+	}
+	.color-row.off {
+		opacity: 0.35;
+	}
+	/* いまの色 */
+	.now {
+		flex: none;
+		width: 2.6rem;
+		height: 2.6rem;
+		border: 2px solid var(--color-text);
+		border-radius: 4px;
+	}
+	.colors {
+		display: grid;
+		grid-template-columns: repeat(4, 1fr);
+		gap: 0.25rem;
+		flex: 1;
 	}
 	.colors button {
-		width: 1.4rem;
-		height: 1.4rem;
-		border-radius: 9999px;
-		border: 2px solid var(--color-surface);
+		height: 1.2rem;
+		border-radius: 2px;
 	}
 	.colors button.on {
 		outline: 2px solid var(--color-text);
+		outline-offset: 1px;
 	}
 	.sizes {
-		display: flex;
-		gap: 0.45rem;
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		gap: 0.25rem;
 	}
 	.sizes button {
 		display: grid;
-		place-items: center;
-		width: 1.6rem;
-		height: 1.6rem;
-		border: 1px solid var(--color-line);
-		border-radius: 9999px;
+		align-items: center;
+		height: 1.9rem;
+		padding-inline: 0.5rem;
+		border-radius: 4px;
+	}
+	.sizes button:hover {
+		background: var(--color-surface-2);
 	}
 	.sizes button.on {
-		border-color: var(--color-text);
+		background: var(--color-surface-2);
+		outline: 1px solid var(--color-text);
 	}
 	.sizes span {
 		border-radius: 9999px;
-		background: var(--color-text);
+	}
+	.status {
+		font-size: 0.7rem;
+		line-height: 1.5;
 	}
 	/* 指で触る画面でだけ出す案内 */
 	.touch {
