@@ -132,8 +132,12 @@ const filterItems = $derived<{ area: string | null }[] | undefined>(
 
 <main id="main" class="mx-auto max-w-content px-4 pt-6 pb-20">
 	{#if filterItems}
-		<div class="mt-4">
-			<AreaFilter items={filterItems} bind:value={areaFilter.value} />
+		<!-- 狭い画面では検索を上、エリアを下。広い画面ではエリアの右に検索 -->
+		<div class="mt-4 flex flex-col gap-3 sm:flex-row-reverse sm:items-start sm:justify-between sm:gap-6">
+			<input type="search" class="input py-1 text-sm sm:w-56" placeholder="名前や場所で探す" aria-label="名前や場所で探す" bind:value={areaFilter.query} />
+			<div class="min-w-0 sm:flex-1">
+				<AreaFilter items={filterItems} bind:value={areaFilter.value} />
+			</div>
 		</div>
 	{/if}
 	{@render children()}

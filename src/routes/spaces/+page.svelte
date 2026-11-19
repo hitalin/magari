@@ -1,13 +1,21 @@
 <script lang="ts">
-import { areaFilter, inArea } from "#lib/area-filter.svelte.ts";
+import {
+	areaFilter,
+	emptyTitle,
+	inArea,
+	inQuery,
+} from "#lib/area-filter.svelte.ts";
 import Empty from "#lib/components/Empty.svelte";
+import { spaceText } from "#lib/search.ts";
 import { SPACE_SORTS, type SpaceSort, sortSpaces } from "#lib/space-sort.ts";
 import type { PageProps } from "./$types";
 
 let { data }: PageProps = $props();
 const area = $derived(areaFilter.value);
 let sort = $state<SpaceSort>("many");
-const spaces = $derived(sortSpaces(inArea(data.spaces), sort));
+const spaces = $derived(
+	sortSpaces(inQuery(inArea(data.spaces), spaceText), sort),
+);
 </script>
 
 <svelte:head>
@@ -26,9 +34,8 @@ const spaces = $derived(sortSpaces(inArea(data.spaces), sort));
 		<h1 class="section-title">ハコ</h1>
 		<a href="/spaces/new" class="more text-sm">自分のハコを載せる ›</a>
 	</div>
-	<p class="mb-10 text-sm text-muted">間が開かれる店や会場。</p>
 	{#if spaces.length === 0}
-		<Empty title={area.length ? `${area.join('・')}のハコはまだありません。` : 'ハコはまだありません。'} />
+		<Empty title={emptyTitle(area.length ? `${area.join('・')}のハコはまだありません。` : 'ハコはまだありません。')} />
 	{:else}
 		<!-- 段ボールの看板を壁に貼って並べる。上辺のテープがはみ出すので縦の間隔を広めに。写真の無い看板は低いので上で揃える -->
 		<div class="grid items-start gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">

@@ -1,15 +1,16 @@
 <script lang="ts">
-import { inArea } from "#lib/area-filter.svelte.ts";
+import { inArea, inQuery } from "#lib/area-filter.svelte.ts";
 import { monthKey } from "#lib/calendar.ts";
 import DayList from "#lib/components/DayList.svelte";
 import Empty from "#lib/components/Empty.svelte";
 import EventViews from "#lib/components/EventViews.svelte";
 import MonthGrid from "#lib/components/MonthGrid.svelte";
 import { dayKey } from "#lib/date.ts";
+import { eventText } from "#lib/search.ts";
 import type { PageProps } from "./$types";
 
 let { data }: PageProps = $props();
-const events = $derived(inArea(data.events));
+const events = $derived(inQuery(inArea(data.events), eventText));
 // スマホではグリッドの題が読めないので、この月の間を下に並べる
 const monthEvents = $derived(
 	events.filter((e) =>

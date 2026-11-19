@@ -1,13 +1,19 @@
 <script lang="ts">
-import { areaFilter, inArea } from "#lib/area-filter.svelte.ts";
+import {
+	areaFilter,
+	emptyTitle,
+	inArea,
+	inQuery,
+} from "#lib/area-filter.svelte.ts";
 import Empty from "#lib/components/Empty.svelte";
 import EventViews from "#lib/components/EventViews.svelte";
 import FlyerWall from "#lib/components/FlyerWall.svelte";
+import { eventText } from "#lib/search.ts";
 import type { PageProps } from "./$types";
 
 let { data }: PageProps = $props();
 const area = $derived(areaFilter.value);
-const events = $derived(inArea(data.events));
+const events = $derived(inQuery(inArea(data.events), eventText));
 </script>
 
 <svelte:head>
@@ -22,7 +28,7 @@ const events = $derived(inArea(data.events));
 	</div>
 	<p class="mb-10 text-sm text-muted">これからの間を、開かれる順に貼っています。フライヤーの画像が無い間は、自動のビラで貼ります。自分の間のフライヤーは、間の編集画面から上げられます。</p>
 	{#if events.length === 0}
-		<Empty title={area.length ? `${area.join('・')}では、まだ誰もくねくねしていません。` : 'まだ誰もくねくねしていません。'} />
+		<Empty title={emptyTitle(area.length ? `${area.join('・')}では、まだ誰もくねくねしていません。` : 'まだ誰もくねくねしていません。')} />
 	{:else}
 		<FlyerWall {events} />
 	{/if}
