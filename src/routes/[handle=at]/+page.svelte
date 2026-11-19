@@ -118,7 +118,7 @@ const description = $derived(actor.catch ?? actor.summary ?? undefined);
 		<div class="mt-5 border-t border-line pt-4">
 			<p class="text-sm font-semibold">ここで開けたい人は、まず声をかけてみてください。</p>
 			<div class="pills mt-3">
-				{#if actor.xHandle}<a href="https://x.com/{actor.xHandle}" class="chip chip-tape" rel="noopener">X で @{actor.xHandle} に声をかける ›</a>{/if}
+				{#if actor.xHandle}<a href="https://x.com/{actor.xHandle}" class="chip chip-tape gap-1.5" rel="noopener" aria-label="X で @{actor.xHandle} に声をかける"><svg viewBox="0 0 24 24" class="h-3.5 w-3.5 shrink-0" fill="currentColor" aria-hidden="true"><path d={SNS_ICON.x} /></svg>で @{actor.xHandle} に声をかける ›</a>{/if}
 				<a href="/new?space={actor.handle}" class="chip">日が決まっていたら、ここでまがりする ›</a>
 			</div>
 		</div>
