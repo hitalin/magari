@@ -36,6 +36,8 @@ export const load: PageServerLoad = async ({ locals, request, url }) => {
 	return {
 		actor,
 		managed,
+		// 運営者（ADMIN_HANDLE の本人）にだけ、運営の画面への入口を出す
+		isAdmin: !!env.ADMIN_HANDLE && actor.handle === env.ADMIN_HANDLE,
 		xEnabled: !!env.X_CLIENT_ID,
 		linkError: url.searchParams.get("error"),
 		linked: url.searchParams.has("linked"),

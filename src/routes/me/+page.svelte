@@ -64,6 +64,7 @@ async function unlink(id: string) {
 		<!-- 開ける入口はナビの「まがり」だけ。ログインにまつわるもの（パスキー）は下の「ログイン方法」にまとめる -->
 		<a href="/@{data.actor.handle}" class="btn">自分のページ ›</a>
 		<a href="/@{data.actor.handle}/edit" class="btn">ページを編集</a>
+		{#if data.isAdmin}<a href="/admin/reports" class="btn">運営の画面 ›</a>{/if}
 		<form method="POST" action="/logout"><button type="submit" class="btn">ログアウト</button></form>
 	</div>
 </header>
