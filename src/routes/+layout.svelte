@@ -34,9 +34,10 @@ const nav = [
 const REPO = "https://github.com/hitalin/magari";
 // 一覧・フライヤー・カレンダーはイベントの見せ方（EventViews）。どれにいてもナビは「イベント」
 // 本文がナビの下に入ったら、ナビに地の色を敷く
-let scrolled = $state(false);
+// 0（一番上）〜 1。スクロールし始めの 120px で、地の色を少しずつ濃くする
+let tint = $state(0);
 const onScroll = () => {
-	scrolled = window.scrollY > 8;
+	tint = Math.min(window.scrollY / 120, 1);
 };
 // 途中までスクロールした位置で開き直したときも、最初から敷く
 $effect(onScroll);
@@ -64,7 +65,7 @@ const isActive = (href: string) =>
 {#if navigating.to}<div class="progress" role="progressbar" aria-label="読み込み中"></div>{/if}
 
 <!-- 図像と字だけのナビ。上に固定するが帯は見せない。下を流れる本文は、下端へ向けて消えるぼかしで溶かす（.site-header） -->
-<header class="site-header fixed inset-x-0 top-0 z-50 h-header" class:scrolled style="view-transition-name: header">
+<header class="site-header fixed inset-x-0 top-0 z-50 h-header" style:--nav-tint={tint} style="view-transition-name: header">
 	<div class="flex h-full items-center gap-3 px-4 text-[0.8rem] sm:gap-6 sm:px-5 sm:text-sm">
 		<a href="/" class="flex shrink-0 items-center" aria-label="まがり"><img src={logo} alt="" class="h-7 w-7" /></a>
 		<!-- タブ（実体の「イベント」「ハコ」だけ）の左端を、本文の左端に揃える（図像は左端、ログインは右端のまま）。狭い画面では図像のすぐ右。

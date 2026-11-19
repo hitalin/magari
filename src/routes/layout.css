@@ -665,7 +665,9 @@ h4 {
 	}
 
 	/* 固定のナビ。境界線は無く、下を通る本文だけをぼかす。ぼかしは下端へ向けて消えるので帯に見えない。
-	   スクロールして本文が下を通る間だけ（.scrolled）地の色を薄く敷き、明るいビラや看板が通ってもナビの字が沈まないようにする */
+	   スクロールして本文が下を通る間だけ地の色を敷き、明るいビラや看板が通ってもナビの字が沈まないようにする。
+	   濃さは --nav-tint（0〜1。スクロール量から layout が入れる）に合わせて少しずつ上げる。
+	   地の色はナビの高さの中で上から下へ薄くし、下端で消す（字のある中ほどは 84% 残す） */
 	.site-header::before {
 		content: "";
 		position: absolute;
@@ -674,10 +676,21 @@ h4 {
 		pointer-events: none;
 		backdrop-filter: blur(14px);
 		mask-image: linear-gradient(to bottom, #000 55%, transparent);
-		transition: background-color 0.2s;
-	}
-	.site-header.scrolled::before {
-		background-color: color-mix(in srgb, var(--color-bg) 88%, transparent);
+		background-image: linear-gradient(
+			to bottom,
+			color-mix(
+				in srgb,
+				var(--color-bg) calc(var(--nav-tint, 0) * 96%),
+				transparent
+			),
+			color-mix(
+					in srgb,
+					var(--color-bg) calc(var(--nav-tint, 0) * 84%),
+					transparent
+				)
+				calc(var(--spacing-header) * 0.5),
+			transparent var(--spacing-header)
+		);
 	}
 
 	/* 流れるラベル: ヒーロー上端の pill に、テープのラベル + マーキー（notedeck の tickers）。装飾なので aria-hidden */
