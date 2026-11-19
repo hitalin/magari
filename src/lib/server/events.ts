@@ -1,6 +1,7 @@
 import {
 	and,
 	asc,
+	desc,
 	eq,
 	gte,
 	inArray,
@@ -166,6 +167,44 @@ function toSummary(detail: EventDetail): EventSummary {
 	};
 }
 
+// その Actor が場または主催の会
+function ofActor(db: Db, actorId: string) {
+	return or(
+		eq(events.spaceActorId, actorId),
+		inArray(
+			events.id,
+			db
+				.select({ id: eventHosts.eventId })
+				.from(eventHosts)
+				.where(eq(eventHosts.actorId, actorId)),
+		),
+	);
+}
+
+// Actor のこれまでの間。before より前に始まったものを、新しい順に
+export async function listPastEvents(
+	db: Db,
+	opts: { actorId: string; before: Date; limit: number },
+): Promise<EventSummary[]> {
+	const rows = await selectEvents(db)
+		.where(
+			and(
+				eq(events.status, "published"),
+				eq(events.visibility, "public"),
+				lt(events.startsAt, opts.before),
+				notHidden(db),
+				ofActor(db, opts.actorId),
+			),
+		)
+		.orderBy(desc(events.startsAt))
+		.limit(opts.limit);
+	const hosts = await hostsByEvent(
+		db,
+		rows.map((r) => r.id),
+	);
+	return rows.map((r) => toSummary(toDetail(r, hosts.get(r.id) ?? [])));
+}
+
 export async function listUpcomingEvents(
 	db: Db,
 	opts: {
@@ -185,19 +224,7 @@ export async function listUpcomingEvents(
 	);
 	// actorId 指定時は、その Actor が場または主催の会に絞る
 	const where = opts.actorId
-		? and(
-				upcoming,
-				or(
-					eq(events.spaceActorId, opts.actorId),
-					inArray(
-						events.id,
-						db
-							.select({ id: eventHosts.eventId })
-							.from(eventHosts)
-							.where(eq(eventHosts.actorId, opts.actorId)),
-					),
-				),
-			)
+		? and(upcoming, ofActor(db, opts.actorId))
 		: upcoming;
 
 	const rows = await selectEvents(db)

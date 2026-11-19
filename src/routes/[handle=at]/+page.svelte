@@ -50,6 +50,7 @@ const sections = $derived(
 	[
 		actor.body && { id: "about", label: "紹介" },
 		{ id: "events", label: "これからの間" },
+		data.past.length > 0 && { id: "past", label: "これまでの間" },
 		hasAccess && { id: "access", label: "アクセス" },
 	].filter((s): s is { id: string; label: string } => !!s),
 );
@@ -71,20 +72,22 @@ const description = $derived(actor.catch ?? actor.summary ?? undefined);
 
 <!-- ハコ（箱）のページは段ボールの看板 -->
 <header class="{actor.kind === 'space' ? 'cardboard mt-8' : 'panel mt-4'} mb-8 p-6 sm:p-8">
-	<div class="flex items-start gap-5">
+	<!-- 名刺は X や Misskey のプロフィールと同じ並び: 左上に顔、右上に編集、その下に名前・@ID・ひとこと・リンク -->
+	<div class="flex items-start justify-between gap-4">
 		{#if icon}
 			<img src={icon} alt="" class="h-20 w-20 shrink-0 rounded-full border border-line object-cover sm:h-24 sm:w-24" />
+		{:else}
+			<span class="grid h-20 w-20 shrink-0 place-items-center rounded-full border border-line bg-accent-soft font-serif text-3xl text-accent-ink sm:h-24 sm:w-24" aria-hidden="true">{[...actor.name][0]}</span>
 		{/if}
-		<div class="min-w-0">
-			<p class="label">
-				{#if unofficial}<span class="badge-unofficial mr-2 align-middle">非公式</span>{/if}{KIND_LABEL[actor.kind]} · @{actor.handle}
-			</p>
-			<h1 class="mt-2 text-[clamp(1.8rem,3.5vw,2.6rem)]">{actor.name}</h1>
-			{#if actor.catch}<p class="mt-2 font-serif text-lg text-accent-ink">{actor.catch}</p>{/if}
-		</div>
+		{#if canEdit}<a href="/@{actor.handle}/edit" class="btn px-4 py-2 text-sm">ページを編集</a>{/if}
 	</div>
+	<h1 class="mt-3 text-[clamp(1.5rem,3vw,2rem)] leading-tight">{actor.name}</h1>
+	<p class="mt-1 text-sm text-muted">
+		@{actor.handle} · {KIND_LABEL[actor.kind]}{#if unofficial}<span class="badge-unofficial ml-2 align-middle">非公式</span>{/if}
+	</p>
+	{#if actor.catch}<p class="mt-3 font-serif text-lg text-accent-ink">{actor.catch}</p>{/if}
 	{#if actor.summary}
-		<p class="mt-3 max-w-[34em] whitespace-pre-line text-muted">{actor.summary}</p>
+		<p class="mt-3 max-w-[34em] whitespace-pre-line">{actor.summary}</p>
 	{:else if canEdit && actor.kind === 'person'}
 		<!-- 本人にだけ: まだ自己紹介が無い -->
 		<p class="mt-3 text-sm"><a href="/@{actor.handle}/edit" class="text-accent-ink underline-offset-2 hover:underline">ひとこと自己紹介を書く ›</a></p>
@@ -104,7 +107,6 @@ const description = $derived(actor.catch ?? actor.summary ?? undefined);
 			</a>
 		{/each}
 		{#if actor.kind === 'space'}<a href={reviewsUrl} class="chip" rel="noopener">Google マップの口コミ ›</a>{/if}
-		{#if canEdit}<a href="/@{actor.handle}/edit" class="chip chip-tape">ページを編集</a>{/if}
 	</div>
 	{#if actor.facilities.length}
 		<div class="pills mt-3">
@@ -121,7 +123,8 @@ const description = $derived(actor.catch ?? actor.summary ?? undefined);
 			</div>
 		</div>
 	{/if}
-	{#if sections.length > 1}
+	<!-- ページ内の目次は、長くなるハコ・団体のページだけ。人のページは短いので出さない -->
+	{#if actor.kind !== 'person' && sections.length > 1}
 		<nav class="mt-5 flex flex-wrap gap-x-4 gap-y-1 text-sm font-semibold" aria-label="このページ">
 			{#each sections as s (s.id)}<a href="#{s.id}" class="hover:text-accent-ink">{s.label} ›</a>{/each}
 		</nav>
@@ -148,6 +151,17 @@ const description = $derived(actor.catch ?? actor.summary ?? undefined);
 	<Empty title="これからの間はまだありません。" hint="くねくねし始めたらここに出ます。" />
 {/if}
 <DayList events={upcoming} collapse={false} />
+
+<!-- どんな会を開いてきたか。新しいほうから数件だけ出し、続きは /@handle/past -->
+{#if data.past.length}
+	<section id="past" class="mt-12 scroll-mt-20">
+		<div class="section-head">
+			<h2 class="section-title">これまでの間</h2>
+			{#if data.morePast}<a href="/@{actor.handle}/past" class="btn">すべて見る ›</a>{/if}
+		</div>
+		<DayList events={data.past} collapse={false} />
+	</section>
+{/if}
 
 {#if hasAccess}
 	<section id="access" class="mt-12 mb-12 scroll-mt-20">

@@ -65,7 +65,20 @@ export type ActorProfile = ActorRef & {
 export type ActorPage = {
 	actor: ActorProfile;
 	events: EventSummary[];
+	// これまでの間の新しいほうから数件（ページの下に出す）と、まだ先があるか
+	past: EventSummary[];
+	morePast: boolean;
 };
+
+// /@handle/past の 1 ページぶん。next は続きを取るときの before
+export type ActorPast = {
+	actor: ActorRef;
+	events: EventSummary[];
+	next: string | null;
+};
+
+// 「これから」と「これまで」の境目。始まってから 1 日は「これから」に残す
+export const pastBefore = () => new Date(Date.now() - 86_400_000);
 
 // ハコ一覧（/spaces）の 1 行
 export type SpaceSummary = {
