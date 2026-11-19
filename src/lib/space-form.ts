@@ -1,5 +1,6 @@
 // 場（ハコ）のページ・出店プラン・お知らせのフォーム検証（純粋関数）。
 import { isValidHandle } from "./id";
+import { parseMisskeyHost } from "./misskey";
 
 const nullable = (s: string) => (s.trim() ? s.trim() : null);
 const isUrl = (s: string) => /^https?:\/\/\S+$/.test(s);
@@ -20,7 +21,7 @@ export type SpaceFormValues = {
 	operator: string;
 	url: string;
 	xHandle: string;
-	instagram: string;
+	misskey: string;
 	links: string; // 1 行 1 リンク「ラベル URL」
 };
 
@@ -38,7 +39,7 @@ export const EMPTY_SPACE_FORM: SpaceFormValues = {
 	operator: "",
 	url: "",
 	xHandle: "",
-	instagram: "",
+	misskey: "",
 	links: "",
 };
 
@@ -56,7 +57,8 @@ export type ParsedSpace = {
 	operator: string | null;
 	url: string | null;
 	xHandle: string | null;
-	instagram: string | null;
+	// "name@host"
+	misskey: string | null;
 	links: { label: string; url: string }[];
 };
 
@@ -91,11 +93,21 @@ export function parseLinks(
 function handleOf(s: string, pattern: RegExp): string | null | false {
 	const t = s
 		.trim()
-		.replace(/^https?:\/\/(www\.)?(x\.com|twitter\.com|instagram\.com)\//i, "")
+		.replace(/^https?:\/\/(www\.)?(x\.com|twitter\.com)\//i, "")
 		.replace(/[/?].*$/, "")
 		.replace(/^@/, "");
 	if (!t) return null;
 	return pattern.test(t) ? t : false;
+}
+
+// 「@name@host」「name@host」「https://host/@name」→「name@host」
+function misskeyOf(s: string): string | null | false {
+	const t = s.trim();
+	if (!t) return null;
+	const url = t.match(/^https?:\/\/([^/]+)\/@(\w+)\/?$/);
+	const [name, host] = url ? [url[2], url[1]] : t.replace(/^@/, "").split("@");
+	const h = host ? parseMisskeyHost(host) : null;
+	return h && /^\w{1,64}$/.test(name) ? `${name}@${h}` : false;
 }
 
 export function parseSpaceForm(
@@ -123,9 +135,12 @@ export function parseSpaceForm(
 	const xHandle = handleOf(v.xHandle, /^[A-Za-z0-9_]{1,15}$/);
 	if (xHandle === false)
 		return { ok: false, error: "X のユーザー名が正しくありません" };
-	const instagram = handleOf(v.instagram, /^[A-Za-z0-9._]{1,30}$/);
-	if (instagram === false)
-		return { ok: false, error: "Instagram のユーザー名が正しくありません" };
+	const misskey = misskeyOf(v.misskey);
+	if (misskey === false)
+		return {
+			ok: false,
+			error: "Misskey は @name@misskey.io のようにサーバーまで入れてください",
+		};
 	const links = parseLinks(v.links);
 	if (!links)
 		return { ok: false, error: "リンクは 1 行に「名前 https://...」の形で" };
@@ -153,7 +168,7 @@ export function parseSpaceForm(
 			operator: nullable(v.operator),
 			url: nullable(v.url),
 			xHandle,
-			instagram,
+			misskey,
 			links,
 		},
 	};

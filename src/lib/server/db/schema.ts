@@ -31,6 +31,8 @@ export const actors = sqliteTable(
 		headerKey: text("header_key"),
 		url: text("url"),
 		xHandle: text("x_handle"),
+		// ハコ・団体の Misskey（"name@host"）。人はログインでつないだアカウントを出すので使わない
+		misskey: text("misskey"),
 		// space 向け。person/group は会ごとに場所を持つ。
 		address: text("address"),
 		region: text("region"),

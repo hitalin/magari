@@ -11,7 +11,7 @@ import {
 	notInArray,
 	or,
 } from "drizzle-orm";
-import { nameOnlyIfUnmanaged } from "#lib/actor.ts";
+import { type LinkedSns, nameOnlyIfUnmanaged, shownSns } from "#lib/actor.ts";
 import { parseFlyerLook } from "#lib/flyer.ts";
 import { mentionHandles } from "#lib/share.ts";
 import { actorSns } from "#lib/sns.ts";
@@ -24,7 +24,14 @@ import {
 	type ShareMention,
 } from "#lib/types.ts";
 import type { Db } from "./db/index.ts";
-import { actorMembers, actors, eventHosts, events } from "./db/schema.ts";
+import {
+	account,
+	actorMembers,
+	actors,
+	eventHosts,
+	events,
+	user,
+} from "./db/schema.ts";
 
 function selectEvents(db: Db) {
 	return db
@@ -144,6 +151,41 @@ function toDetail(
 	};
 }
 
+// ログインでつないだ X と Misskey。人のページのバッジと、共有文のメンションに使う
+export async function linkedSns(
+	db: Db,
+	userIds: string[],
+): Promise<Map<string, LinkedSns>> {
+	const out = new Map<string, LinkedSns>();
+	if (!userIds.length) return out;
+	const rows = await db
+		.select({
+			userId: account.userId,
+			providerId: account.providerId,
+			accountId: account.accountId,
+			xUsername: user.xUsername,
+		})
+		.from(account)
+		.innerJoin(user, eq(account.userId, user.id))
+		.where(
+			and(
+				inArray(account.userId, userIds),
+				inArray(account.providerId, ["twitter", "miauth"]),
+			),
+		);
+	for (const r of rows) {
+		const l = out.get(r.userId) ?? {
+			hasX: false,
+			x: r.xUsername,
+			misskey: [],
+		};
+		if (r.providerId === "twitter") l.hasX = true;
+		else l.misskey.push(r.accountId);
+		out.set(r.userId, l);
+	}
+	return out;
+}
+
 // 共有文（題・場所）に書かれた @name のうち、まがりにいる人の、ページに出している X と Fediverse
 async function mentionsOf(db: Db, row: Row): Promise<ShareMention[]> {
 	const handles = mentionHandles(
@@ -153,18 +195,29 @@ async function mentionsOf(db: Db, row: Row): Promise<ShareMention[]> {
 	const rows = await db
 		.select({
 			handle: actors.handle,
+			kind: actors.kind,
+			userId: actors.userId,
 			xHandle: actors.xHandle,
-			instagram: actors.instagram,
+			misskey: actors.misskey,
 			links: actors.links,
 		})
 		.from(actors)
 		.where(and(inArray(actors.handle, handles), isNull(actors.hiddenAt)));
-	return rows.map((a) => ({
-		handle: a.handle,
-		x: a.xHandle,
-		fediverse:
-			actorSns(a).sns.find((s) => s.kind === "fediverse")?.label ?? null,
-	}));
+	const linked = await linkedSns(
+		db,
+		rows.flatMap((a) => (a.kind === "person" && a.userId ? [a.userId] : [])),
+	);
+	return rows.map((a) => {
+		const shown = shownSns(a, a.userId ? linked.get(a.userId) : undefined);
+		return {
+			handle: a.handle,
+			x: shown.xHandle,
+			fediverse:
+				actorSns({ ...shown, instagram: null, links: a.links }).sns.find(
+					(s) => s.kind === "misskey" || s.kind === "fediverse",
+				)?.label ?? null,
+		};
+	});
 }
 
 function toSummary(detail: EventDetail): EventSummary {
@@ -320,6 +373,7 @@ export async function getActorByHandle(
 			summary: actors.summary,
 			url: actors.url,
 			xHandle: actors.xHandle,
+			misskey: actors.misskey,
 			instagram: actors.instagram,
 			address: actors.address,
 			region: actors.region,
@@ -343,9 +397,14 @@ export async function getActorByHandle(
 		.where(eq(actorMembers.actorId, row.id))
 		.limit(1);
 	const { headerKey, userId, ...rest } = row;
+	const linked =
+		row.kind === "person" && userId
+			? (await linkedSns(db, [userId])).get(userId)
+			: undefined;
 	return nameOnlyIfUnmanaged(
 		{
 			...rest,
+			...shownSns(row, linked),
 			hasManager: userId !== null || member !== undefined,
 			headerUrl: mediaUrl(headerKey),
 		},

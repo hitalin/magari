@@ -35,6 +35,7 @@ async function addPasskey() {
 		<Field label="表示名">
 			<input name="name" value={form?.name ?? data.suggestedName} required maxlength="50" class="input" />
 		</Field>
+		<p class="text-xs text-muted">ログインした X や Misskey のアカウントは、あなたのページの名前の下に出ます。</p>
 		<button type="submit" class="btn btn-primary">これで始める</button>
 		<p class="text-xs text-dim">始めると、<a href="/terms" class="underline underline-offset-2 hover:text-accent-ink">利用規約</a>と<a href="/privacy" class="underline underline-offset-2 hover:text-accent-ink">プライバシーポリシー</a>に同意したことになります。</p>
 	</form>

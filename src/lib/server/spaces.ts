@@ -160,7 +160,8 @@ export async function updateActorPage(
 ): Promise<void> {
 	await db
 		.update(actors)
-		.set({ ...values, updatedAt: new Date() })
+		// Instagram の欄はやめた。前の値は編集画面がリンクへ移して送ってくる
+		.set({ ...values, instagram: null, updatedAt: new Date() })
 		.where(eq(actors.id, actorId));
 }
 

@@ -58,6 +58,8 @@ export type ActorProfile = ActorRef & {
 	summary: string | null;
 	url: string | null;
 	xHandle: string | null;
+	// "name@host"。人はログインでつないだもの全部、ハコ・団体は欄の 1 つ
+	misskey: string[];
 	instagram: string | null;
 	address: string | null;
 	region: string | null;

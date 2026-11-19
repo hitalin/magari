@@ -131,7 +131,7 @@ const STATUS: Record<string, string> = {
 
 <section class="mb-10">
 	<div class="section-head"><h2 class="section-title text-[1.25rem]">ログイン方法</h2></div>
-	<p class="mb-3 text-sm text-muted">X と Misskey のアカウントをいくつでもつなげます。どれで入っても同じ ID（@{data.actor.handle}）です。</p>
+	<p class="mb-3 text-sm text-muted">X と Misskey のアカウントをいくつでもつなげます。どれで入っても同じ ID（@{data.actor.handle}）です。つないだアカウントは、自分のページの名前の下にも出ます。</p>
 	{#if data.linked}<p class="mb-3 rounded-sm bg-accent-soft px-4 py-2 text-sm text-accent-ink" role="status">つなぎました。次からはそのアカウントでも入れます。</p>{/if}
 	{#if data.linkError && LINK_ERRORS[data.linkError]}<p class="mb-3 rounded-sm bg-accent-soft px-4 py-2 text-sm text-accent-ink" role="alert">{LINK_ERRORS[data.linkError]}</p>{/if}
 	<div class="rule-list">

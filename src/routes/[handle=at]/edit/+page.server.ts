@@ -1,6 +1,8 @@
 import { env } from "cloudflare:workers";
 import { error, fail, redirect } from "@sveltejs/kit";
+import { type LinkedSns, shownSns } from "#lib/actor.ts";
 import { shortId } from "#lib/id.ts";
+import { linkedSns } from "#lib/server/events.ts";
 import { requireActor } from "#lib/server/me.ts";
 import {
 	getManagedActor,
@@ -10,6 +12,7 @@ import {
 	setHeaderKey,
 	updateActorPage,
 } from "#lib/server/spaces.ts";
+import { actorSns } from "#lib/sns.ts";
 import {
 	parseSpaceForm,
 	readSpaceForm,
@@ -26,7 +29,10 @@ async function managed(locals: App.Locals, handle: string) {
 }
 
 // いまの値をフォームの形に
-function formValues(actor: ManagedActor): SpaceFormValues {
+function formValues(actor: ManagedActor, linked?: LinkedSns): SpaceFormValues {
+	// 人の X の欄はやめた。つないでいない人が前に手で書いた値は、リンクの 1 行にして見せる（保存するとリンクへ移る）
+	const moveX = actor.kind === "person" && !linked?.hasX;
+	const oldX = moveX ? shownSns(actor, linked).xHandle : null;
 	return {
 		name: actor.name,
 		catch: actor.catch ?? "",
@@ -40,10 +46,23 @@ function formValues(actor: ManagedActor): SpaceFormValues {
 		closedDays: actor.closedDays ?? "",
 		operator: actor.operator ?? "",
 		url: actor.url ?? "",
-		xHandle: actor.xHandle ?? "",
-		instagram: actor.instagram ?? "",
-		links: actor.links.map((l) => `${l.label} ${l.url}`).join("\n"),
+		xHandle: moveX ? "" : (actor.xHandle ?? ""),
+		misskey: actor.misskey ?? "",
+		// Instagram の欄はやめたので、前の値はリンクの 1 行にして見せる（保存するとリンクへ移る）
+		links: [
+			...(oldX ? [`https://x.com/${oldX}`] : []),
+			...(actor.instagram
+				? [`https://www.instagram.com/${actor.instagram}/`]
+				: []),
+			...actor.links.map((l) => `${l.label} ${l.url}`),
+		].join("\n"),
 	};
+}
+
+async function linkedOf(db: App.Locals["db"], actor: ManagedActor) {
+	return actor.kind === "person" && actor.userId
+		? (await linkedSns(db, [actor.userId])).get(actor.userId)
+		: undefined;
 }
 
 const str = (form: FormData, k: string) => String(form.get(k) ?? "");
@@ -52,8 +71,19 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 	const actor = await managed(locals, params.handle);
 	const members =
 		actor.kind === "person" ? [] : await listMembers(locals.db, actor.id);
-	const values = formValues(actor);
+	// 人のページの X と Misskey は、ログインでつないだアカウント。欄は無く、いま出ているものを見せるだけ
+	const linked = await linkedOf(locals.db, actor);
+	const values = formValues(actor, linked);
 	return {
+		linked:
+			actor.kind === "person" && linked
+				? actorSns({
+						xHandle: linked.hasX ? shownSns(actor, linked).xHandle : null,
+						misskey: linked.misskey,
+						instagram: null,
+						links: [],
+					}).sns
+				: [],
 		handle: actor.handle,
 		kind: actor.kind,
 		headerUrl: mediaUrl(actor.headerKey),
@@ -90,7 +120,7 @@ export const actions: Actions = {
 		const actor = await managed(locals, params.handle);
 		const form = await request.formData();
 		// 人のページの編集画面は、ハコ向けの欄（設備・アクセスなど）を出さない。来なかった欄は今の値を保つ
-		const current = formValues(actor);
+		const current = formValues(actor, await linkedOf(locals.db, actor));
 		const values = readSpaceForm((k) =>
 			form.has(k) ? String(form.get(k)) : current[k as keyof SpaceFormValues],
 		);

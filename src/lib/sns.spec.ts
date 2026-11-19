@@ -60,13 +60,15 @@ describe("snsOf", () => {
 });
 
 describe("actorSns", () => {
-	it("X・Instagram の欄と、リンクの中の SNS をまとめ、残りを分ける", () => {
+	it("X・Misskey と、リンクの中の SNS をまとめ、残りを分ける", () => {
 		expect(
 			actorSns({
 				xHandle: "magari_cc",
+				misskey: ["taka@yami.ski"],
 				instagram: null,
 				links: [
 					{ label: "Misskey", url: "https://yami.ski/@taka" },
+					{ label: "Mastodon", url: "https://mstdn.jp/@taka" },
 					{ label: "X", url: "https://x.com/magari_cc" },
 					{ label: "系列店", url: "https://example.com/" },
 				],
@@ -75,9 +77,14 @@ describe("actorSns", () => {
 			sns: [
 				{ kind: "x", label: "@magari_cc", url: "https://x.com/magari_cc" },
 				{
-					kind: "fediverse",
+					kind: "misskey",
 					label: "@taka@yami.ski",
 					url: "https://yami.ski/@taka",
+				},
+				{
+					kind: "fediverse",
+					label: "@taka@mstdn.jp",
+					url: "https://mstdn.jp/@taka",
 				},
 			],
 			rest: [{ label: "系列店", url: "https://example.com/" }],

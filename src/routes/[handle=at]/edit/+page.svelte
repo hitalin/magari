@@ -1,5 +1,6 @@
 <script lang="ts">
 import Field from "#lib/components/Field.svelte";
+import { SNS_ICON, SNS_NAME } from "#lib/sns.ts";
 import type { PageProps } from "./$types";
 
 let { data, form }: PageProps = $props();
@@ -91,12 +92,26 @@ const KIND_WORD: Record<string, string> = {
 		{/if}
 
 		<h3 class="label pt-4">リンク</h3>
+		{#if person}
+			<!-- 人の X と Misskey は書く欄を置かず、ログインでつないだアカウントをそのまま出す -->
+			<div>
+				<p class="label">X・Misskey</p>
+				<div class="mt-2 flex flex-wrap gap-2">
+					{#each data.linked as s (s.url)}
+						<span class="chip gap-1.5"><svg viewBox="0 0 24 24" class="h-3.5 w-3.5 shrink-0" fill="currentColor" role="img" aria-label={SNS_NAME[s.kind]}><path d={SNS_ICON[s.kind]} /></svg>{s.label}</span>
+					{/each}
+				</div>
+				<p class="mt-2 text-xs text-dim">ログインでつないだアカウントが、名前の下に出ます。増やす・外すは<a href="/me" class="underline underline-offset-2 hover:text-accent-ink">「自分」のページのログイン方法</a>から。</p>
+			</div>
+			<Field label="ウェブサイト"><input name="url" value={v.url} class="input" inputmode="url" autocapitalize="off" spellcheck="false" placeholder="https://" /></Field>
+		{:else}
 		<div class="grid gap-4 sm:grid-cols-3">
 			<Field label="ウェブサイト"><input name="url" value={v.url} class="input" inputmode="url" autocapitalize="off" spellcheck="false" placeholder="https://" /></Field>
 			<Field label="X"><input name="xHandle" value={v.xHandle} class="input" placeholder="@ユーザー名" autocapitalize="off" autocorrect="off" spellcheck="false" /></Field>
-			<Field label="Instagram"><input name="instagram" value={v.instagram} class="input" placeholder="@ユーザー名" autocapitalize="off" autocorrect="off" spellcheck="false" /></Field>
+			<Field label="Misskey"><input name="misskey" value={v.misskey} class="input" placeholder="@ユーザー名@misskey.io" autocapitalize="off" autocorrect="off" spellcheck="false" /></Field>
 		</div>
-		<Field label={person ? 'ほかの SNS・リンク' : '関連リンク'} hint={person ? '1 行に 1 つ、URL だけでも「名前 https://...」でも。Misskey・Mastodon・Bluesky・Threads・YouTube・TikTok・GitHub・note・Twitch のプロフィールは、アイコン付きで名前の下に出ます' : '1 行に 1 つ、「名前 https://...」の形で。系列店や関連サイトなど。SNS のプロフィールの URL は、アイコン付きでページの上に出ます'}>
+		{/if}
+		<Field label={person ? 'ほかの SNS・リンク' : '関連リンク'} hint={person ? '1 行に 1 つ、URL だけでも「名前 https://...」でも。Instagram・Bluesky・Threads・Mastodon・YouTube・TikTok・GitHub・note・Twitch のプロフィールは、アイコン付きで名前の下に出ます' : '1 行に 1 つ、「名前 https://...」の形で。系列店や関連サイトなど。SNS のプロフィールの URL は、アイコン付きでページの上に出ます'}>
 			<textarea name="links" rows="4" class="input">{v.links}</textarea>
 		</Field>
 

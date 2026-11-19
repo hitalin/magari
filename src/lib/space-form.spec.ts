@@ -30,12 +30,21 @@ describe("parseSpaceForm", () => {
 			...base,
 			facilities: "厨房, Wi-Fi、電源",
 			xHandle: "@curry_shop",
-			instagram: "https://www.instagram.com/curry.shop/",
+			misskey: "@Curry@Misskey.io",
 			url: "https://curry.example",
 		});
 		expect(r.ok && r.values.facilities).toEqual(["厨房", "Wi-Fi", "電源"]);
 		expect(r.ok && r.values.xHandle).toBe("curry_shop");
-		expect(r.ok && r.values.instagram).toBe("curry.shop");
+		expect(r.ok && r.values.misskey).toBe("Curry@misskey.io");
+	});
+	it("Misskey は @name@host でも URL でもよく、サーバーが無ければエラー", () => {
+		const r = parseSpaceForm({ ...base, misskey: "https://yami.ski/@taka" });
+		expect(r.ok && r.values.misskey).toBe("taka@yami.ski");
+		expect(parseSpaceForm({ ...base, misskey: "" })).toMatchObject({
+			ok: true,
+			values: { misskey: null },
+		});
+		expect(parseSpaceForm({ ...base, misskey: "@taka" }).ok).toBe(false);
 	});
 	it("空欄は null、名前が無ければエラー", () => {
 		const r = parseSpaceForm(base);
