@@ -1,10 +1,11 @@
 import { env } from "cloudflare:workers";
 import { error, fail, redirect } from "@sveltejs/kit";
 import { type LinkedSns, shownSns } from "#lib/actor.ts";
-import { shortId } from "#lib/id.ts";
+import { parseHandleInput, shortId } from "#lib/id.ts";
 import { linkedSns } from "#lib/server/events.ts";
 import { requireActor } from "#lib/server/me.ts";
 import {
+	addMember,
 	getManagedActor,
 	listMembers,
 	type ManagedActor,
@@ -114,6 +115,22 @@ export const actions: Actions = {
 			});
 		// 自分を外したら、もう編集できないのでページへ
 		if (userId === locals.session?.user.id) redirect(303, `/@${actor.handle}`);
+		return { section: "members", ok: true };
+	},
+	// 一緒に営む人を管理者に加える。相手は、まがりに自分のページを持っている人
+	addMember: async ({ request, locals, params }) => {
+		const actor = await managed(locals, params.handle);
+		if (actor.kind === "person") error(404, "見つかりません");
+		const form = await request.formData();
+		const person = parseHandleInput(str(form, "person"));
+		if (!person)
+			return fail(400, {
+				section: "members",
+				error: "加える人の @ID を入れてください",
+			});
+		const result = await addMember(locals.db, actor.handle, person);
+		if ("error" in result)
+			return fail(400, { section: "members", error: result.error });
 		return { section: "members", ok: true };
 	},
 	profile: async ({ request, locals, params }) => {

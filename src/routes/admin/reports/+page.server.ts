@@ -12,6 +12,7 @@ import {
 	setHidden,
 	unblockHandle,
 } from "#lib/server/moderation.ts";
+import { addMember } from "#lib/server/spaces.ts";
 import type { Actions, PageServerLoad } from "./$types";
 
 // 運営者（ADMIN_HANDLE の本人）だけ。ほかの人には無いページに見せる
@@ -32,6 +33,9 @@ export const load: PageServerLoad = async ({ locals }) => {
 		reports: reports.map((r) => ({
 			...r,
 			canHide: r.about !== null && parseModerationTarget(r.about) !== null,
+			// 引き取りの申し出で、対象が @ID なら、その場で管理者に加える欄を出す
+			claimPage:
+				r.kind === "claim" && r.about ? parseHandleInput(r.about) : null,
 		})),
 		blocked,
 		hidden,
@@ -70,6 +74,20 @@ export const actions: Actions = {
 		const form = await request.formData();
 		const target = parseModerationTarget(String(form.get("target") ?? ""));
 		if (target) await setHidden(locals.db, target, false);
+	},
+	// ページの引き取り。申し出た人だと確かめてから、その人をハコ・団体のページの管理者に加える
+	handover: async ({ request, locals }) => {
+		requireAdmin(locals);
+		const form = await request.formData();
+		const page = parseHandleInput(String(form.get("page") ?? ""));
+		const person = parseHandleInput(String(form.get("person") ?? ""));
+		if (!page || !person)
+			return fail(400, { handoverError: "ページと人の @ID を入れてください" });
+		const result = await addMember(locals.db, page, person);
+		if ("error" in result) return fail(400, { handoverError: result.error });
+		return {
+			handoverDone: `${result.person} を ${result.page} の管理者に加えました。`,
+		};
 	},
 	block: async ({ request, locals }) => {
 		requireAdmin(locals);

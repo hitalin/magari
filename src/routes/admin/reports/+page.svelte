@@ -37,6 +37,13 @@ const fmt = new Intl.DateTimeFormat("ja-JP", {
 								<button type="submit" class="btn btn-primary text-xs">対象をまず非表示にする</button>
 							</form>
 						{/if}
+						{#if r.claimPage && !r.handledAt}
+							<form method="POST" action="?/handover" class="flex flex-wrap items-end gap-2">
+								<input type="hidden" name="page" value={r.claimPage} />
+								<input name="person" required class="input max-w-[12rem] text-sm" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="渡す人の @ID" aria-label="渡す人の @ID" />
+								<button type="submit" class="btn btn-primary text-xs">@{r.claimPage} の管理を渡す</button>
+							</form>
+						{/if}
 						{#if !r.handledAt}
 							<form method="POST" action="?/handle" class="flex flex-wrap items-end gap-2">
 								<input type="hidden" name="id" value={r.id} />
@@ -78,6 +85,18 @@ const fmt = new Intl.DateTimeFormat("ja-JP", {
 			{/each}
 		</ul>
 	{/if}
+</section>
+
+<section class="mt-12" id="handover">
+	<div class="section-head"><h2 class="section-title">ページの引き取り</h2></div>
+	<p class="mb-6 text-sm text-muted">申し出た人がそのハコ・団体の方だと確かめてから、その人をページの管理者に加えます。渡す相手は、先にログインして自分のページを作っている必要があります。管理者がつくと「非公式」の表示が消え、本人が紹介文を書けるようになります。外すのは、そのページの編集画面の「管理者」から。</p>
+	<form method="POST" action="?/handover" class="panel grid gap-4 p-5 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+		{#if form?.handoverError}<p class="text-sm text-accent-ink sm:col-span-3" role="alert">{form.handoverError}</p>{/if}
+		{#if form?.handoverDone}<p class="text-sm text-accent-ink sm:col-span-3" role="status">{form.handoverDone}</p>{/if}
+		<Field label="ページ" hint="ハコ・団体の @ID"><input name="page" required class="input" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="@eden" /></Field>
+		<Field label="渡す人" hint="その人のまがりの @ID"><input name="person" required class="input" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="@example" /></Field>
+		<button type="submit" class="btn btn-primary">管理者に加える</button>
+	</form>
 </section>
 
 <section class="mt-12">

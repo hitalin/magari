@@ -1,5 +1,5 @@
 // 場（ハコ）・団体のページ: 作成、管理者判定、プロフィールの読み書き。
-import { and, asc, count, eq, gte, isNull, min } from "drizzle-orm";
+import { and, asc, count, eq, gte, inArray, isNull, min } from "drizzle-orm";
 import { nameOnlyIfUnmanaged } from "#lib/actor.ts";
 import { compareArea, detectArea } from "#lib/area.ts";
 import type { ParsedSpace } from "#lib/space-form.ts";
@@ -151,6 +151,47 @@ export async function createManagedActor(
 		.insert(actorMembers)
 		.values({ actorId: row.id, userId: input.userId, role: "owner" });
 	return { handle: row.handle };
+}
+
+// ページの引き取り（運営者の操作）。ハコ・団体のページの管理者に、その人を加える。
+// 管理者がまだいないページなら、その人が「作った人」と同じ扱いになる
+export async function addMember(
+	db: Db,
+	pageHandle: string,
+	personHandle: string,
+): Promise<{ page: string; person: string } | { error: string }> {
+	const rows = await db
+		.select({
+			id: actors.id,
+			handle: actors.handle,
+			kind: actors.kind,
+			name: actors.name,
+			userId: actors.userId,
+		})
+		.from(actors)
+		.where(inArray(actors.handle, [pageHandle, personHandle]));
+	const page = rows.find((a) => a.handle === pageHandle);
+	const person = rows.find((a) => a.handle === personHandle);
+	if (!page || page.kind === "person")
+		return { error: `@${pageHandle} というハコ・団体のページはありません` };
+	if (!person?.userId || person.kind !== "person")
+		return {
+			error: `@${personHandle} という人はいません。先にログインして、自分のページを作ってもらってください`,
+		};
+	const [first] = await db
+		.select({ userId: actorMembers.userId })
+		.from(actorMembers)
+		.where(eq(actorMembers.actorId, page.id))
+		.limit(1);
+	await db
+		.insert(actorMembers)
+		.values({
+			actorId: page.id,
+			userId: person.userId,
+			role: first ? "editor" : "owner",
+		})
+		.onConflictDoNothing();
+	return { page: page.name, person: person.name };
 }
 
 export async function updateActorPage(

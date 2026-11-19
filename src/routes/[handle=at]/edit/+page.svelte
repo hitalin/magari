@@ -142,5 +142,9 @@ const KIND_WORD: Record<string, string> = {
 				</div>
 			{/each}
 		</div>
+		<form method="POST" action="?/addMember" class="mt-4 flex max-w-md items-end gap-2">
+			<div class="min-w-0 flex-1"><Field label="管理者を加える" hint="一緒に営む人の、まがりの @ID"><input name="person" required class="input" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="@example" /></Field></div>
+			<button type="submit" class="btn mb-6 shrink-0">加える</button>
+		</form>
 	</section>
 {/if}
