@@ -1,6 +1,7 @@
 <script lang="ts">
 import { authClient } from "#lib/auth-client.ts";
 import MisskeyForm from "#lib/components/MisskeyForm.svelte";
+import { MISSKEY_ICON, SNS_ICON } from "#lib/sns.ts";
 import { goto } from "$app/navigation";
 import type { PageProps } from "./$types";
 
@@ -48,13 +49,13 @@ async function passkey() {
 		{#if data.error && ERRORS[data.error]}<p class="rounded-sm bg-accent-soft px-4 py-2 text-sm text-accent-ink" role="alert">{ERRORS[data.error]}</p>{/if}
 
 		{#if data.xEnabled}
-			<button type="button" class="btn btn-primary w-full justify-center" onclick={x} disabled={busy}>X でログイン</button>
+			<button type="button" class="btn btn-primary w-full justify-center" onclick={x} disabled={busy} aria-label="X でログイン"><svg viewBox="0 0 24 24" class="h-4 w-4 shrink-0" fill="currentColor" aria-hidden="true"><path d={SNS_ICON.x} /></svg>でログイン</button>
 		{:else}
 			<p class="text-sm text-dim">X ログインは準備中です（Developer Portal の鍵を設定すると使えます）。</p>
 		{/if}
 
 		<div class="border-t border-line pt-6">
-			<p class="label mb-2">Misskey でログイン</p>
+			<p class="label mb-2 flex items-center gap-1.5"><svg viewBox="0 0 24 24" class="h-4 w-4 shrink-0" fill="currentColor" aria-hidden="true"><path d={MISSKEY_ICON} /></svg><span class="sr-only">Misskey </span>でログイン</p>
 			<MisskeyForm callbackURL={data.next} action="ログイン" disabled={busy} />
 			<p class="mt-3 text-xs text-dim">自分のサーバーのドメインを入れます。どのサーバーでも可。サーバー側で「まがり」を許可すると戻ってきます。</p>
 		</div>
