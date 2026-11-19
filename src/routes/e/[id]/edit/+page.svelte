@@ -2,6 +2,7 @@
 import EventForm from "#lib/components/EventForm.svelte";
 import Flyer from "#lib/components/Flyer.svelte";
 import FlyerPicker from "#lib/components/FlyerPicker.svelte";
+import { flyerStyle } from "#lib/flyer.ts";
 import type { PageProps } from "./$types";
 
 let { data, form }: PageProps = $props();
@@ -20,48 +21,45 @@ const flyer = $derived({
 
 <svelte:head><title>間を編集 | ◱</title></svelte:head>
 
-<section class="mx-auto mt-4 max-w-2xl">
-	<p class="label">間を編集</p>
-	<h1 class="mt-2 mb-8 text-2xl">{data.values.title}</h1>
+<section class="mt-4">
+	<p class="text-sm text-muted"><a href="/e/{data.id}" class="hover:text-accent-ink">{data.values.title}</a> › 編集</p>
 
-	<section class="mb-12">
-		<h2 class="section-title text-[1.25rem]">フライヤー</h2>
-		{#if form && 'flyerError' in form}<p class="mt-4 rounded-sm bg-accent-soft px-4 py-2 text-sm text-accent-ink">{form.flyerError}</p>{/if}
-		<div class="mt-6 grid items-start gap-6 sm:grid-cols-[10rem_1fr]">
-			<div class="flyer-pin mx-auto w-40">
+	<!-- 間のページと同じ 2 列。左にフライヤーとその差し替え、右に中身 -->
+	<div class="detail-cols mt-8">
+		<div class="detail-flyer">
+			<div class="flyer-pin mx-auto w-full max-w-[20rem] md:max-w-none" style="--tilt: {flyerStyle(data.id).tilt / 2}deg">
 				{#if data.flyer.url}
 					<img src={data.flyer.url} alt="今のフライヤー" />
 				{:else}
 					<Flyer {...flyer} {look} />
 				{/if}
 			</div>
-			<div>
-				<p class="text-sm text-muted">
-					{#if data.flyer.url}上げた画像を壁と間のページに貼っています。{:else}今は題・日時・場所から作った自動のビラです。型と色を選べて、好きな画像にも差し替えられます。{/if}
-					X で共有したときの画像にもなります。縦横比は自由で、切り抜きません。JPEG / PNG / WebP、10MB まで。
+			{#if form && 'flyerError' in form}<p class="mt-6 rounded-sm bg-accent-soft px-4 py-2 text-sm text-accent-ink">{form.flyerError}</p>{/if}
+			{#if !data.flyer.url}
+				<form method="POST" action="?/look" class="mt-8">
+					<FlyerPicker bind:look {...flyer} />
+					<p class="mt-4 text-center"><button type="submit" class="btn px-4 py-1.5 text-sm">このビラにする</button></p>
+				</form>
+			{/if}
+			<div class="mt-6 border-t border-line pt-5">
+				<p class="text-xs leading-relaxed text-dim">
+					{#if data.flyer.url}上げた画像を貼っています。{:else}好きな画像にも差し替えられます。{/if}X で共有したときの画像にもなります。縦横比は自由で、切り抜きません。JPEG / PNG / WebP、10MB まで。
 				</p>
-				<div class="mt-4 flex flex-wrap items-center gap-3">
-					<form method="POST" action="?/flyer" enctype="multipart/form-data" class="flex flex-wrap items-center gap-2">
-						<input type="file" name="flyer" accept="image/jpeg,image/png,image/webp" required class="input max-w-xs" />
-						<button type="submit" class="btn">{data.flyer.url ? '差し替える' : 'アップロード'}</button>
-					</form>
-					{#if data.flyer.url}
-						<form method="POST" action="?/removeFlyer"><button type="submit" class="btn">自動のビラに戻す</button></form>
-					{/if}
-				</div>
+				<form method="POST" action="?/flyer" enctype="multipart/form-data" class="mt-3 flex items-center gap-2">
+					<input type="file" name="flyer" accept="image/jpeg,image/png,image/webp" required class="input min-w-0 flex-1 text-sm" />
+					<button type="submit" class="btn shrink-0 px-4 py-1.5 text-sm">{data.flyer.url ? '差し替える' : '上げる'}</button>
+				</form>
+				{#if data.flyer.url}
+					<form method="POST" action="?/removeFlyer" class="mt-3"><button type="submit" class="text-xs text-muted underline underline-offset-2 hover:text-accent-ink">自動のビラに戻す</button></form>
+				{/if}
 			</div>
 		</div>
-		{#if !data.flyer.url}
-			<form method="POST" action="?/look" class="mt-8 max-w-md">
-				<FlyerPicker bind:look {...flyer} />
-				<p class="mt-5 text-center"><button type="submit" class="btn">このビラにする</button></p>
-			</form>
-		{/if}
-	</section>
-	{#if data.status === 'cancelled'}
-		<p class="mb-6 rounded-sm bg-accent-soft px-4 py-2 text-sm text-accent-ink">中止にした間です。内容を直して保存しても、中止のままです。</p>
-	{/if}
-	<EventForm values={form?.values ?? data.values} error={form?.error} submitLabel={data.status === 'cancelled' ? '保存する' : '保存して公開'} />
+		<div class="min-w-0">
+			<p class="label mb-6">間を編集</p>
+			{#if data.status === 'cancelled'}
+				<p class="mb-6 rounded-sm bg-accent-soft px-4 py-2 text-sm text-accent-ink">中止にした間です。内容を直して保存しても、中止のままです。</p>
+			{/if}
+			<EventForm values={form?.values ?? data.values} error={form?.error} submitLabel={data.status === 'cancelled' ? '保存する' : '保存して公開'} />
 
 	<section class="mt-12 border-t border-line pt-6">
 		<h2 class="section-title text-[1.25rem]">主催</h2>
@@ -98,5 +96,7 @@ const flyer = $derived({
 		<form method="POST" action="?/delete" onsubmit={(e) => { if (!confirm('この間を削除しますか？元に戻せません。')) e.preventDefault(); }}>
 			<button type="submit" class="btn text-accent-ink">削除する</button>
 		</form>
+	</div>
+		</div>
 	</div>
 </section>
