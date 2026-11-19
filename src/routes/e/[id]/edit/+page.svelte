@@ -62,8 +62,8 @@ const flyer = $derived({
 
 	<section class="mt-12 border-t border-line pt-6">
 		<h2 class="section-title text-[1.25rem]">主催</h2>
-		<p class="mt-4 mb-4 text-sm text-muted">主催は間のページに並んで出て、全員がこの間を編集できます。</p>
-		{#if form && 'hostError' in form}<p class="mb-4 rounded-sm bg-accent-soft px-4 py-2 text-sm text-accent-ink">{form.hostError}</p>{/if}
+		<p class="mt-4 mb-4 text-sm text-muted">主催は間のページに並んで出て、全員がこの間を編集できます。ハコや団体を加えると、その管理者も編集できます。</p>
+		{#if form && 'hostError' in form}<p class="mb-4 rounded-sm bg-accent-soft px-4 py-2 text-sm text-accent-ink" role="alert">{form.hostError}</p>{/if}
 		<div class="rule-list">
 			{#each data.hosts as h (h.actorId)}
 				<div class="row items-center">
@@ -82,6 +82,10 @@ const flyer = $derived({
 				</div>
 			{/each}
 		</div>
+		<form method="POST" action="?/addHost" class="mt-4 flex max-w-md items-center gap-2">
+			<input name="handle" required class="input" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="加える相手の @ID" aria-label="主催に加える相手の @ID" />
+			<button type="submit" class="btn shrink-0">加える</button>
+		</form>
 	</section>
 
 	<div class="mt-12 flex flex-wrap gap-3 border-t border-line pt-6">

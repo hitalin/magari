@@ -352,6 +352,42 @@ export async function listEventHosts(
 		.orderBy(asc(eventHosts.role));
 }
 
+// 主催を加える。相手の同意は取らない（加えられた側は、自分で主催から外れられる）。
+// だから、外れる人がいない相手（管理者のいない非公式のページ）は加えられない
+export async function addEventHost(
+	db: Db,
+	eventId: string,
+	handle: string,
+): Promise<{ name: string } | { error: string }> {
+	const [actor] = await db
+		.select({
+			id: actors.id,
+			name: actors.name,
+			kind: actors.kind,
+			userId: actors.userId,
+		})
+		.from(actors)
+		.where(and(eq(actors.handle, handle), isNull(actors.hiddenAt)))
+		.limit(1);
+	if (!actor) return { error: `@${handle} というページはありません` };
+	const [member] = actor.userId
+		? [true]
+		: await db
+				.select({ userId: actorMembers.userId })
+				.from(actorMembers)
+				.where(eq(actorMembers.actorId, actor.id))
+				.limit(1);
+	if (!member)
+		return {
+			error: `${actor.name} は管理者のいない非公式のページなので、主催にできません`,
+		};
+	await db
+		.insert(eventHosts)
+		.values({ eventId, actorId: actor.id, role: "cohost" })
+		.onConflictDoNothing();
+	return { name: actor.name };
+}
+
 // 主催を外す。最後の 1 人は外せない（外せたら true）
 export async function removeEventHost(
 	db: Db,

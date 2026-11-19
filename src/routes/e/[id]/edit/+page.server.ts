@@ -6,10 +6,12 @@ import {
 	statusAfterEdit,
 } from "#lib/event-form.ts";
 import { flyerStyle, parseFlyerLook } from "#lib/flyer.ts";
+import { parseHandleInput } from "#lib/id.ts";
 import { warmCard } from "#lib/server/card.ts";
 import { toFormValues } from "#lib/server/event-values.ts";
 import { checkFlyer, putFlyer } from "#lib/server/flyer-upload.ts";
 import {
+	addEventHost,
 	deleteEvent,
 	getEditableEvent,
 	listEventHosts,
@@ -96,6 +98,17 @@ export const actions: Actions = {
 		// 何度も替えて試すものなので、カード画像は作り直さない（共有のときに作る）
 		await setEventFlyerLook(locals.db, ev.id, look);
 		return { flyerSaved: true };
+	},
+	// 一緒に開く人・ハコ・団体を主催に加える
+	addHost: async ({ request, locals, params }) => {
+		await editable(locals, params.id);
+		const form = await request.formData();
+		const handle = parseHandleInput(String(form.get("handle") ?? ""));
+		if (!handle)
+			return fail(400, { hostError: "加える相手の @ID を入れてください" });
+		const result = await addEventHost(locals.db, params.id, handle);
+		if ("error" in result) return fail(400, { hostError: result.error });
+		return { hostAdded: true };
 	},
 	removeHost: async ({ request, locals, params }) => {
 		await editable(locals, params.id);
