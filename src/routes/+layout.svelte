@@ -8,7 +8,6 @@ import type { LayoutProps } from "./$types";
 import "./layout.css";
 
 let { children, data }: LayoutProps = $props();
-const year = new Date().getFullYear();
 // ページ遷移を短いクロスフェードに。対応していないブラウザでは何もしない
 onNavigate((navigation) => {
 	if (!document.startViewTransition) return;
@@ -93,16 +92,36 @@ const isActive = (href: string) =>
 	{@render children()}
 </main>
 
-<!-- ナビと同じものは繰り返さない。ここにしか無い入口（運営への連絡、ソース）だけを 1 行で -->
+<!-- 奥付。ナビと同じものは繰り返さない。左にだれがどう動かしているか（無償・広告なし・ソース公開）、右に規約類と連絡。© は置かない -->
 <footer class="border-t border-line">
-	<div class="mx-auto flex max-w-content flex-wrap items-center justify-between gap-x-6 gap-y-2 px-4 py-6 text-xs text-dim">
-		<p>© {year} ◱</p>
-		<nav aria-label="フッター" class="flex flex-wrap gap-x-5 gap-y-1">
-			<a href="/terms" class="hover:text-text">利用規約</a>
-			<a href="/privacy" class="hover:text-text">プライバシー</a>
-			<a href="/policy" class="hover:text-text">掲載と削除の方針</a>
-			<a href="/contact" class="hover:text-text">掲載の取り下げ・連絡</a>
-			<a href={REPO} class="hover:text-text" rel="noopener">GitHub（MIT）</a>
+	<div class="mx-auto grid max-w-content gap-x-12 gap-y-7 px-4 pt-9 pb-20 text-xs text-muted sm:grid-cols-[1fr_auto] sm:pb-12">
+		<div>
+			<p class="flex items-center gap-2 font-serif text-sm text-text"><img src={logo} alt="" class="h-4 w-4" />まがり</p>
+			<p class="mt-3 leading-relaxed">個人が無償で動かしています。広告はありません。<br />ソースは公開していて、だれでも読めて、直せます。</p>
+			<p class="mt-3 flex flex-wrap gap-x-5 gap-y-1">
+				<a href={REPO} class="footer-link" rel="noopener">ソースを読む<span aria-hidden="true"> ↗</span></a>
+				<a href="{REPO}/issues" class="footer-link" rel="noopener">不具合・要望<span aria-hidden="true"> ↗</span></a>
+				<a href="{REPO}/blob/main/LICENSE" class="footer-link" rel="noopener">MIT License</a>
+			</p>
+		</div>
+		<nav aria-label="フッター" class="flex flex-wrap content-start gap-x-5 gap-y-1 sm:flex-col sm:gap-y-1.5">
+			<a href="/terms" class="footer-link">利用規約</a>
+			<a href="/privacy" class="footer-link">プライバシー</a>
+			<a href="/policy" class="footer-link">掲載と削除の方針</a>
+			<a href="/contact" class="footer-link">掲載の取り下げ・連絡</a>
 		</nav>
 	</div>
 </footer>
+
+<style>
+	.footer-link {
+		text-decoration: underline;
+		text-decoration-color: var(--color-line);
+		text-underline-offset: 0.3em;
+		transition: color 0.15s;
+	}
+	.footer-link:hover {
+		color: var(--color-text);
+		text-decoration-color: currentColor;
+	}
+</style>
