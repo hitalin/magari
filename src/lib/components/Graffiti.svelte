@@ -40,11 +40,6 @@ const TOOLS: [Tool, string][] = [
 	["spray", "スプレー"],
 	["eraser", "消しゴム"],
 ];
-// 本文の幅の半分（--container-content: 56rem の半分）。
-// 地面の横は、広い画面では画面の中央、本文より狭い画面では本文の左端に合わせる。
-// 中央のままだと、狭い画面で本文は左に詰まるのに地面だけ中央の帯が出て、見出しの脇に描いた線がずれる
-const CONTENT_HALF = 448;
-const originAt = (w: number) => Math.max(w / 2, CONTENT_HALF);
 // canvas は画面より上下に PAD 倍ずつ広く描いて、ページの中に置く（スクロールはブラウザが滑らかに流す）
 const PAD = 0.5;
 const MAX_PIXELS = 12_000_000;
@@ -271,7 +266,7 @@ function paint() {
 	ctx.setTransform(1, 0, 0, 1, 0, 0);
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
 	// 以後は地面の座標のまま描く（横は画面の中央が ORIGIN_X、縦はページの上端から）
-	ctx.setTransform(dpr, 0, 0, dpr, dpr * (originAt(w) - ORIGIN_X), -dpr * base);
+	ctx.setTransform(dpr, 0, 0, dpr, dpr * (w / 2 - ORIGIN_X), -dpr * base);
 	ctx.lineCap = "round";
 	ctx.lineJoin = "round";
 	for (const [i, s] of visible.entries()) {
@@ -284,7 +279,7 @@ function paint() {
 	for (const stroke of pending) drawStroke(ctx, stroke);
 	if (current) drawStroke(ctx, current, 1, true);
 	// ざらつき（mask）は地面に貼り付ける（canvas を置き直しても粒が動かないように）
-	canvas.style.maskPosition = `${Math.round(originAt(w))}px ${-(base % 240)}px`;
+	canvas.style.maskPosition = `${Math.round(w / 2)}px ${-(base % 240)}px`;
 }
 
 // スクロールでは描き直さない。canvas はページと一緒に流れるので、描いてある範囲の端が近づいたときだけ置き直す
@@ -397,8 +392,7 @@ onMount(() => {
 });
 
 function at(e: PointerEvent): [number, number] {
-	const x =
-		e.clientX - originAt(document.documentElement.clientWidth) + ORIGIN_X;
+	const x = e.clientX - document.documentElement.clientWidth / 2 + ORIGIN_X;
 	const y = e.clientY + scrollY;
 	return [
 		Math.min(WALL_W, Math.max(0, Math.round(x))),
