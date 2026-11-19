@@ -1,11 +1,22 @@
 <script lang="ts">
 import { authClient } from "#lib/auth-client.ts";
+import MisskeyForm from "#lib/components/MisskeyForm.svelte";
 import { goto } from "$app/navigation";
 import type { PageProps } from "./$types";
 
 let { data }: PageProps = $props();
 let busy = $state(false);
 let error = $state<string | null>(null);
+
+const ERRORS: Record<string, string> = {
+	miauth_state:
+		"Misskey からの戻りが確認できませんでした。もう一度お試しください。",
+	miauth_denied:
+		"Misskey 側で許可されませんでした。許可するとログインできます。",
+	miauth_user: "Misskey のアカウント情報を取れませんでした。",
+	miauth_unlinked:
+		"その Misskey アカウントは、前につないでいた ID から外されています。別の方法でログインして、「自分」のページからつなぎ直してください。",
+};
 
 async function x() {
 	busy = true;
@@ -21,7 +32,7 @@ async function passkey() {
 	busy = false;
 	if (res?.error)
 		error =
-			"パスキーでのログインに失敗しました。まだ作っていなければ、X で入ってから作ってください。";
+			"パスキーでのログインに失敗しました。まだ作っていなければ、X か Misskey で入ってから作ってください。";
 	else await goto(data.next);
 }
 </script>
@@ -34,6 +45,8 @@ async function passkey() {
 	<p class="mt-3 text-sm text-muted">見るだけならログインは要りません。まがりする（自分で開ける）人だけ。メールアドレスは使いません。</p>
 
 	<div class="panel mt-8 space-y-6 p-6">
+		{#if data.error && ERRORS[data.error]}<p class="rounded-sm bg-accent-soft px-4 py-2 text-sm text-accent-ink" role="alert">{ERRORS[data.error]}</p>{/if}
+
 		{#if data.xEnabled}
 			<button type="button" class="btn btn-primary w-full justify-center" onclick={x} disabled={busy}>X でログイン</button>
 		{:else}
@@ -41,9 +54,16 @@ async function passkey() {
 		{/if}
 
 		<div class="border-t border-line pt-6">
+			<p class="label mb-2">Misskey でログイン</p>
+			<MisskeyForm callbackURL={data.next} action="ログイン" disabled={busy} />
+			<p class="mt-3 text-xs text-dim">自分のサーバーのドメインを入れます。どのサーバーでも可。サーバー側で「まがり」を許可すると戻ってきます。</p>
+		</div>
+
+		<div class="border-t border-line pt-6">
 			<button type="button" class="btn" onclick={passkey} disabled={busy}>パスキーでログイン</button>
-			<p class="mt-3 text-xs text-dim">パスキーは、X で一度入ったあとに作れます。以後は指紋や顔で入れます。</p>
+			<p class="mt-3 text-xs text-dim">パスキーは、X か Misskey で一度入ったあとに作れます。以後は指紋や顔で入れます。</p>
 		</div>
 		{#if error}<p class="text-sm text-accent-ink">{error}</p>{/if}
 	</div>
+	<p class="mt-4 text-xs text-dim">X と Misskey のアカウントは、入ったあと「自分」のページでいくつでもつなげます。つないだものは、どれで入っても同じ ID になります。</p>
 </section>

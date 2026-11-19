@@ -1,6 +1,7 @@
 <script lang="ts">
 import { authClient } from "#lib/auth-client.ts";
 import Empty from "#lib/components/Empty.svelte";
+import MisskeyForm from "#lib/components/MisskeyForm.svelte";
 import { formatWhen } from "#lib/date.ts";
 import { invalidateAll } from "$app/navigation";
 import type { PageProps } from "./$types";
@@ -8,6 +9,15 @@ import type { PageProps } from "./$types";
 let { data }: PageProps = $props();
 let passkeyMsg = $state<string | null>(null);
 let linkMsg = $state<string | null>(null);
+
+const LINK_ERRORS: Record<string, string> = {
+	miauth_state:
+		"Misskey からの戻りが確認できませんでした。もう一度お試しください。",
+	miauth_denied: "Misskey 側で許可されませんでした。",
+	miauth_user: "Misskey のアカウント情報を取れませんでした。",
+	miauth_linked_elsewhere:
+		"その Misskey アカウントは、すでに別の ID で使われています。まとめたいときは運営に連絡してください。",
+};
 
 async function addPasskey() {
 	const res = await authClient.passkey.addPasskey({ name: "まがり" });
@@ -18,9 +28,9 @@ async function addPasskey() {
 async function linkX() {
 	await authClient.linkSocial({ provider: "twitter", callbackURL: "/me" });
 }
-async function unlink(accountId: string) {
+async function unlink(id: string) {
 	if (!confirm("このログイン方法を外しますか？")) return;
-	const res = await authClient.unlinkAccount({ accountId });
+	const res = await authClient.unlinkAccount({ accountId: id });
 	linkMsg = res?.error
 		? "外せませんでした。最後のログイン方法は外せません。"
 		: null;
@@ -114,23 +124,30 @@ const STATUS: Record<string, string> = {
 
 <section class="mb-10">
 	<div class="section-head"><h2 class="section-title text-[1.25rem]">ログイン方法</h2></div>
+	<p class="mb-3 text-sm text-muted">X と Misskey のアカウントをいくつでもつなげます。どれで入っても同じ ID（@{data.actor.handle}）です。</p>
+	{#if data.linked}<p class="mb-3 rounded-sm bg-accent-soft px-4 py-2 text-sm text-accent-ink" role="status">つなぎました。次からはそのアカウントでも入れます。</p>{/if}
+	{#if data.linkError && LINK_ERRORS[data.linkError]}<p class="mb-3 rounded-sm bg-accent-soft px-4 py-2 text-sm text-accent-ink" role="alert">{LINK_ERRORS[data.linkError]}</p>{/if}
 	<div class="rule-list">
-		{#each data.accounts as a (a.providerId + a.accountId)}
+		{#each data.accounts as a (a.id)}
 			<div class="row items-center">
 				<span class="font-mono text-xs text-muted">{a.label}</span>
 				<span class="flex flex-wrap items-center gap-3 text-sm">
-					<span>つながっています</span>
+					<span class="break-all">{a.detail ?? 'つながっています'}</span>
 					{#if data.accounts.length > 1}
-						<button type="button" class="text-xs text-muted hover:text-accent-ink" onclick={() => unlink(a.accountId)}>外す</button>
+						<button type="button" class="text-xs text-muted hover:text-accent-ink" onclick={() => unlink(a.id)}>外す</button>
 					{/if}
 				</span>
 			</div>
 		{/each}
 	</div>
-	<div class="mt-4 flex flex-wrap items-center gap-3">
+	<div class="mt-4 max-w-md space-y-4">
 		{#if data.xEnabled && !data.accounts.some((a) => a.providerId === 'twitter')}
 			<button type="button" class="btn" onclick={linkX}>X をつなぐ</button>
 		{/if}
+		<div>
+			<p class="label mb-2">Misskey をつなぐ</p>
+			<MisskeyForm callbackURL="/me?linked" action="つなぐ" />
+		</div>
 	</div>
 	{#if linkMsg}<p class="mt-3 text-sm text-accent-ink">{linkMsg}</p>{/if}
 </section>

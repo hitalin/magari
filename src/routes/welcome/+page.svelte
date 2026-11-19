@@ -40,8 +40,14 @@ async function addPasskey() {
 	</form>
 
 	<div class="panel mt-6 p-6">
+		<p class="label">前にも来たことがある人</p>
+		<p class="mt-2 text-sm text-muted">いつもと違うアカウントで入ると、ここに出ます。ここでは始めずにログアウトして、いつものアカウントで入り直してください。「自分」のページの「ログイン方法」で、このアカウントも同じ ID につなげます。</p>
+		<form method="POST" action="/logout" class="mt-3"><button type="submit" class="btn">ログアウトして入り直す</button></form>
+	</div>
+
+	<div class="panel mt-6 p-6">
 		<p class="label">ついでに</p>
-		<p class="mt-2 text-sm text-muted">パスキーを作っておくと、次回から X を経由せず、指紋や顔でログインできます。</p>
+		<p class="mt-2 text-sm text-muted">パスキーを作っておくと、次回から X や Misskey を経由せず、指紋や顔でログインできます。</p>
 		<button type="button" class="btn mt-3" onclick={addPasskey}>パスキーを作る</button>
 		{#if passkeyMsg}<p class="mt-3 text-sm text-accent-ink">{passkeyMsg}</p>{/if}
 	</div>

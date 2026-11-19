@@ -1,8 +1,10 @@
 import { passkey } from "@better-auth/passkey";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { eq } from "drizzle-orm";
 import type { Db } from "./db";
 import * as schema from "./db/schema";
+import { miauth } from "./miauth.ts";
 
 export type AuthEnv = {
 	PUBLIC_ORIGIN: string;
@@ -11,7 +13,7 @@ export type AuthEnv = {
 	X_CLIENT_SECRET?: string;
 };
 
-// ログインは X だけ。メールは使わない（確認メールの配送が要るため）。
+// ログインは X と Misskey（MiAuth）だけ。メールは使わない（確認メールの配送が要るため）。
 export function createAuth(db: Db, env: AuthEnv) {
 	const origin = new URL(env.PUBLIC_ORIGIN);
 	return betterAuth({
@@ -21,7 +23,7 @@ export function createAuth(db: Db, env: AuthEnv) {
 		emailAndPassword: { enabled: false },
 		// 本人によるアカウント削除（メール確認なしで即時）
 		user: { deleteUser: { enabled: true } },
-		// ログイン中の本人が X をつなぐ。メールは使っていないので、メール不一致を理由に拒まない
+		// ログイン中の本人が X / Misskey をつなぐ。メールは使っていないので、メール不一致を理由に拒まない
 		account: {
 			accountLinking: {
 				enabled: true,
@@ -54,6 +56,29 @@ export function createAuth(db: Db, env: AuthEnv) {
 				rpID: origin.hostname,
 				rpName: "まがり",
 				origin: env.PUBLIC_ORIGIN,
+			}),
+			miauth({
+				appName: "まがり",
+				isEmptyUser: async (userId) => {
+					const rows = await db.batch([
+						db
+							.select({ id: schema.actors.id })
+							.from(schema.actors)
+							.where(eq(schema.actors.userId, userId))
+							.limit(1),
+						db
+							.select({ id: schema.actorMembers.actorId })
+							.from(schema.actorMembers)
+							.where(eq(schema.actorMembers.userId, userId))
+							.limit(1),
+						db
+							.select({ id: schema.events.id })
+							.from(schema.events)
+							.where(eq(schema.events.createdByUserId, userId))
+							.limit(1),
+					]);
+					return rows.every((r) => r.length === 0);
+				},
 			}),
 		],
 	});

@@ -12,9 +12,10 @@ import type { Actions, PageServerLoad } from "./$types";
 
 const PROVIDER_LABEL: Record<string, string> = {
 	twitter: "X",
+	miauth: "Misskey",
 };
 
-export const load: PageServerLoad = async ({ locals, request }) => {
+export const load: PageServerLoad = async ({ locals, request, url }) => {
 	const { session, actor } = requireActor(locals);
 	const [actorIds, accounts, managed] = await Promise.all([
 		listManagedActorIds(locals.db, session.user.id, actor),
@@ -36,10 +37,15 @@ export const load: PageServerLoad = async ({ locals, request }) => {
 		actor,
 		managed,
 		xEnabled: !!env.X_CLIENT_ID,
+		linkError: url.searchParams.get("error"),
+		linked: url.searchParams.has("linked"),
 		accounts: accounts.map((a) => ({
+			// better-auth の行 ID。外すときに渡す
+			id: a.id,
 			providerId: a.providerId,
-			accountId: a.accountId,
 			label: PROVIDER_LABEL[a.providerId] ?? a.providerId,
+			// Misskey は "username@host" で保存しているので、そのまま見せる
+			detail: a.providerId === "miauth" ? `@${a.accountId}` : null,
 		})),
 		drafts: all.filter((e) => e.status === "draft").map(toItem),
 		upcoming: all
