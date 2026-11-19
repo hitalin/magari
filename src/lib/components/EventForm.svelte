@@ -151,8 +151,7 @@ function clearFile() {
 			<!-- 画像を選んでも型と差し色は送る（あとで自動のビラに戻したときに使う） -->
 			<div hidden={!!preview}><FlyerPicker bind:look={chosen} {...flyer} /></div>
 			<div class="mt-6 border-t border-line pt-5">
-				<p class="text-xs leading-relaxed text-dim">好きな画像も貼れます。X で共有したときの画像にもなります。縦横比は自由で、切り抜きません。JPEG / PNG / WebP、10MB まで。</p>
-				<div class="mt-3 flex items-center gap-2">
+				<div class="flex items-center gap-2">
 					<input type="file" name="flyer" accept="image/jpeg,image/png,image/webp" bind:this={fileInput} onchange={pickFile} class="input min-w-0 flex-1 text-sm" />
 					{#if preview}<button type="button" class="btn shrink-0 px-4 py-1.5 text-sm" onclick={clearFile}>やめる</button>{/if}
 				</div>

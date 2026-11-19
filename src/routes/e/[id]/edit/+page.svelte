@@ -42,10 +42,7 @@ const flyer = $derived({
 				</form>
 			{/if}
 			<div class="mt-6 border-t border-line pt-5">
-				<p class="text-xs leading-relaxed text-dim">
-					{#if data.flyer.url}上げた画像を貼っています。{:else}好きな画像にも差し替えられます。{/if}X で共有したときの画像にもなります。縦横比は自由で、切り抜きません。JPEG / PNG / WebP、10MB まで。
-				</p>
-				<form method="POST" action="?/flyer" enctype="multipart/form-data" class="mt-3 flex items-center gap-2">
+				<form method="POST" action="?/flyer" enctype="multipart/form-data" class="flex items-center gap-2">
 					<input type="file" name="flyer" accept="image/jpeg,image/png,image/webp" required class="input min-w-0 flex-1 text-sm" />
 					<button type="submit" class="btn shrink-0 px-4 py-1.5 text-sm">{data.flyer.url ? '差し替える' : '上げる'}</button>
 				</form>
