@@ -42,7 +42,7 @@ async function passkey() {
 <section class="mx-auto mt-6 max-w-md">
 	<p class="label">ログイン</p>
 	<h1 class="mt-2 text-2xl">開ける人はこちら</h1>
-	<p class="mt-3 text-sm text-muted">見るだけならログインは要りません。まがりする（自分で開ける）人だけ。メールアドレスは使いません。</p>
+	<p class="mt-3 text-sm text-muted">見るだけならログインは要りません。まがりする（自分で開ける）人だけ。メールアドレスは使いません。{#if data.next === '/new'}ログインすると、そのまま開ける画面に進みます。{/if}</p>
 
 	<div class="panel mt-8 space-y-6 p-6">
 		{#if data.error && ERRORS[data.error]}<p class="rounded-sm bg-accent-soft px-4 py-2 text-sm text-accent-ink" role="alert">{ERRORS[data.error]}</p>{/if}

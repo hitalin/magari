@@ -68,7 +68,7 @@ const isActive = (href: string) =>
 <header class="site-header fixed inset-x-0 top-0 z-50 h-header" style:--nav-tint={tint} style="view-transition-name: header">
 	<div class="flex h-full items-center gap-3 px-4 text-[0.8rem] sm:gap-6 sm:px-5 sm:text-sm">
 		<a href="/" class="flex shrink-0 items-center" aria-label="まがり"><img src={logo} alt="" class="h-7 w-7" /></a>
-		<!-- タブ（実体の「イベント」「ハコ」だけ）の左端を、本文の左端に揃える（図像は左端、ログインは右端のまま）。狭い画面では図像のすぐ右。
+		<!-- タブ（実体の「イベント」「ハコ」だけ）の左端を、本文の左端に揃える（図像は左端、「まがり」は右端のまま）。狭い画面では図像のすぐ右。
 		     % はこの行の中身の幅（ヘッダー幅 − 左右 2.5rem）。本文の左端 (ヘッダー幅 − content)/2 + 1rem から、左余白・図像・間の 4.5rem を引くと -2.25rem -->
 		<nav class="flex gap-3 font-medium whitespace-nowrap sm:gap-6" style="margin-left: max(0px, calc((100% - var(--container-content)) / 2 - 2.25rem))">
 			{#each nav as item (item.href)}
@@ -80,7 +80,13 @@ const isActive = (href: string) =>
 			{/each}
 		</nav>
 		<div class="ml-auto flex shrink-0 items-center gap-3 sm:gap-5">
-			<a href="/new" class="font-medium text-muted transition hover:text-text">まがり</a>
+			<!-- ログイン前は「まがり」だけ。押せばログインを挟んで /new に着くので、ログインのボタンは並べない（フッターに小さく置く） -->
+			<!-- このサイトの主な動作なので、ナビでここだけテープ（primary）にする。開ける画面にいる間は字に戻す -->
+			{#if isActive('/new')}
+				<a href="/new" class="font-medium text-text" aria-current="page">まがり</a>
+			{:else}
+				<a href="/new" class="btn btn-primary px-3 py-1 text-xs sm:text-[0.8rem]">まがり</a>
+			{/if}
 			{#if data.loggedIn}
 				<a href="/me" aria-label={data.me?.name ?? '自分'} title={data.me?.name ?? '自分'} aria-current={isActive('/me') ? 'page' : undefined}>
 					{#if data.me?.avatarUrl}
@@ -89,8 +95,6 @@ const isActive = (href: string) =>
 						<span class="block h-7 w-7 rounded-full bg-accent-soft"></span>
 					{/if}
 				</a>
-			{:else}
-				<a href="/login" class="btn px-3 py-1 text-xs">ログイン</a>
 			{/if}
 		</div>
 	</div>
@@ -110,6 +114,7 @@ const isActive = (href: string) =>
 		<a href="/privacy" class="footer-link">プライバシー</a>
 		<a href="/policy" class="footer-link">掲載方針</a>
 		<a href="/contact" class="footer-link">連絡</a>
+		{#if !data.loggedIn}<a href="/login" class="footer-link">ログイン</a>{/if}
 		<a href={REPO} class="footer-link sm:ml-auto" rel="noopener">ソース<span aria-hidden="true"> ↗</span></a>
 	</nav>
 </footer>
