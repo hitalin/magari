@@ -8,6 +8,7 @@ import { setSessionCookie } from "better-auth/cookies";
 import { handleOAuthUserInfo } from "better-auth/oauth2";
 import { parseMisskeyHost } from "../misskey.ts";
 import { safeNext } from "../next.ts";
+import { adoptAccount, type IsEmptyUser } from "./link-empty-user.ts";
 
 // Misskey の MiAuth でログインする better-auth プラグイン。
 // 事前登録なし。任意のサーバーに「このアプリを許可しますか」を出し、戻ってきたセッション ID を
@@ -61,7 +62,7 @@ export const miauth = (opts: {
 	appName: string;
 	// まだ何も作っていないユーザーか（ページも会も無い）。
 	// 間違えて別の Misskey アカウントで入って出来た空のユーザーは、つなぐときに今のユーザーへ寄せる
-	isEmptyUser: (userId: string) => Promise<boolean>;
+	isEmptyUser: IsEmptyUser;
 }) =>
 	({
 		id: PROVIDER_ID,
@@ -162,11 +163,13 @@ export const miauth = (opts: {
 
 					if (linkUserId) {
 						if (existing && existing.userId !== linkUserId) {
-							if (!(await opts.isEmptyUser(existing.userId)))
-								return fail("miauth_linked_elsewhere");
-							await adapter.updateAccount(existing.id, { userId: linkUserId });
-							if ((await adapter.findAccounts(existing.userId)).length === 0)
-								await adapter.deleteUser(existing.userId);
+							const adopted = await adoptAccount(
+								adapter,
+								existing,
+								linkUserId,
+								opts.isEmptyUser,
+							);
+							if (!adopted) return fail("miauth_linked_elsewhere");
 						} else if (!existing) {
 							await adapter.linkAccount({ ...key, userId: linkUserId });
 						}

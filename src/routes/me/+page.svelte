@@ -15,6 +15,8 @@ const LINK_ERRORS: Record<string, string> = {
 		"Misskey からの戻りが確認できませんでした。もう一度お試しください。",
 	miauth_denied: "Misskey 側で許可されませんでした。",
 	miauth_user: "Misskey のアカウント情報を取れませんでした。",
+	account_already_linked_to_different_user:
+		"その X アカウントは、すでに別の ID で使われています。まとめたいときは運営に連絡してください。",
 	miauth_linked_elsewhere:
 		"その Misskey アカウントは、すでに別の ID で使われています。まとめたいときは運営に連絡してください。",
 };
@@ -26,7 +28,11 @@ async function addPasskey() {
 		: "パスキーを登録しました。次回からパスキーでログインできます。";
 }
 async function linkX() {
-	await authClient.linkSocial({ provider: "twitter", callbackURL: "/me" });
+	await authClient.linkSocial({
+		provider: "twitter",
+		callbackURL: "/me?linked",
+		errorCallbackURL: "/me",
+	});
 }
 async function unlink(id: string) {
 	if (!confirm("このログイン方法を外しますか？")) return;
