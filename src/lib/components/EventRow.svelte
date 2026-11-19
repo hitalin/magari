@@ -19,7 +19,7 @@ const place = $derived.by(() => {
 });
 </script>
 
-<!-- 主語は人。左に顔、「誰が」を先に、ひとことと場所はその下 -->
+<!-- 左に顔、「誰が」を小さく先に、その下にひとこと（会の名前）を大きく、場所はさらに下 -->
 <a href="/e/{event.id}" class="row group">
 	<span class="font-mono text-sm leading-snug tabular-nums text-muted">
 		{#if event.allDay}終日{:else}{formatTime(event.startsAt)}{#if event.endsAt && event.endsAt !== event.startsAt}<br /><span class="text-dim">〜{formatTime(event.endsAt)}</span>{/if}{/if}
@@ -27,11 +27,11 @@ const place = $derived.by(() => {
 	<span class="relative block min-h-9 min-w-0 pl-12">
 		<ActorFace {actor} seed={event.id} fallbackUrl={event.space?.avatarUrl} />
 		{#if actor}
-			<span class="flex flex-wrap items-baseline gap-x-2 font-serif text-[1.1rem] font-bold leading-snug group-hover:text-accent-ink">
-				<span class="min-w-0">{who}</span>
-				<span class="truncate font-sans text-sm font-normal text-muted">@{actor.handle}</span>
+			<span class="flex flex-wrap items-baseline gap-x-2 text-sm leading-snug text-muted">
+				<span class="min-w-0 font-bold">{who}</span>
+				<span class="truncate text-dim">@{actor.handle}</span>
 			</span>
-			<span class="mt-0.5 block">{event.title}</span>
+			<span class="mt-0.5 block font-serif text-[1.1rem] font-bold leading-snug group-hover:text-accent-ink">{event.title}</span>
 		{:else}
 			<span class="block font-serif text-[1.1rem] font-bold leading-snug group-hover:text-accent-ink">{event.title}</span>
 		{/if}
