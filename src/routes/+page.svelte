@@ -25,8 +25,8 @@ const WORDS = [
 </script>
 
 <svelte:head>
-	<title>◱ | 今日も、どこかで誰かが開けている。</title>
-	<meta name="description" content="今日もどこかで誰かが開けている。行ってもいいし、自分が開けてもいい。間借り店舗・日替わり店長・ライブ・自助会・オフ会を一箇所で。" />
+	<title>◱ | 今日も、誰かが開けている。</title>
+	<meta name="description" content="今日も、誰かが開けている。行ってもいい。ひとこと書けば、開けられる。間借り店舗・日替わり店長・ライブ・自助会・オフ会を一箇所で。" />
 </svelte:head>
 
 <!-- 左に一文とボタン、右にビラ。それ以外は置かない -->
@@ -43,10 +43,10 @@ const WORDS = [
 <section class="landing">
 	<div class="text-center md:text-left">
 		<h1 class="text-[clamp(1.9rem,4.2vw,2.75rem)] leading-[1.35] whitespace-nowrap">
-			今日も、どこかで<br /><span class="tape mr-1 px-3 leading-[1.15]">誰か</span>が開けている。
+			今日も、<br /><span class="tape mr-1 px-3 leading-[1.15]">誰か</span>が開けている。
 		</h1>
 		<p class="mt-6 text-[1.05rem] leading-loose text-muted">
-			行ってもいいし、自分が開けてもいい。<br />ひとこと書けば、ビラが 1 枚できます。
+			行ってもいい。ひとこと書けば、開けられる。
 		</p>
 		<div class="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 md:justify-start">
 			<a href="/new" class="btn btn-primary">とりあえず開ける</a>
