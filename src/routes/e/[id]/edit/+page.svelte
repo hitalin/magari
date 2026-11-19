@@ -22,8 +22,6 @@ const flyer = $derived({
 <svelte:head><title>間を編集 | ◱</title></svelte:head>
 
 <section class="mt-4">
-	<p class="text-sm text-muted"><a href="/e/{data.id}" class="hover:text-accent-ink">{data.values.title}</a> › 編集</p>
-
 	<!-- 間のページと同じ 2 列。左にフライヤーとその差し替え、右に中身 -->
 	<div class="detail-cols mt-8">
 		<div class="detail-flyer">
@@ -52,6 +50,11 @@ const flyer = $derived({
 			</div>
 		</div>
 		<div class="min-w-0">
+			<!-- 題は下の欄に出ているので繰り返さない。保存せずに戻る道だけ右に置く -->
+			<div class="mb-6 flex items-baseline justify-between gap-4">
+				<p class="label">間を編集</p>
+				<a href="/e/{data.id}" class="text-sm text-muted hover:text-accent-ink">見る ›</a>
+			</div>
 			{#if data.status === 'cancelled'}
 				<p class="mb-6 rounded-sm bg-accent-soft px-4 py-2 text-sm text-accent-ink">中止にした間です。内容を直して保存しても、中止のままです。</p>
 			{/if}
