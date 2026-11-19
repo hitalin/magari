@@ -5,10 +5,15 @@ import {
 	encodeStrokes,
 	MAX_POINTS,
 	MAX_STROKES,
+	markerHalf,
 	ORIGIN_X,
+	outline,
 	parseStrokes,
 	type Scribble,
+	SIZES,
 	type Stroke,
+	sprayDrips,
+	sprayHalf,
 	type Tool,
 	VISIBLE,
 	WALL_H,
@@ -19,13 +24,13 @@ import {
 // 右下のチョークを持つと、画面のどこでも描ける。描いた線は少し置いてから勝手に残る（残すボタンは無い）。
 // 線は中身の後ろ（z-index: -1 の canvas）に描く。canvas は画面の大きさだけで、スクロールのたびに見える所を描き直す。
 
-// 道具ごとの線。太さ（px）、縁のぼけ（px。スプレーだけ）、濃さ
-const BRUSH: Record<Tool, { width: number; blur: number; alpha: number }> = {
-	chalk: { width: 3, blur: 0, alpha: 0.85 },
-	marker: { width: 7, blur: 0, alpha: 1 },
-	paint: { width: 18, blur: 0, alpha: 1 },
-	spray: { width: 9, blur: 12, alpha: 0.9 },
-	eraser: { width: 28, blur: 0, alpha: 1 },
+// 道具ごとの太さ（px。太さ「中」のとき）
+const WIDTH: Record<Tool, number> = {
+	chalk: 3,
+	marker: 10,
+	paint: 18,
+	spray: 15,
+	eraser: 28,
 };
 const TOOLS: [Tool, string][] = [
 	["chalk", "チョーク"],
@@ -36,12 +41,16 @@ const TOOLS: [Tool, string][] = [
 ];
 // 描き終えてから残すまでの間（続けて描いた線をまとめて送る）
 const SAVE_AFTER_MS = 2500;
+// スプレーを止めたままにすると、この間隔で垂れが伸びる（MAX_DWELL 回まで）
+const DWELL_MS = 280;
+const MAX_DWELL = 6;
 
 let canvas: HTMLCanvasElement;
 let ctx: CanvasRenderingContext2D | null = null;
 let holding = $state(false);
 let tool = $state<Tool>("chalk");
 let color = $state(0);
+let size = $state(1);
 let dpr = 1;
 let scribbles = $state.raw<Scribble[]>([]);
 // まだ残していない線
@@ -52,6 +61,9 @@ let current: Stroke | null = null;
 let frame = 0;
 let saveTimer: ReturnType<typeof setTimeout> | undefined;
 let saving = false;
+let dwellTimer: ReturnType<typeof setTimeout> | undefined;
+// 画面に置いている指（pointerId → 縦の位置）。2 本目が来たら描かずに地面を動かす
+const fingers = new Map<number, number>();
 
 const visible = $derived(
 	scribbles.flatMap((s) => {
@@ -64,33 +76,152 @@ const visible = $derived(
 	}),
 );
 
-// fade: 古さによる薄さ（1 がそのまま）
+type Point = [number, number];
+// 1 本の線を、塗る形の重なりにしたもの。width があれば線として引き、無ければ中を塗る
+type Shape = { path: Path2D; alpha: number; width?: number };
+// 残した線は変わらないので、形は 1 度だけ作る（スクロールのたびに全部描き直すため）
+const shapes = new WeakMap<Stroke, Shape[]>();
+
+// 点と点の中間を通る曲線でつなぎ、角を丸める
+function curve(path: Path2D, points: Point[], closed: boolean) {
+	const n = points.length;
+	const mid = (a: Point, b: Point): Point => [
+		(a[0] + b[0]) / 2,
+		(a[1] + b[1]) / 2,
+	];
+	if (closed) {
+		path.moveTo(...mid(points[n - 1], points[0]));
+		for (let i = 0; i < n; i++)
+			path.quadraticCurveTo(
+				...points[i],
+				...mid(points[i], points[(i + 1) % n]),
+			);
+		path.closePath();
+		return;
+	}
+	path.moveTo(...points[0]);
+	for (let i = 1; i < n - 1; i++)
+		path.quadraticCurveTo(...points[i], ...mid(points[i], points[i + 1]));
+	path.lineTo(...points[n - 1]);
+}
+
+function shape({ tool, size, points }: Stroke): Shape[] {
+	const w = WIDTH[tool] * SIZES[size];
+	const path = new Path2D();
+	if (tool === "marker") {
+		curve(path, outline(points, markerHalf(points, w)), true);
+		return [{ path, alpha: 1 }];
+	}
+	if (tool !== "spray") {
+		curve(path, points, false);
+		return [{ path, alpha: tool === "chalk" ? 0.9 : 1, width: w }];
+	}
+	// スプレー: 芯の外に薄い霧を重ね、まわりに飛沫を散らし、止めていた所から垂らす
+	const pts = points.filter(
+		(p, i) => i === 0 || p[0] !== points[i - 1][0] || p[1] !== points[i - 1][1],
+	);
+	const half = sprayHalf(pts, w);
+	const widened = (by: number) => {
+		const mist = new Path2D();
+		curve(
+			mist,
+			outline(
+				pts,
+				half.map((h) => h + w * by),
+			),
+			true,
+		);
+		return mist;
+	};
+	curve(path, outline(pts, half), true);
+	for (const { x, y, length } of sprayDrips(points, w)) {
+		const r = Math.max(1.2, w * 0.1);
+		curve(
+			path,
+			outline(
+				[
+					[x, y],
+					[x, y + length / 2],
+					[x, y + length],
+				],
+				[r, r * 0.7, r * 1.15],
+			),
+			true,
+		);
+	}
+	const specks = new Path2D();
+	for (const [i, [x, y]] of pts.entries()) {
+		// 同じ絵はいつも同じ所に飛沫が出る
+		const rnd = (k: number) =>
+			Math.abs(Math.sin(x * 12.9898 + y * 78.233 + k * 37.719) * 43758.5453) %
+			1;
+		const a = rnd(1) * Math.PI * 2;
+		const d = half[i] + w * (0.2 + rnd(2) * 0.9);
+		const sx = x + Math.cos(a) * d;
+		const sy = y + Math.sin(a) * d;
+		specks.moveTo(sx, sy);
+		specks.arc(sx, sy, 0.5 + rnd(3) * 0.9, 0, Math.PI * 2);
+	}
+	return [
+		{ path: widened(0.62), alpha: 0.05 },
+		{ path: widened(0.42), alpha: 0.09 },
+		{ path: widened(0.26), alpha: 0.14 },
+		{ path: widened(0.12), alpha: 0.22 },
+		{ path: specks, alpha: 0.6 },
+		{ path, alpha: 0.95 },
+	];
+}
+
+// チョークは粉なので、色を粒の模様にして引く（マーカーやペンキは地面の目を埋めるので、べた塗り）
+const chalks = new Map<number, CanvasPattern | null>();
+function chalk(c: CanvasRenderingContext2D, color: number) {
+	let pattern = chalks.get(color);
+	if (pattern === undefined) {
+		const tile = document.createElement("canvas");
+		tile.width = tile.height = 96;
+		const t = tile.getContext("2d");
+		if (t) {
+			t.fillStyle = COLORS[color];
+			for (let y = 0; y < 96; y++)
+				for (let x = 0; x < 96; x++) {
+					const r = Math.random();
+					if (r < 0.45) continue;
+					t.globalAlpha = r;
+					t.fillRect(x, y, 1, 1);
+				}
+		}
+		pattern = c.createPattern(tile, "repeat");
+		chalks.set(color, pattern);
+	}
+	return pattern ?? COLORS[color];
+}
+
+// fade: 古さによる薄さ（1 がそのまま）。live: いま引いている線（点が増えるので、形を毎回作る）
 function drawStroke(
 	c: CanvasRenderingContext2D,
-	{ tool, color, points }: Stroke,
+	stroke: Stroke,
 	fade = 1,
+	live = false,
 ) {
-	const brush = BRUSH[tool];
-	c.lineWidth = brush.width;
-	c.strokeStyle = COLORS[color];
-	// 消しゴムは色を塗らず、それまでに描いた線を抜く（古さで薄くはしない）
-	const erasing = tool === "eraser";
-	c.globalCompositeOperation = erasing ? "destination-out" : "source-over";
-	c.globalAlpha = erasing ? 1 : brush.alpha * fade;
-	// スプレーの縁は、同じ色の影でぼかす（影のぼけは transform の外なので dpr を掛ける）
-	c.shadowColor = COLORS[color];
-	c.shadowBlur = brush.blur * dpr;
-	c.beginPath();
-	c.moveTo(points[0][0], points[0][1]);
-	// 点と点の中間を通る曲線でつなぎ、角を丸める
-	for (let i = 1; i < points.length - 1; i++) {
-		const [x, y] = points[i];
-		const [nx, ny] = points[i + 1];
-		c.quadraticCurveTo(x, y, (x + nx) / 2, (y + ny) / 2);
+	let parts = live ? undefined : shapes.get(stroke);
+	if (!parts) {
+		parts = shape(stroke);
+		if (!live) shapes.set(stroke, parts);
 	}
-	const last = points[points.length - 1];
-	c.lineTo(last[0], last[1]);
-	c.stroke();
+	// 消しゴムは色を塗らず、それまでに描いた線を抜く（古さで薄くはしない）
+	const erasing = stroke.tool === "eraser";
+	c.globalCompositeOperation = erasing ? "destination-out" : "source-over";
+	const style =
+		stroke.tool === "chalk" ? chalk(c, stroke.color) : COLORS[stroke.color];
+	c.strokeStyle = style;
+	c.fillStyle = style;
+	for (const { path, alpha, width } of parts) {
+		c.globalAlpha = erasing ? 1 : alpha * fade;
+		if (width) {
+			c.lineWidth = width;
+			c.stroke(path);
+		} else c.fill(path);
+	}
 }
 
 // 画面に見えている所を描き直す
@@ -118,7 +249,7 @@ function paint() {
 		for (const stroke of s.strokes) drawStroke(ctx, stroke, fade);
 	}
 	for (const stroke of pending) drawStroke(ctx, stroke);
-	if (current) drawStroke(ctx, current);
+	if (current) drawStroke(ctx, current, 1, true);
 	// ざらつき（mask）も地面と一緒に流す。画面に貼り付いたままだと、スクロールで粒がちらつく
 	canvas.style.maskPosition = `${Math.round(w / 2)}px ${-Math.round(scrollY)}px`;
 }
@@ -164,17 +295,48 @@ function at(e: PointerEvent): [number, number] {
 	];
 }
 
+// スプレーを動かさずにいる間、同じ点を足していく（その数だけ垂れが伸びる）
+function dwell() {
+	clearTimeout(dwellTimer);
+	if (current?.tool !== "spray") return;
+	dwellTimer = setTimeout(() => {
+		if (!current) return;
+		const pts = current.points;
+		const last = pts[pts.length - 1];
+		const held = pts.findLastIndex((p) => p[0] !== last[0] || p[1] !== last[1]);
+		if (pts.length - 1 - held > MAX_DWELL) return;
+		pts.push([last[0], last[1]]);
+		schedule();
+		dwell();
+	}, DWELL_MS);
+}
+
 function down(e: PointerEvent) {
-	if (!e.isPrimary || !ctx) return;
-	const p = at(e);
+	if (!ctx) return;
 	(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+	fingers.set(e.pointerId, e.clientY);
+	// 2 本目の指: 描きかけの線は捨てて、地面を動かす
+	if (fingers.size > 1) {
+		clearTimeout(dwellTimer);
+		current = null;
+		schedule();
+		return;
+	}
 	clearTimeout(saveTimer);
 	notice = "";
-	current = { tool, color, points: [p] };
+	current = { tool, color, size, points: [at(e)] };
+	dwell();
 	schedule();
 }
 
 function move(e: PointerEvent) {
+	if (fingers.size > 1) {
+		const y = fingers.get(e.pointerId);
+		if (y === undefined) return;
+		fingers.set(e.pointerId, e.clientY);
+		scrollBy({ top: (y - e.clientY) / fingers.size, behavior: "instant" });
+		return;
+	}
 	if (!current || !ctx) return;
 	const p = at(e);
 	const last = current.points[current.points.length - 1];
@@ -185,10 +347,13 @@ function move(e: PointerEvent) {
 		current = { ...current, points: [last] };
 	}
 	current.points.push(p);
+	dwell();
 	schedule();
 }
 
-function up() {
+function up(e: PointerEvent) {
+	fingers.delete(e.pointerId);
+	clearTimeout(dwellTimer);
 	if (!current) return;
 	pending = [...pending, current];
 	current = null;
@@ -236,6 +401,7 @@ async function save(leaving = false) {
 function toggle() {
 	holding = !holding;
 	notice = "";
+	fingers.clear();
 	if (!holding) save();
 }
 </script>
@@ -252,13 +418,18 @@ function toggle() {
 <div class="hand">
 	{#if holding}
 		<div class="tools" role="toolbar" aria-label="落書きの道具">
-			<p class="w-full text-xs {notice ? 'text-accent-ink' : 'text-muted'}" role="status">{notice || 'どこにでも描けます。描いた線はそのまま残ります。'}</p>
+			<p class="w-full text-xs {notice ? 'text-accent-ink' : 'text-muted'}" role="status">{notice || 'どこにでも描けます。描いた線はそのまま残ります。'}{#if !notice}<span class="touch">指 2 本で地面を動かせます。</span>{/if}</p>
 			{#each TOOLS as [t, label] (t)}
 				<button type="button" class="chip {tool === t ? 'chip-tape' : 'chip-plain'}" aria-pressed={tool === t} onclick={() => (tool = t)}>{label}</button>
 			{/each}
 			<div class="colors" role="group" aria-label="色">
 				{#each COLORS as c, i (c)}
 					<button type="button" class:on={color === i} style="background: {c}" aria-pressed={color === i} aria-label="色 {i + 1}" onclick={() => (color = i)}></button>
+				{/each}
+			</div>
+			<div class="sizes" role="group" aria-label="太さ">
+				{#each ['細い', '中くらい', '太い'] as label, i (label)}
+					<button type="button" class:on={size === i} aria-pressed={size === i} aria-label={label} title={label} onclick={() => (size = i)}><span style="width: {0.3 + i * 0.3}rem; height: {0.3 + i * 0.3}rem"></span></button>
 				{/each}
 			</div>
 		</div>
@@ -281,7 +452,7 @@ function toggle() {
 		width: 100%;
 		height: 100%;
 		pointer-events: none;
-		mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='m'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' seed='11' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  3.2 0 0 0 -0.85'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23m)'/%3E%3C/svg%3E");
+		mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='m'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' seed='11' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  2 0 0 0 -0.1'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23m)'/%3E%3C/svg%3E");
 		mask-size: 240px;
 	}
 	.catch {
@@ -329,6 +500,34 @@ function toggle() {
 	}
 	.colors button.on {
 		outline: 2px solid var(--color-text);
+	}
+	.sizes {
+		display: flex;
+		gap: 0.45rem;
+	}
+	.sizes button {
+		display: grid;
+		place-items: center;
+		width: 1.6rem;
+		height: 1.6rem;
+		border: 1px solid var(--color-line);
+		border-radius: 9999px;
+	}
+	.sizes button.on {
+		border-color: var(--color-text);
+	}
+	.sizes span {
+		border-radius: 9999px;
+		background: var(--color-text);
+	}
+	/* 指で触る画面でだけ出す案内 */
+	.touch {
+		display: none;
+	}
+	@media (pointer: coarse) {
+		.touch {
+			display: inline;
+		}
 	}
 	.chalk {
 		display: grid;
