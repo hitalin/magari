@@ -5,6 +5,7 @@ import { requireActor } from "#lib/server/me.ts";
 import {
 	getManagedActor,
 	listMembers,
+	type ManagedActor,
 	removeMember,
 	setHeaderKey,
 	updateActorPage,
@@ -24,13 +25,9 @@ async function managed(locals: App.Locals, handle: string) {
 	return actor;
 }
 
-const str = (form: FormData, k: string) => String(form.get(k) ?? "");
-
-export const load: PageServerLoad = async ({ locals, params }) => {
-	const actor = await managed(locals, params.handle);
-	const members =
-		actor.kind === "person" ? [] : await listMembers(locals.db, actor.id);
-	const values: SpaceFormValues = {
+// いまの値をフォームの形に
+function formValues(actor: ManagedActor): SpaceFormValues {
+	return {
 		name: actor.name,
 		catch: actor.catch ?? "",
 		summary: actor.summary ?? "",
@@ -47,6 +44,15 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 		instagram: actor.instagram ?? "",
 		links: actor.links.map((l) => `${l.label} ${l.url}`).join("\n"),
 	};
+}
+
+const str = (form: FormData, k: string) => String(form.get(k) ?? "");
+
+export const load: PageServerLoad = async ({ locals, params }) => {
+	const actor = await managed(locals, params.handle);
+	const members =
+		actor.kind === "person" ? [] : await listMembers(locals.db, actor.id);
+	const values = formValues(actor);
 	return {
 		handle: actor.handle,
 		kind: actor.kind,
@@ -83,7 +89,11 @@ export const actions: Actions = {
 	profile: async ({ request, locals, params }) => {
 		const actor = await managed(locals, params.handle);
 		const form = await request.formData();
-		const values = readSpaceForm((k) => (form.get(k) as string | null) ?? null);
+		// 人のページの編集画面は、ハコ向けの欄（設備・アクセスなど）を出さない。来なかった欄は今の値を保つ
+		const current = formValues(actor);
+		const values = readSpaceForm((k) =>
+			form.has(k) ? String(form.get(k)) : current[k as keyof SpaceFormValues],
+		);
 		const parsed = parseSpaceForm(values);
 		if (!parsed.ok)
 			return fail(400, { section: "profile", error: parsed.error, values });

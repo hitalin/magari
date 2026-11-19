@@ -4,6 +4,7 @@ import Blocks from "#lib/components/Blocks.svelte";
 import DayList from "#lib/components/DayList.svelte";
 import Empty from "#lib/components/Empty.svelte";
 import MonthGrid from "#lib/components/MonthGrid.svelte";
+import { actorSns, SNS_ICON, SNS_NAME } from "#lib/sns.ts";
 import { KIND_LABEL } from "#lib/types.ts";
 import { page } from "$app/state";
 import type { PageProps } from "./$types";
@@ -52,6 +53,8 @@ const sections = $derived(
 		hasAccess && { id: "access", label: "アクセス" },
 	].filter((s): s is { id: string; label: string } => !!s),
 );
+// SNS はアイコン付きのバッジで上に、それ以外のリンクは下に
+const social = $derived(actorSns(actor));
 const description = $derived(actor.catch ?? actor.summary ?? undefined);
 </script>
 
@@ -80,7 +83,12 @@ const description = $derived(actor.catch ?? actor.summary ?? undefined);
 			{#if actor.catch}<p class="mt-2 font-serif text-lg text-accent-ink">{actor.catch}</p>{/if}
 		</div>
 	</div>
-	{#if actor.summary}<p class="mt-3 max-w-[34em] text-muted">{actor.summary}</p>{/if}
+	{#if actor.summary}
+		<p class="mt-3 max-w-[34em] whitespace-pre-line text-muted">{actor.summary}</p>
+	{:else if canEdit && actor.kind === 'person'}
+		<!-- 本人にだけ: まだ自己紹介が無い -->
+		<p class="mt-3 text-sm"><a href="/@{actor.handle}/edit" class="text-accent-ink underline-offset-2 hover:underline">ひとこと自己紹介を書く ›</a></p>
+	{/if}
 	{#if unofficial}
 		<p class="mt-3 max-w-[34em] text-xs text-muted">
 			運営者がまだいない非公式のページで、名前とリンクと、公式ページの店の写真だけを載せています。運営者の方は、<a href="/contact?kind=claim&about=@{actor.handle}" class="underline underline-offset-2 hover:text-accent-ink">ページの引き取り</a>か<a href="/contact?kind=takedown&about=@{actor.handle}" class="underline underline-offset-2 hover:text-accent-ink">掲載の取り下げ</a>をご連絡ください。
@@ -89,8 +97,12 @@ const description = $derived(actor.catch ?? actor.summary ?? undefined);
 	<div class="pills mt-5">
 		{#if address}<span class="chip chip-plain">{address}</span>{/if}
 		{#if actor.url}<a href={actor.url} class="chip" rel="noopener">{actor.url.replace(/^https?:\/\//, '')}</a>{/if}
-		{#if actor.xHandle}<a href="https://x.com/{actor.xHandle}" class="chip" rel="noopener">X @{actor.xHandle}</a>{/if}
-		{#if actor.instagram}<a href="https://www.instagram.com/{actor.instagram}/" class="chip" rel="noopener">Instagram @{actor.instagram}</a>{/if}
+		{#each social.sns as s (s.url)}
+			<a href={s.url} class="chip gap-1.5" rel="noopener" aria-label="{SNS_NAME[s.kind]} {s.label}" title={SNS_NAME[s.kind]}>
+				<svg viewBox="0 0 24 24" class="h-3.5 w-3.5 shrink-0" fill="currentColor" aria-hidden="true"><path d={SNS_ICON[s.kind]} /></svg>
+				{s.label}
+			</a>
+		{/each}
 		{#if actor.kind === 'space'}<a href={reviewsUrl} class="chip" rel="noopener">Google マップの口コミ ›</a>{/if}
 		{#if canEdit}<a href="/@{actor.handle}/edit" class="chip chip-tape">ページを編集</a>{/if}
 	</div>
@@ -153,11 +165,11 @@ const description = $derived(actor.catch ?? actor.summary ?? undefined);
 	</section>
 {/if}
 
-{#if actor.links.length}
+{#if social.rest.length}
 	<section class="mb-12">
 		<div class="section-head"><h2 class="section-title text-[1.25rem]">リンク</h2></div>
 		<div class="pills">
-			{#each actor.links as l (l.url)}<a href={l.url} class="chip" rel="noopener">{l.label} ›</a>{/each}
+			{#each social.rest as l (l.url)}<a href={l.url} class="chip" rel="noopener">{l.label} ›</a>{/each}
 		</div>
 	</section>
 {/if}

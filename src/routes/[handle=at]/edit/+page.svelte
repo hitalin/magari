@@ -8,6 +8,7 @@ const v = $derived(
 );
 const err = (section: string) =>
 	form?.section === section && "error" in form ? form.error : null;
+const person = $derived(data.kind === "person");
 const KIND_WORD: Record<string, string> = {
 	space: "ハコ",
 	group: "団体",
@@ -56,6 +57,14 @@ const KIND_WORD: Record<string, string> = {
 	<div class="section-head"><h2 class="section-title text-[1.25rem]">紹介</h2></div>
 	<form method="POST" action="?/profile" class="space-y-6">
 		{@render error('profile')}
+		<!-- 人のページは、名前・ひとこと・紹介文・リンクだけ。ハコ向けの欄（キャッチコピー・設備・アクセス）は出さない -->
+		{#if person}
+			<Field label="名前"><input name="name" value={v.name} required maxlength="50" class="input" /></Field>
+			<Field label="ひとこと" hint="名前の下に出る自己紹介。何をしている人か、どんな会を開けるか"><textarea name="summary" rows="3" maxlength="200" class="input" placeholder="例: 月に一度、間借りでカレー屋をやっています。">{v.summary}</textarea></Field>
+			<Field label="紹介文" hint="長く書きたいときに。「## 見出し」「- 箇条書き」が使えます">
+				<textarea name="body" rows="6" class="input">{v.body}</textarea>
+			</Field>
+		{:else}
 		<div class="grid gap-4 sm:grid-cols-2">
 			<Field label="名前"><input name="name" value={v.name} required maxlength="50" class="input" /></Field>
 			<Field label="キャッチコピー" hint="見出しの下に大きく出ます"><input name="catch" value={v.catch} maxlength="100" class="input" placeholder="例: 出会い、つながる、みんなのスタンド。" /></Field>
@@ -79,6 +88,7 @@ const KIND_WORD: Record<string, string> = {
 			<Field label="定休日"><textarea name="closedDays" rows="2" maxlength="200" class="input">{v.closedDays}</textarea></Field>
 		</div>
 		<Field label="運営" hint="会社名・個人名など"><input name="operator" value={v.operator} maxlength="100" class="input" /></Field>
+		{/if}
 
 		<h3 class="label pt-4">リンク</h3>
 		<div class="grid gap-4 sm:grid-cols-3">
@@ -86,7 +96,7 @@ const KIND_WORD: Record<string, string> = {
 			<Field label="X"><input name="xHandle" value={v.xHandle} class="input" placeholder="@ユーザー名" autocapitalize="off" /></Field>
 			<Field label="Instagram"><input name="instagram" value={v.instagram} class="input" placeholder="@ユーザー名" autocapitalize="off" /></Field>
 		</div>
-		<Field label="関連リンク" hint="1 行に 1 つ、「名前 https://...」の形で。系列店や関連サイトなど">
+		<Field label={person ? 'ほかの SNS・リンク' : '関連リンク'} hint={person ? '1 行に 1 つ、URL だけでも「名前 https://...」でも。Misskey・Mastodon・Bluesky・Threads・YouTube・TikTok・GitHub・note・Twitch のプロフィールは、アイコン付きで名前の下に出ます' : '1 行に 1 つ、「名前 https://...」の形で。系列店や関連サイトなど。SNS のプロフィールの URL は、アイコン付きでページの上に出ます'}>
 			<textarea name="links" rows="4" class="input">{v.links}</textarea>
 		</Field>
 
