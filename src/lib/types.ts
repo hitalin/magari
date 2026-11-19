@@ -1,4 +1,5 @@
 // API（/api/*）が返す DTO。サーバーとクライアントで共有する。
+import type { FlyerLook } from "./flyer";
 
 export type ActorRef = {
 	handle: string;
@@ -21,6 +22,8 @@ export type EventSummary = {
 	hosts: ActorRef[];
 	// 主催が上げたフライヤー。無ければ自動のビラを描く
 	flyerUrl: string | null;
+	// 自動のビラの型と差し色（開けた人が選んだもの）。無ければ ID から決まる
+	flyerLook: FlyerLook | null;
 };
 
 export type EventDetail = EventSummary & {

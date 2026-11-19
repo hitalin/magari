@@ -16,11 +16,12 @@ type CardEvent = Pick<
 	| "onlineUrl"
 	| "hosts"
 	| "flyerUrl"
+	| "flyerLook"
 	| "status"
 >;
 
 // カードの絵柄を変えたら上げる（作り置きの画像を全部作り直す）
-const DESIGN = 1;
+const DESIGN = 2;
 
 // カードに出るものから決まる版。変わったら画像を作り直す
 export function cardVersion(e: CardEvent): string {
@@ -33,6 +34,7 @@ export function cardVersion(e: CardEvent): string {
 			eventPlace(e),
 			e.hosts[0]?.name ?? null,
 			e.flyerUrl,
+			e.flyerLook,
 			e.status,
 		]),
 	).toString(36);

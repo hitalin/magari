@@ -1,15 +1,17 @@
 <script lang="ts">
 import Field from "#lib/components/Field.svelte";
 import Flyer from "#lib/components/Flyer.svelte";
+import FlyerPicker from "#lib/components/FlyerPicker.svelte";
 import { dayKey } from "#lib/date.ts";
 import type { EventFormValues } from "#lib/event-form.ts";
-import { shortId } from "#lib/id.ts";
+import { type FlyerLook, flyerStyle } from "#lib/flyer.ts";
 
 let {
 	values,
 	error,
 	submitLabel = "開ける",
 	flyerId,
+	look = null,
 	host = null,
 }: {
 	values: EventFormValues;
@@ -17,9 +19,17 @@ let {
 	submitLabel?: string;
 	// 新しく開けるときだけ渡す。会の ID を先に決め、打った内容でビラをその場で刷って左に出す
 	flyerId?: string;
+	// ビラの型と差し色の初期値（複製元、送り直し）。無ければ ID から決まる組を最初に出す
+	look?: FlyerLook | null;
 	host?: string | null;
 } = $props();
+function pickLook(id: string): FlyerLook {
+	const { variant, color } = flyerStyle(id);
+	return { variant, color };
+}
 // svelte-ignore state_referenced_locally -- 初期値だけ props から取り、以後は利用者の操作で変える
+let chosen = $state(look ?? pickLook(flyerId ?? ""));
+// svelte-ignore state_referenced_locally -- 同上
 let v = $state({
 	id: flyerId ?? "",
 	title: values.title,
@@ -112,17 +122,17 @@ const place = $derived(v.locationName || (v.space ? `@${v.space}` : null));
 {/snippet}
 
 {#if flyerId}
+	{@const flyer = { id: v.id, title: v.title || 'ひとこと', startsAt, endsAt, allDay: v.allDay, place, host }}
 	<!-- 会のページと同じ 2 列。左のビラは打つそばから刷り上がり、保存後もこの見た目のまま -->
 	<form method="POST" action="?/save" class="detail-cols">
 		<input type="hidden" name="id" value={v.id} />
 		<div class="detail-flyer">
-			<div class="flyer-pin mx-auto w-full max-w-[11rem] md:max-w-none">
-				<Flyer id={v.id} title={v.title || 'ひとこと'} {startsAt} {endsAt} allDay={v.allDay} {place} {host} />
+			<!-- スマホでは大きいビラを出さず、型の見本だけにして、打つ欄を最初の画面に入れる -->
+			<div class="flyer-pin mx-auto mb-8 hidden w-full md:block">
+				<Flyer {...flyer} look={chosen} />
 			</div>
-			<p class="mt-4 text-center text-sm">
-				<button type="button" class="text-muted underline underline-offset-2 hover:text-accent-ink" onclick={() => (v.id = shortId())}>刷り直す</button>
-				<span class="ml-2 text-xs text-dim">好きな画像には、開けたあとで差し替えられます</span>
-			</p>
+			<FlyerPicker bind:look={chosen} {...flyer} />
+			<p class="mt-4 text-center text-xs text-dim">好きな画像には、開けたあとで差し替えられます</p>
 		</div>
 		<div class="min-w-0 space-y-6">{@render fields()}</div>
 	</form>

@@ -6,6 +6,7 @@ import {
 	parseEventForm,
 	readEventForm,
 } from "#lib/event-form.ts";
+import { type FlyerLook, parseFlyerLook } from "#lib/flyer.ts";
 import { isShortId, shortId } from "#lib/id.ts";
 import { toFormValues } from "#lib/server/event-values.ts";
 import {
@@ -25,6 +26,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 		...EMPTY_EVENT_FORM,
 		space: url.searchParams.get("space") ?? "",
 	};
+	let look: FlyerLook | null = null;
 	if (from) {
 		const actorIds = await listManagedActorIds(
 			locals.db,
@@ -37,10 +39,13 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 			session.user.id,
 			actorIds,
 		);
-		if (src) values = { ...toFormValues(src), date: "" };
+		if (src) {
+			values = { ...toFormValues(src), date: "" };
+			look = parseFlyerLook(src.flyerVariant, src.flyerColor);
+		}
 	}
-	// ビラの見た目は ID から決まるので、先に ID を決めて画面のビラと保存後のビラを同じにする
-	return { values, id: shortId() };
+	// ビラの傾きと、型と差し色の最初の組は ID から決まるので、先に ID を決めて画面のビラと保存後のビラを同じにする
+	return { values, look, id: shortId() };
 };
 
 export const actions: Actions = {
@@ -48,14 +53,18 @@ export const actions: Actions = {
 		const { session, actor } = requireActor(locals);
 		const form = await request.formData();
 		const values = readEventForm((k) => (form.get(k) as string | null) ?? null);
+		const look = parseFlyerLook(
+			form.get("flyerVariant") as string | null,
+			form.get("flyerColor") as string | null,
+		);
 		const parsed = parseEventForm(values);
-		if (!parsed.ok) return fail(400, { error: parsed.error, values });
+		if (!parsed.ok) return fail(400, { error: parsed.error, values, look });
 		const ev = await toEventValues(locals.db, parsed.event);
-		if ("error" in ev) return fail(400, { error: ev.error, values });
+		if ("error" in ev) return fail(400, { error: ev.error, values, look });
 		const wanted = (form.get("id") as string | null) ?? "";
 		const id = await createEvent(
 			locals.db,
-			ev,
+			{ ...ev, flyerVariant: look?.variant, flyerColor: look?.color },
 			actor.id,
 			session.user.id,
 			isShortId(wanted) ? wanted : undefined,
@@ -76,8 +85,9 @@ export const actions: Actions = {
 		);
 		if (saved && isSameSubmission(saved, parsed.event)) done(saved.id);
 		return fail(400, {
-			error: "保存できませんでした。ビラを刷り直して、もう一度お試しください",
+			error: "保存できませんでした。もう一度お試しください",
 			values,
+			look,
 		});
 	},
 };

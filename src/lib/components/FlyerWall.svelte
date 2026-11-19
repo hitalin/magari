@@ -39,7 +39,7 @@ const place = (e: EventSummary) => e.space?.name ?? e.locationName ?? null;
 				{#if e.flyerUrl}
 					<img src={e.flyerUrl} alt="" loading="lazy" />
 				{:else}
-					<Flyer id={e.id} title={e.title} startsAt={e.startsAt} endsAt={e.endsAt} allDay={e.allDay} place={place(e)} host={e.hosts[0]?.name ?? null} />
+					<Flyer id={e.id} title={e.title} startsAt={e.startsAt} endsAt={e.endsAt} allDay={e.allDay} place={place(e)} host={e.hosts[0]?.name ?? null} look={e.flyerLook} />
 				{/if}
 			</a>
 		{:else}

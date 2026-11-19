@@ -11,6 +11,7 @@ import {
 	or,
 } from "drizzle-orm";
 import { nameOnlyIfUnmanaged } from "#lib/actor.ts";
+import { parseFlyerLook } from "#lib/flyer.ts";
 import {
 	type ActorProfile,
 	type ActorRef,
@@ -42,6 +43,8 @@ function selectEvents(db: Db) {
 			onlineUrl: events.onlineUrl,
 			feeText: events.feeText,
 			coverKey: events.coverKey,
+			flyerVariant: events.flyerVariant,
+			flyerColor: events.flyerColor,
 			hiddenAt: events.hiddenAt,
 			spaceHandle: actors.handle,
 			spaceName: actors.name,
@@ -118,6 +121,7 @@ function toDetail(row: Row, hosts: ActorRef[]): EventDetail {
 		onlineUrl: row.onlineUrl,
 		feeText: row.feeText,
 		flyerUrl: mediaUrl(row.coverKey),
+		flyerLook: parseFlyerLook(row.flyerVariant, row.flyerColor),
 		space:
 			row.spaceHandle && row.spaceName && row.spaceKind
 				? { handle: row.spaceHandle, name: row.spaceName, kind: row.spaceKind }
@@ -139,6 +143,7 @@ function toSummary(detail: EventDetail): EventSummary {
 		space,
 		hosts,
 		flyerUrl,
+		flyerLook,
 	} = detail;
 	return {
 		id,
@@ -152,6 +157,7 @@ function toSummary(detail: EventDetail): EventSummary {
 		space,
 		hosts,
 		flyerUrl,
+		flyerLook,
 	};
 }
 

@@ -59,7 +59,7 @@ const WORDS = [
 				{#if e.flyerUrl}
 					<img src={e.flyerUrl} alt="" />
 				{:else}
-					<Flyer id={e.id} title={e.title} startsAt={e.startsAt} endsAt={e.endsAt} allDay={e.allDay} place={e.space?.name ?? e.locationName} host={e.hosts[0]?.name ?? null} />
+					<Flyer id={e.id} title={e.title} startsAt={e.startsAt} endsAt={e.endsAt} allDay={e.allDay} place={e.space?.name ?? e.locationName} host={e.hosts[0]?.name ?? null} look={e.flyerLook} />
 				{/if}
 			</a>
 		{:else}

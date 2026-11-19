@@ -25,7 +25,7 @@ const host = $derived(event.hosts[0]?.name ?? null);
 			{#if event.flyerUrl}
 				<img src={event.flyerUrl} alt="" />
 			{:else}
-				<div class="auto"><Flyer id={event.id} title={event.title} startsAt={event.startsAt} endsAt={event.endsAt} allDay={event.allDay} {place} {host} /></div>
+				<div class="auto"><Flyer id={event.id} title={event.title} startsAt={event.startsAt} endsAt={event.endsAt} allDay={event.allDay} {place} {host} look={event.flyerLook} /></div>
 			{/if}
 		</div>
 	</div>

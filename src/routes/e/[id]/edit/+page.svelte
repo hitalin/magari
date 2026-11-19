@@ -1,9 +1,21 @@
 <script lang="ts">
 import EventForm from "#lib/components/EventForm.svelte";
 import Flyer from "#lib/components/Flyer.svelte";
+import FlyerPicker from "#lib/components/FlyerPicker.svelte";
 import type { PageProps } from "./$types";
 
 let { data, form }: PageProps = $props();
+// svelte-ignore state_referenced_locally -- 初期値だけ data から取り、以後は選んだ型と色
+let look = $state({ ...data.flyer.look });
+const flyer = $derived({
+	id: data.id,
+	title: data.flyer.title,
+	startsAt: data.flyer.startsAt,
+	endsAt: data.flyer.endsAt,
+	allDay: data.flyer.allDay,
+	place: data.flyer.place,
+	host: data.hosts[0]?.name ?? null,
+});
 </script>
 
 <svelte:head><title>間を編集 | ◱</title></svelte:head>
@@ -20,12 +32,12 @@ let { data, form }: PageProps = $props();
 				{#if data.flyer.url}
 					<img src={data.flyer.url} alt="今のフライヤー" />
 				{:else}
-					<Flyer id={data.id} title={data.flyer.title} startsAt={data.flyer.startsAt} endsAt={data.flyer.endsAt} allDay={data.flyer.allDay} place={data.flyer.place} host={data.hosts[0]?.name ?? null} />
+					<Flyer {...flyer} {look} />
 				{/if}
 			</div>
 			<div>
 				<p class="text-sm text-muted">
-					{#if data.flyer.url}上げた画像を壁と間のページに貼っています。{:else}今は題・日時・場所から作った自動のビラです。好きな画像に差し替えられます。{/if}
+					{#if data.flyer.url}上げた画像を壁と間のページに貼っています。{:else}今は題・日時・場所から作った自動のビラです。型と色を選べて、好きな画像にも差し替えられます。{/if}
 					X で共有したときの画像にもなります。縦横比は自由で、切り抜きません。JPEG / PNG / WebP、10MB まで。
 				</p>
 				<div class="mt-4 flex flex-wrap items-center gap-3">
@@ -39,6 +51,12 @@ let { data, form }: PageProps = $props();
 				</div>
 			</div>
 		</div>
+		{#if !data.flyer.url}
+			<form method="POST" action="?/look" class="mt-8 max-w-md">
+				<FlyerPicker bind:look {...flyer} />
+				<p class="mt-5 text-center"><button type="submit" class="btn">このビラにする</button></p>
+			</form>
+		{/if}
 	</section>
 	{#if data.status === 'cancelled'}
 		<p class="mb-6 rounded-sm bg-accent-soft px-4 py-2 text-sm text-accent-ink">中止にした間です。内容を直して保存しても、中止のままです。</p>

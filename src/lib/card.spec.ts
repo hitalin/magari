@@ -12,6 +12,7 @@ const base = {
 	onlineUrl: null,
 	hosts: [{ handle: "kojiro", name: "こーじろー", kind: "person" as const }],
 	flyerUrl: null,
+	flyerLook: null,
 	status: "published" as const,
 };
 
@@ -32,6 +33,12 @@ describe("cardVersion", () => {
 		expect(cardVersion({ ...base, locationName: "神田" })).not.toBe(v);
 		expect(
 			cardVersion({ ...base, flyerUrl: "/i/flyers/abc123/x.png" }),
+		).not.toBe(v);
+		expect(
+			cardVersion({
+				...base,
+				flyerLook: { variant: "danbo", color: "red" },
+			}),
 		).not.toBe(v);
 		expect(cardVersion({ ...base, status: "cancelled" })).not.toBe(v);
 		expect(

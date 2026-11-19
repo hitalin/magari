@@ -1,68 +1,66 @@
 import { dayKey, formatTime } from "./date";
 
 // 自動のビラ（画像を上げていない会のフライヤー）の見た目。
-// 会の ID から決まるので、同じ会はいつも同じ見た目になる。
-// 手本は二つ。二色刷りのイベントフライヤー（リソグラフ、ライブハウスの壁）と、
-// 街に実際に貼ってある紙もの（日めくり、戸口の札、会報、掲示板の貼り紙）。
-// どの題がどの型に当たるかは選べないので、題には演出をかけない（1 字だけ大きくする、傾ける、寝かせる、をしない）。
+// まがりの貼り紙として、アプリと同じ材料（アスファルト・段ボール・ガムテープ・紙）だけで作る。
+// 型と差し色は開ける人が選べる。選んでいない会（取り込んだ会、まとめのビラ）は ID から決まり、同じ会はいつも同じ見た目になる。
+// 選んでいない会にはどの題がどの型に当たるか分からないので、題には演出をかけない（1 字だけ大きくする、傾ける、寝かせる、をしない）。
 
-// sun: はみ出す丸と輪 / wedge: 円に刺さる楔と斜めの札（構成主義） / kanban: 太い枠に傾いた縦書き（立て看板）
-// outline: 白抜きの巨大な日付に題の札 / dots: 網点の円盤 / stencil: 一色刷りの歪んだ枠 / gig: 墨の地に巨大な日付（ライブ告知）
-// himekuri: 日めくり / fuda: 戸口にねじで留めた札 / gariban: わら半紙のおたより
-// tearoff: ちぎり札つきの貼り紙 / riso: 同じ色の版を二枚ずらして重ねる
+// danbo: 段ボールにマジック、日付はガムテープ / gumtape: 黒い紙に、題をガムテープに書いて貼る
+// gariban: わら半紙のおたより / harigami: 白い紙の貼り紙（日付が主役）
 export const FLYER_VARIANTS = [
-	"sun",
-	"wedge",
-	"kanban",
-	"outline",
-	"dots",
-	"stencil",
-	"gig",
-	"himekuri",
-	"fuda",
+	"danbo",
+	"gumtape",
 	"gariban",
-	"tearoff",
-	"riso",
+	"harigami",
 ] as const;
 export type FlyerVariant = (typeof FLYER_VARIANTS)[number];
-
-// 出る割合。どの題でも無事な日めくり・札・おたよりを多めに、評価の割れたちぎり札とリソは少なめに
-const WEIGHTS: Record<FlyerVariant, number> = {
-	sun: 2,
-	wedge: 2,
-	kanban: 2,
-	outline: 2,
-	dots: 2,
-	stencil: 2,
-	gig: 2,
-	himekuri: 3,
-	fuda: 3,
-	gariban: 3,
-	tearoff: 1,
-	riso: 1,
+export const FLYER_VARIANT_LABEL: Record<FlyerVariant, string> = {
+	danbo: "段ボール",
+	gumtape: "ガムテ",
+	gariban: "わら半紙",
+	harigami: "貼り紙",
 };
-const DECK = FLYER_VARIANTS.flatMap((v) =>
-	Array<FlyerVariant>(WEIGHTS[v]).fill(v),
-);
 
-// 二色刷りの組。紙・墨（字の色）・差し色（図形の色）。先の 6 つが優しい色の紙、後の 3 つが黄・赤・黒の強い紙。
-// 墨は紙の上でも差し色の上でも読める組だけを置く
-const PALETTES = [
-	{ paper: "#f1eadb", ink: "#1f1d1a", spot: "#e2492f" },
-	{ paper: "#f1eadb", ink: "#23408e", spot: "#f0a51e" },
-	{ paper: "#f1eadb", ink: "#1f1d1a", spot: "#2a8f83" },
-	{ paper: "#f6e7e4", ink: "#23408e", spot: "#ef5d7e" },
-	{ paper: "#e8eddc", ink: "#1f1d1a", spot: "#e2492f" },
-	{ paper: "#f3e6b8", ink: "#1f1d1a", spot: "#3f66c4" },
-	{ paper: "#f2c62e", ink: "#1f1d1a", spot: "#d3261f" },
-	{ paper: "#d93a2b", ink: "#1f1d1a", spot: "#f1eadb" },
-	{ paper: "#1f1d1a", ink: "#f1eadb", spot: "#e2492f" },
-];
-const SOFT_PAPERS = 6;
-// 強い紙を使わない型（赤は警告札、黒は訃報、黄に墨は立入禁止に寄る）
-const SOFT_ONLY: readonly FlyerVariant[] = ["fuda", "tearoff", "riso"];
-// おたよりのインク。墨は訃報の黒枠に寄るので置かない
-const GARIBAN_INKS = ["#262a78", "#7a2230", "#1c543b", "#5b3a1e"];
+// 差し色。1 枚に 1 色だけ使う
+export const FLYER_COLORS = ["red", "blue", "green", "pink", "mono"] as const;
+export type FlyerColor = (typeof FLYER_COLORS)[number];
+export const FLYER_COLOR_LABEL: Record<FlyerColor, string> = {
+	red: "赤",
+	blue: "青",
+	green: "緑",
+	pink: "桃",
+	mono: "色なし",
+};
+
+// 開ける人が選んだ型と差し色（events.flyer_variant / flyer_color）
+export type FlyerLook = { variant: FlyerVariant; color: FlyerColor };
+
+export function parseFlyerLook(
+	variant: string | null,
+	color: string | null,
+): FlyerLook | null {
+	const v = FLYER_VARIANTS.find((x) => x === variant);
+	const c = FLYER_COLORS.find((x) => x === color);
+	return v && c ? { variant: v, color: c } : null;
+}
+
+// 明るい紙に載せる濃い色（マジック、インク）と、黒い紙に載せる明るい色（落書きのチョークと同じ色）
+const DEEP: Record<FlyerColor, string> = {
+	red: "#c2321f",
+	blue: "#23408e",
+	green: "#1c6148",
+	pink: "#b8305f",
+	mono: "#1f1d1a",
+};
+const BRIGHT: Record<FlyerColor, string> = {
+	red: "#f0433a",
+	blue: "#2f9bff",
+	green: "#3ecf6b",
+	pink: "#ff5fa2",
+	mono: "#edeae3",
+};
+// おたよりを色なしで刷るときのインク。墨は訃報の黒枠に寄るので焦げ茶にする
+const SEPIA = "#4a2f1a";
 
 // FNV-1a（32bit）
 export function hash(s: string): number {
@@ -74,33 +72,47 @@ export function hash(s: string): number {
 	return h;
 }
 
-export function flyerStyle(id: string): {
-	variant: FlyerVariant;
+// 紙・墨（字の色）・差し色。紙は型ごとに 1 つで、アプリの色から取る（段ボール、アスファルト、生成り）
+function colors(
+	variant: FlyerVariant,
+	color: FlyerColor,
+): { paper: string; ink: string; spot: string } {
+	switch (variant) {
+		case "danbo":
+			// 色なしは白のペンキ
+			return {
+				paper: "#c9a67a",
+				ink: "#2a1e13",
+				spot: color === "mono" ? "#f1efe9" : DEEP[color],
+			};
+		case "gumtape":
+			return { paper: "#17181a", ink: "#f1efe9", spot: BRIGHT[color] };
+		case "gariban": {
+			// 一色刷り。字も罫も同じインク
+			const ink = color === "mono" ? SEPIA : DEEP[color];
+			return { paper: "#e6dcbd", ink, spot: ink };
+		}
+		case "harigami":
+			return { paper: "#f1efe9", ink: "#1f1d1a", spot: DEEP[color] };
+	}
+}
+
+export function flyerStyle(
+	id: string,
+	look?: FlyerLook | null,
+): FlyerLook & {
 	paper: string;
 	ink: string;
 	spot: string;
-	// 型の中の振り分け（おたよりのインク、リソの色面の形）
-	k: number;
 	tilt: number;
 } {
 	const h = hash(id);
-	const variant = DECK[h % DECK.length];
-	const k = (h >>> 9) % 4;
-	const palettes = SOFT_ONLY.includes(variant) ? SOFT_PAPERS : PALETTES.length;
-	let { paper, ink, spot } = PALETTES[(h >>> 4) % palettes];
-	if (variant === "himekuri") {
-		paper = "#f5f2ea";
-		ink = "#1f1d1a";
-	} else if (variant === "gariban") {
-		paper = "#e9e1c6";
-		ink = GARIBAN_INKS[k];
-	}
+	const variant = look?.variant ?? FLYER_VARIANTS[h % FLYER_VARIANTS.length];
+	const color = look?.color ?? FLYER_COLORS[(h >>> 4) % FLYER_COLORS.length];
 	return {
 		variant,
-		paper,
-		ink,
-		spot,
-		k,
+		color,
+		...colors(variant, color),
 		// 壁に貼ったときの傾き。-2.5〜2.5 度を 0.5 度刻み
 		tilt: (((h >>> 13) % 11) - 5) / 2,
 	};

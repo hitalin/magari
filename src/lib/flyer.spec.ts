@@ -1,58 +1,74 @@
 import { describe, expect, it } from "vitest";
 import {
+	FLYER_COLORS,
 	FLYER_VARIANTS,
 	flyerDate,
 	flyerStyle,
 	flyerTitleChunks,
 	flyerTitleSize,
+	parseFlyerLook,
 } from "./flyer";
 
 describe("flyerStyle", () => {
 	it("同じ会はいつも同じ見た目になる", () => {
 		expect(flyerStyle("ytk7da2hnt")).toEqual(flyerStyle("ytk7da2hnt"));
 	});
-	it("会によって型が散らばり、傾きは ±2.5 度に収まる", () => {
+	it("選んでいない会は ID から型と色が散らばり、傾きは ±2.5 度に収まる", () => {
 		const styles = Array.from({ length: 300 }, (_, i) => flyerStyle(`ev${i}x`));
-		expect(new Set(styles.map((s) => s.variant)).size).toBe(
-			FLYER_VARIANTS.length,
+		expect(new Set(styles.map((s) => s.variant))).toEqual(
+			new Set(FLYER_VARIANTS),
 		);
+		expect(new Set(styles.map((s) => s.color))).toEqual(new Set(FLYER_COLORS));
 		for (const s of styles) {
 			expect(Math.abs(s.tilt)).toBeLessThanOrEqual(2.5);
 		}
 	});
+	it("選んだ型と色はそのまま使い、傾きだけ ID から決める", () => {
+		const auto = flyerStyle("ytk7da2hnt");
+		const chosen = flyerStyle("ytk7da2hnt", {
+			variant: "gumtape",
+			color: "pink",
+		});
+		expect([chosen.variant, chosen.color]).toEqual(["gumtape", "pink"]);
+		expect(chosen.tilt).toBe(auto.tilt);
+	});
 });
 
 describe("flyerStyle の色", () => {
-	it("紙・墨・差し色の 3 色が決まり、互いに違う", () => {
-		for (let i = 0; i < 60; i++) {
-			const { paper, ink, spot } = flyerStyle(`ev${i}x`);
+	const all = FLYER_VARIANTS.flatMap((variant) =>
+		FLYER_COLORS.map((color) => flyerStyle("x", { variant, color })),
+	);
+	it("紙・墨・差し色が決まり、墨と差し色は紙と違う色", () => {
+		for (const { paper, ink, spot } of all) {
 			for (const c of [paper, ink, spot]) expect(c).toMatch(/^#[0-9a-f]{6}$/);
-			expect(new Set([paper, ink, spot]).size).toBe(3);
+			expect(ink).not.toBe(paper);
+			expect(spot).not.toBe(paper);
+		}
+	});
+	it("紙は型ごとに 1 つ（段ボール・黒い紙・わら半紙・白い紙）", () => {
+		for (const variant of FLYER_VARIANTS) {
+			const papers = all.filter((s) => s.variant === variant);
+			expect(new Set(papers.map((s) => s.paper)).size).toBe(1);
+		}
+		expect(new Set(all.map((s) => s.paper)).size).toBe(FLYER_VARIANTS.length);
+	});
+	it("わら半紙は差し色のインクで刷る（墨は訃報の黒枠に寄るので使わない）", () => {
+		for (const s of all.filter((s) => s.variant === "gariban")) {
+			expect(s.ink).toBe(s.spot);
+			expect(s.ink).not.toBe("#1f1d1a");
 		}
 	});
 });
 
-describe("flyerStyle の型ごとの色", () => {
-	const styles = Array.from({ length: 300 }, (_, i) => flyerStyle(`ev${i}x`));
-	it("札・ちぎり札・リソは強い紙（黄・赤・黒）を使わない", () => {
-		for (const s of styles) {
-			if (!["fuda", "tearoff", "riso"].includes(s.variant)) continue;
-			expect(["#f2c62e", "#d93a2b", "#1f1d1a"]).not.toContain(s.paper);
-		}
-	});
-	it("日めくりは白い紙に墨、おたよりは藁色の紙に墨以外のインク", () => {
-		for (const s of styles) {
-			if (s.variant === "himekuri") {
-				expect([s.paper, s.ink]).toEqual(["#f5f2ea", "#1f1d1a"]);
-			}
-			if (s.variant === "gariban") {
-				expect(s.paper).toBe("#e9e1c6");
-				expect(s.ink).not.toBe("#1f1d1a");
-			}
-		}
-	});
-	it("型の中の振り分け（k）は 0〜3", () => {
-		expect(new Set(styles.map((s) => s.k))).toEqual(new Set([0, 1, 2, 3]));
+describe("parseFlyerLook", () => {
+	it("知っている型と色の組だけ通す", () => {
+		expect(parseFlyerLook("danbo", "red")).toEqual({
+			variant: "danbo",
+			color: "red",
+		});
+		expect(parseFlyerLook("sun", "red")).toBeNull();
+		expect(parseFlyerLook("danbo", "#fff")).toBeNull();
+		expect(parseFlyerLook(null, null)).toBeNull();
 	});
 });
 

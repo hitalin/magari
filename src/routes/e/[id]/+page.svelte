@@ -83,7 +83,7 @@ const cardDescription = $derived(
 				{#if event.flyerUrl}
 					<img src={event.flyerUrl} alt="{event.title} のフライヤー" />
 				{:else}
-					<Flyer id={event.id} title={event.title} startsAt={event.startsAt} endsAt={event.endsAt} allDay={event.allDay} place={event.space?.name ?? event.locationName} host={event.hosts[0]?.name ?? null} />
+					<Flyer id={event.id} title={event.title} startsAt={event.startsAt} endsAt={event.endsAt} allDay={event.allDay} place={event.space?.name ?? event.locationName} host={event.hosts[0]?.name ?? null} look={event.flyerLook} />
 				{/if}
 			</div>
 		</div>

@@ -5,6 +5,7 @@ import {
 	readEventForm,
 	statusAfterEdit,
 } from "#lib/event-form.ts";
+import { flyerStyle, parseFlyerLook } from "#lib/flyer.ts";
 import { shortId } from "#lib/id.ts";
 import { toFormValues } from "#lib/server/event-values.ts";
 import {
@@ -15,6 +16,7 @@ import {
 	removeEventHost,
 	requireActor,
 	setEventFlyer,
+	setEventFlyerLook,
 	setEventStatus,
 	toEventValues,
 	updateEvent,
@@ -40,6 +42,10 @@ async function editable(locals: App.Locals, id: string) {
 
 export const load: PageServerLoad = async ({ locals, params }) => {
 	const ev = await editable(locals, params.id);
+	const { variant, color } = flyerStyle(
+		ev.id,
+		parseFlyerLook(ev.flyerVariant, ev.flyerColor),
+	);
 	return {
 		id: ev.id,
 		status: ev.status,
@@ -49,6 +55,7 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 		// フライヤーの見本（上げた画像か、自動のビラの材料）
 		flyer: {
 			url: mediaUrl(ev.coverKey),
+			look: { variant, color },
 			title: ev.title,
 			startsAt: ev.startsAt.toISOString(),
 			endsAt: ev.endsAt?.toISOString() ?? null,
@@ -85,6 +92,18 @@ export const actions: Actions = {
 			await setEventFlyer(locals.db, ev.id, null);
 			await env.MEDIA.delete(ev.coverKey);
 		}
+		return { flyerSaved: true };
+	},
+	// 自動のビラの型と差し色を替える
+	look: async ({ request, locals, params }) => {
+		const ev = await editable(locals, params.id);
+		const form = await request.formData();
+		const look = parseFlyerLook(
+			form.get("flyerVariant") as string | null,
+			form.get("flyerColor") as string | null,
+		);
+		if (!look) return fail(400, { flyerError: "型と色を選んでください" });
+		await setEventFlyerLook(locals.db, ev.id, look);
 		return { flyerSaved: true };
 	},
 	removeHost: async ({ request, locals, params }) => {

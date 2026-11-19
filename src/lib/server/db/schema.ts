@@ -129,6 +129,9 @@ export const events = sqliteTable(
 		url: text("url"),
 		feeText: text("fee_text"),
 		coverKey: text("cover_key"),
+		// 自動のビラの型と差し色（開けた人が選んだもの）。無ければ ID から決まる
+		flyerVariant: text("flyer_variant"),
+		flyerColor: text("flyer_color"),
 		seriesId: text("series_id").references(() => eventSeries.id, {
 			onDelete: "set null",
 		}),
