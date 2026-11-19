@@ -63,6 +63,19 @@ const startsAt = $derived(
 );
 const endsAt = $derived(v.allDay || !v.endTime ? null : iso(v.endTime));
 const place = $derived(v.locationName || (v.space ? `@${v.space}` : null));
+
+// 自分のフライヤーを選んだら、自動のビラの代わりにその画像を見せる
+let fileInput = $state<HTMLInputElement>();
+let preview = $state<string | null>(null);
+function pickFile() {
+	if (preview) URL.revokeObjectURL(preview);
+	const file = fileInput?.files?.[0];
+	preview = file ? URL.createObjectURL(file) : null;
+}
+function clearFile() {
+	if (fileInput) fileInput.value = "";
+	pickFile();
+}
 </script>
 
 {#snippet fields()}
@@ -124,15 +137,26 @@ const place = $derived(v.locationName || (v.space ? `@${v.space}` : null));
 {#if flyerId}
 	{@const flyer = { id: v.id, title: v.title || 'ひとこと', startsAt, endsAt, allDay: v.allDay, place, host }}
 	<!-- 会のページと同じ 2 列。左のビラは打つそばから刷り上がり、保存後もこの見た目のまま -->
-	<form method="POST" action="?/save" class="detail-cols">
+	<form method="POST" action="?/save" enctype="multipart/form-data" class="detail-cols">
 		<input type="hidden" name="id" value={v.id} />
 		<div class="detail-flyer">
-			<!-- スマホでは大きいビラを出さず、型の見本だけにして、打つ欄を最初の画面に入れる -->
-			<div class="flyer-pin mx-auto mb-8 hidden w-full md:block">
-				<Flyer {...flyer} look={chosen} />
+			{#if preview}
+				<div class="flyer-pin mx-auto mb-8 w-full max-w-[20rem] md:max-w-none"><img src={preview} alt="選んだフライヤー" /></div>
+			{:else}
+				<!-- スマホでは大きいビラを出さず、型の見本だけにして、打つ欄を最初の画面に入れる -->
+				<div class="flyer-pin mx-auto mb-8 hidden w-full md:block">
+					<Flyer {...flyer} look={chosen} />
+				</div>
+			{/if}
+			<!-- 画像を選んでも型と差し色は送る（あとで自動のビラに戻したときに使う） -->
+			<div hidden={!!preview}><FlyerPicker bind:look={chosen} {...flyer} /></div>
+			<div class="mt-6 border-t border-line pt-5">
+				<p class="text-xs leading-relaxed text-dim">好きな画像も貼れます。X で共有したときの画像にもなります。縦横比は自由で、切り抜きません。JPEG / PNG / WebP、10MB まで。</p>
+				<div class="mt-3 flex items-center gap-2">
+					<input type="file" name="flyer" accept="image/jpeg,image/png,image/webp" bind:this={fileInput} onchange={pickFile} class="input min-w-0 flex-1 text-sm" />
+					{#if preview}<button type="button" class="btn shrink-0 px-4 py-1.5 text-sm" onclick={clearFile}>やめる</button>{/if}
+				</div>
 			</div>
-			<FlyerPicker bind:look={chosen} {...flyer} />
-			<p class="mt-4 text-center text-xs text-dim">好きな画像には、開けたあとで差し替えられます</p>
 		</div>
 		<div class="min-w-0 space-y-6">{@render fields()}</div>
 	</form>

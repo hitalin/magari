@@ -6,8 +6,8 @@ import {
 	statusAfterEdit,
 } from "#lib/event-form.ts";
 import { flyerStyle, parseFlyerLook } from "#lib/flyer.ts";
-import { shortId } from "#lib/id.ts";
 import { toFormValues } from "#lib/server/event-values.ts";
+import { checkFlyer, putFlyer } from "#lib/server/flyer-upload.ts";
 import {
 	deleteEvent,
 	getEditableEvent,
@@ -23,14 +23,6 @@ import {
 } from "#lib/server/me.ts";
 import { mediaUrl } from "#lib/types.ts";
 import type { Actions, PageServerLoad } from "./$types";
-
-const IMAGE_TYPES: Record<string, string> = {
-	"image/jpeg": "jpg",
-	"image/png": "png",
-	"image/webp": "webp",
-};
-// A4 のスキャンなども上げられるよう、ハコの写真（5MB）より大きめ
-const MAX_FLYER = 10 * 1024 * 1024;
 
 async function editable(locals: App.Locals, id: string) {
 	const { session, actor } = requireActor(locals);
@@ -73,14 +65,9 @@ export const actions: Actions = {
 		const file = form.get("flyer");
 		if (!(file instanceof File) || file.size === 0)
 			return fail(400, { flyerError: "画像を選んでください" });
-		const ext = IMAGE_TYPES[file.type];
-		if (!ext) return fail(400, { flyerError: "JPEG / PNG / WebP だけ" });
-		if (file.size > MAX_FLYER)
-			return fail(400, { flyerError: "10MB までにしてください" });
-		const key = `flyers/${ev.id}/${shortId()}.${ext}`;
-		await env.MEDIA.put(key, await file.arrayBuffer(), {
-			httpMetadata: { contentType: file.type },
-		});
+		const flyerError = checkFlyer(file);
+		if (flyerError) return fail(400, { flyerError });
+		const key = await putFlyer(env.MEDIA, ev.id, file);
 		await setEventFlyer(locals.db, ev.id, key);
 		if (ev.coverKey) await env.MEDIA.delete(ev.coverKey);
 		return { flyerSaved: true };

@@ -1,3 +1,4 @@
+import { env } from "cloudflare:workers";
 import { fail, redirect } from "@sveltejs/kit";
 import {
 	EMPTY_EVENT_FORM,
@@ -9,11 +10,13 @@ import {
 import { type FlyerLook, parseFlyerLook } from "#lib/flyer.ts";
 import { isShortId, shortId } from "#lib/id.ts";
 import { toFormValues } from "#lib/server/event-values.ts";
+import { checkFlyer, putFlyer } from "#lib/server/flyer-upload.ts";
 import {
 	createEvent,
 	getEditableEvent,
 	listManagedActorIds,
 	requireActor,
+	setEventFlyer,
 	toEventValues,
 } from "#lib/server/me.ts";
 import type { Actions, PageServerLoad } from "./$types";
@@ -59,6 +62,12 @@ export const actions: Actions = {
 		);
 		const parsed = parseEventForm(values);
 		if (!parsed.ok) return fail(400, { error: parsed.error, values, look });
+		// 自分のフライヤー（任意）。会を作る前に確かめ、だめな画像で会だけ出来ないようにする
+		const flyer = form.get("flyer");
+		const file = flyer instanceof File && flyer.size > 0 ? flyer : null;
+		const flyerError = file && checkFlyer(file);
+		if (flyerError)
+			return fail(400, { error: `フライヤー: ${flyerError}`, values, look });
 		const ev = await toEventValues(locals.db, parsed.event);
 		if ("error" in ev) return fail(400, { error: ev.error, values, look });
 		const wanted = (form.get("id") as string | null) ?? "";
@@ -75,7 +84,11 @@ export const actions: Actions = {
 				303,
 				parsed.event.status === "draft" ? "/me" : `/e/${id}?opened`,
 			);
-		if (id) done(id);
+		if (id) {
+			if (file)
+				await setEventFlyer(locals.db, id, await putFlyer(env.MEDIA, id, file));
+			done(id);
+		}
 		// その ID がもう使われている。二度押しで自分が今作った間なら、そのまま続きへ
 		const saved = await getEditableEvent(
 			locals.db,
