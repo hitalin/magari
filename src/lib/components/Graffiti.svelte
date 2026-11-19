@@ -22,7 +22,8 @@ import {
 
 // 地面（アスファルト）の落書き。どのページでも同じ 1 枚の地面で、ページの中身はその上に載っている。
 // 右下のチョークを持つと、画面のどこでも描ける。描いた線は少し置いてから勝手に残る（残すボタンは無い）。
-// 線は中身の後ろ（z-index: -1 の canvas）に描く。canvas は画面の大きさだけで、スクロールのたびに見える所を描き直す。
+// 線は中身の後ろ（z-index: -1 の canvas）に描く。canvas は画面とその上下ぶんの大きさでページの中に置き、
+// スクロールで端が近づいたら置き直す（スクロールのたびに描き直すと、ブラウザの流れに 1 コマ遅れて絵が揺れる）。
 
 // 道具ごとの太さ（px。太さ「中」のとき）
 const WIDTH: Record<Tool, number> = {
@@ -39,6 +40,14 @@ const TOOLS: [Tool, string][] = [
 	["spray", "スプレー"],
 	["eraser", "消しゴム"],
 ];
+// 本文の幅の半分（--container-content: 56rem の半分）。
+// 地面の横は、広い画面では画面の中央、本文より狭い画面では本文の左端に合わせる。
+// 中央のままだと、狭い画面で本文は左に詰まるのに地面だけ中央の帯が出て、見出しの脇に描いた線がずれる
+const CONTENT_HALF = 448;
+const originAt = (w: number) => Math.max(w / 2, CONTENT_HALF);
+// canvas は画面より上下に PAD 倍ずつ広く描いて、ページの中に置く（スクロールはブラウザが滑らかに流す）
+const PAD = 0.5;
+const MAX_PIXELS = 12_000_000;
 // 描き終えてから残すまでの間（続けて描いた線をまとめて送る）
 const SAVE_AFTER_MS = 2500;
 // スプレーを止めたままにすると、この間隔で垂れが伸びる（MAX_DWELL 回まで）
@@ -52,6 +61,8 @@ let tool = $state<Tool>("chalk");
 let color = $state(0);
 let size = $state(1);
 let dpr = 1;
+// いま canvas を置いている所（ページの上端から）
+let base = 0;
 let scribbles = $state.raw<Scribble[]>([]);
 // まだ残していない線
 let pending = $state.raw<Stroke[]>([]);
@@ -62,6 +73,17 @@ let frame = 0;
 let saveTimer: ReturnType<typeof setTimeout> | undefined;
 let saving = false;
 let dwellTimer: ReturnType<typeof setTimeout> | undefined;
+// ほかの人がいま描いている線（送り主と線の番号 → 線）。WebSocket で届くそばから足す。
+// 残された線は、次に取り直したとき scribbles として届くので、ここはそれまでの仮置き
+const remote = new Map<string, Stroke>();
+const MAX_REMOTE = 400;
+let live: WebSocket | undefined;
+let liveTimer: ReturnType<typeof setInterval> | undefined;
+let retryTimer: ReturnType<typeof setTimeout> | undefined;
+let retryAfter = 2000;
+// いま引いている線の番号と、もう送った点の数
+let strokeNo = 0;
+let sent = 0;
 // 画面に置いている指（pointerId → 縦の位置）。2 本目が来たら描かずに地面を動かす
 const fingers = new Map<number, number>();
 
@@ -224,34 +246,55 @@ function drawStroke(
 	}
 }
 
-// 画面に見えている所を描き直す
+// 画面とその上下（画面の高さの PAD 倍ずつ）を描き直す
 function paint() {
 	frame = 0;
 	const w = canvas.clientWidth;
-	const h = canvas.clientHeight;
-	dpr = Math.min(devicePixelRatio, 2);
-	if (canvas.width !== Math.round(w * dpr) || !ctx) {
+	const vh = innerHeight;
+	const h = Math.round(vh * (1 + 2 * PAD));
+	base = Math.max(0, Math.round(scrollY - vh * PAD));
+	// 大きい画面で canvas が重くなりすぎないよう、画素の数に上限を置く
+	dpr = Math.min(devicePixelRatio, 2, Math.sqrt(MAX_PIXELS / (w * h)));
+	// 高さだけ変わったとき（スマホでアドレスバーが引っ込む）も作り直す。古い高さのままだと、絵が縦に引き伸ばされる
+	if (
+		canvas.width !== Math.round(w * dpr) ||
+		canvas.height !== Math.round(h * dpr) ||
+		!ctx
+	) {
 		canvas.width = Math.round(w * dpr);
 		canvas.height = Math.round(h * dpr);
+		canvas.style.height = `${h}px`;
 		ctx = canvas.getContext("2d");
 	}
 	if (!ctx) return;
+	canvas.style.top = `${base}px`;
 	ctx.setTransform(1, 0, 0, 1, 0, 0);
 	ctx.clearRect(0, 0, canvas.width, canvas.height);
 	// 以後は地面の座標のまま描く（横は画面の中央が ORIGIN_X、縦はページの上端から）
-	ctx.setTransform(dpr, 0, 0, dpr, dpr * (w / 2 - ORIGIN_X), -dpr * scrollY);
+	ctx.setTransform(dpr, 0, 0, dpr, dpr * (originAt(w) - ORIGIN_X), -dpr * base);
 	ctx.lineCap = "round";
 	ctx.lineJoin = "round";
 	for (const [i, s] of visible.entries()) {
-		if (s.bottom < scrollY - 20 || s.top > scrollY + h + 20) continue;
+		if (s.bottom < base - 20 || s.top > base + h + 20) continue;
 		// 新しい落書きが重なるほど、古いものは擦れて薄くなる
 		const fade = Math.max(0.3, 1 - (0.7 * (visible.length - 1 - i)) / VISIBLE);
 		for (const stroke of s.strokes) drawStroke(ctx, stroke, fade);
 	}
+	for (const stroke of remote.values()) drawStroke(ctx, stroke);
 	for (const stroke of pending) drawStroke(ctx, stroke);
 	if (current) drawStroke(ctx, current, 1, true);
-	// ざらつき（mask）も地面と一緒に流す。画面に貼り付いたままだと、スクロールで粒がちらつく
-	canvas.style.maskPosition = `${Math.round(w / 2)}px ${-Math.round(scrollY)}px`;
+	// ざらつき（mask）は地面に貼り付ける（canvas を置き直しても粒が動かないように）
+	canvas.style.maskPosition = `${Math.round(originAt(w))}px ${-(base % 240)}px`;
+}
+
+// スクロールでは描き直さない。canvas はページと一緒に流れるので、描いてある範囲の端が近づいたときだけ置き直す
+function scrolled() {
+	const edge = innerHeight * PAD * 0.4;
+	if (
+		(base > 0 && scrollY < base + edge) ||
+		scrollY + innerHeight > base + canvas.clientHeight - edge
+	)
+		schedule();
 }
 
 function schedule() {
@@ -264,30 +307,98 @@ $effect(() => {
 	schedule();
 });
 
-onMount(() => {
-	// ページの表示は待たせない。落書きは後から浮かぶ
+function load() {
 	fetch("/api/graffiti")
-		.then((res) => (res.ok ? res.json() : []))
+		.then((res) => (res.ok ? res.json() : scribbles))
 		.then((rows) => {
-			scribbles = [...(rows as Scribble[]), ...scribbles];
+			scribbles = rows as Scribble[];
 		})
 		.catch(() => {});
-	addEventListener("scroll", schedule, { passive: true });
-	addEventListener("resize", schedule);
-	// 閉じる・離れる前に、残していない線を送る
-	const leave = () => {
-		if (document.visibilityState === "hidden") save(true);
+}
+
+// ほかの人が描いている線を受ける。つながらない環境（vite dev には部屋が無い）では、何もしない
+function connect() {
+	clearTimeout(retryTimer);
+	if (live || document.visibilityState === "hidden") return;
+	const ws = new WebSocket(
+		`${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/api/graffiti/live`,
+	);
+	live = ws;
+	let opened = false;
+	ws.onopen = () => {
+		opened = true;
+		retryAfter = 2000;
 	};
-	document.addEventListener("visibilitychange", leave);
+	ws.onmessage = (e) => {
+		const data = String(e.data);
+		const at = data.indexOf(" ");
+		const key = data.slice(0, at);
+		const part = parseStrokes(data.slice(at + 1))?.[0];
+		if (!part) return;
+		const stroke = remote.get(key);
+		if (stroke) {
+			stroke.points.push(...part.points);
+			shapes.delete(stroke);
+		} else {
+			remote.set(key, part);
+			if (remote.size > MAX_REMOTE)
+				remote.delete(remote.keys().next().value as string);
+		}
+		schedule();
+	};
+	ws.onclose = () => {
+		if (live !== ws) return;
+		live = undefined;
+		// 一度もつながらなかったら、部屋が無い。つながっていたのが切れたなら、間を空けてつなぎ直す
+		if (!opened) return;
+		retryTimer = setTimeout(connect, retryAfter);
+		retryAfter = Math.min(retryAfter * 2, 60_000);
+	};
+}
+
+// いま引いている線の、まだ送っていない点を送る
+function send() {
+	if (!current || live?.readyState !== WebSocket.OPEN) return;
+	const d = encodeStrokes([{ ...current, points: current.points.slice(sent) }]);
+	if (!d) return;
+	sent = current.points.length;
+	live.send(`${strokeNo} ${d}`);
+}
+
+onMount(() => {
+	// ページの表示は待たせない。落書きは後から浮かぶ
+	load();
+	connect();
+	addEventListener("scroll", scrolled, { passive: true });
+	addEventListener("resize", schedule);
+	const seen = () => {
+		if (document.visibilityState === "hidden") {
+			// 閉じる・離れる前に、残していない線を送る。見ていない間はつながない
+			save(true);
+			clearTimeout(retryTimer);
+			live?.close();
+			live = undefined;
+			return;
+		}
+		// 戻ってきたら、見ていなかった間のぶんを取り直す
+		remote.clear();
+		load();
+		connect();
+	};
+	document.addEventListener("visibilitychange", seen);
 	return () => {
-		removeEventListener("scroll", schedule);
+		removeEventListener("scroll", scrolled);
 		removeEventListener("resize", schedule);
-		document.removeEventListener("visibilitychange", leave);
+		document.removeEventListener("visibilitychange", seen);
+		clearTimeout(retryTimer);
+		live?.close();
+		live = undefined;
 	};
 });
 
 function at(e: PointerEvent): [number, number] {
-	const x = e.clientX - document.documentElement.clientWidth / 2 + ORIGIN_X;
+	const x =
+		e.clientX - originAt(document.documentElement.clientWidth) + ORIGIN_X;
 	const y = e.clientY + scrollY;
 	return [
 		Math.min(WALL_W, Math.max(0, Math.round(x))),
@@ -318,6 +429,7 @@ function down(e: PointerEvent) {
 	// 2 本目の指: 描きかけの線は捨てて、地面を動かす
 	if (fingers.size > 1) {
 		clearTimeout(dwellTimer);
+		clearInterval(liveTimer);
 		current = null;
 		schedule();
 		return;
@@ -325,6 +437,10 @@ function down(e: PointerEvent) {
 	clearTimeout(saveTimer);
 	notice = "";
 	current = { tool, color, size, points: [at(e)] };
+	strokeNo++;
+	sent = 0;
+	clearInterval(liveTimer);
+	liveTimer = setInterval(send, 90);
 	dwell();
 	schedule();
 }
@@ -343,8 +459,11 @@ function move(e: PointerEvent) {
 	if (Math.hypot(p[0] - last[0], p[1] - last[1]) < 3) return;
 	// 1 本が長すぎたら、そこで切って次の線として続ける
 	if (current.points.length >= MAX_POINTS / 2) {
+		send();
 		pending = [...pending, current];
 		current = { ...current, points: [last] };
+		strokeNo++;
+		sent = 0;
 	}
 	current.points.push(p);
 	dwell();
@@ -354,7 +473,9 @@ function move(e: PointerEvent) {
 function up(e: PointerEvent) {
 	fingers.delete(e.pointerId);
 	clearTimeout(dwellTimer);
+	clearInterval(liveTimer);
 	if (!current) return;
+	send();
 	pending = [...pending, current];
 	current = null;
 	clearTimeout(saveTimer);
@@ -408,7 +529,7 @@ function toggle() {
 
 <svelte:window onkeydown={(e) => e.key === 'Escape' && holding && toggle()} />
 
-<canvas bind:this={canvas} class="ground" aria-hidden="true"></canvas>
+<div class="ground" aria-hidden="true"><canvas bind:this={canvas}></canvas></div>
 
 {#if holding}
 	<!-- チョークを持っている間だけ、画面全体で指やマウスを受ける（ヘッダーはこの上にあるので、持ったままページを移れる） -->
@@ -440,18 +561,24 @@ function toggle() {
 </div>
 
 <style>
-	/* body を重なりの基準にして、z-index: -1 の canvas が「body の地の上・中身の下」に入るようにする */
+	/* body を重なりの基準にして、z-index: -1 の地面が「body の地の上・中身の下」に入るようにする。
+	   地面はページ全体に敷く（position: relative の body いっぱい）。はみ出した canvas でページが伸びないよう切る */
 	:global(body) {
+		position: relative;
 		isolation: isolate;
 	}
-	/* 線はアスファルトの粒にのった粉。ざらつきは描くたびに計算せず、SVG のノイズで全体を抜く */
 	.ground {
-		position: fixed;
+		position: absolute;
 		inset: 0;
 		z-index: -1;
-		width: 100%;
-		height: 100%;
+		overflow: hidden;
 		pointer-events: none;
+	}
+	/* 地面の目（ざらつき）は描くたびに計算せず、SVG のノイズで全体を薄く抜く */
+	.ground canvas {
+		position: absolute;
+		left: 0;
+		width: 100%;
 		mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='m'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' seed='11' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  2 0 0 0 -0.1'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23m)'/%3E%3C/svg%3E");
 		mask-size: 240px;
 	}

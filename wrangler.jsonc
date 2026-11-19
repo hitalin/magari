@@ -34,6 +34,12 @@
 			"simple": { "limit": 20, "period": 60 }
 		}
 	],
+	// いま描いている落書きを、見ている全員に配る部屋（src/lib/server/graffiti-room.ts。WebSocket、保存はしない）。
+	// 無料枠で使えるのは SQLite 型のクラスだけなので new_sqlite_classes で作る
+	"durable_objects": {
+		"bindings": [{ "name": "GRAFFITI_ROOM", "class_name": "GraffitiRoom" }]
+	},
+	"migrations": [{ "tag": "v1", "new_sqlite_classes": ["GraffitiRoom"] }],
 	"vars": {
 		"PUBLIC_ORIGIN": "https://magari.cc",
 		// 外部カレンダーの取り込みを動かす。見本用の IMPORT_SAMPLES は本番に置かない（店の写真は写すが、X のアイコンと紹介文は写さない）
