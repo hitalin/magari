@@ -94,23 +94,14 @@ const isActive = (href: string) =>
 
 <!-- 奥付。ナビと同じものは繰り返さない。左にだれがどう動かしているか（無償・広告なし・ソース公開）、右に規約類と連絡。© は置かない -->
 <footer class="border-t border-line">
-	<div class="mx-auto grid max-w-content gap-x-12 gap-y-7 px-4 pt-9 pb-20 text-xs text-muted sm:grid-cols-[1fr_auto] sm:pb-12">
-		<div>
-			<p class="flex items-center gap-2 font-serif text-sm text-text"><img src={logo} alt="" class="h-4 w-4" />まがり</p>
-			<p class="mt-3 leading-relaxed">個人が無償で動かしています。広告はありません。<br />ソースは公開していて、だれでも読めて、直せます。</p>
-			<p class="mt-3 flex flex-wrap gap-x-5 gap-y-1">
-				<a href={REPO} class="footer-link" rel="noopener">ソースを読む<span aria-hidden="true"> ↗</span></a>
-				<a href="{REPO}/issues" class="footer-link" rel="noopener">不具合・要望<span aria-hidden="true"> ↗</span></a>
-				<a href="{REPO}/blob/main/LICENSE" class="footer-link" rel="noopener">MIT License</a>
-			</p>
-		</div>
-		<nav aria-label="フッター" class="flex flex-wrap content-start gap-x-5 gap-y-1 sm:flex-col sm:gap-y-1.5">
-			<a href="/terms" class="footer-link">利用規約</a>
-			<a href="/privacy" class="footer-link">プライバシー</a>
-			<a href="/policy" class="footer-link">掲載と削除の方針</a>
-			<a href="/contact" class="footer-link">掲載の取り下げ・連絡</a>
-		</nav>
-	</div>
+	<nav aria-label="フッター" class="mx-auto flex max-w-content flex-wrap items-center gap-x-3 gap-y-1 px-4 pt-4 pb-20 text-xs text-muted sm:gap-x-5 sm:pb-4">
+		<img src={logo} alt="" class="h-4 w-4" />
+		<a href="/terms" class="footer-link">利用規約</a>
+		<a href="/privacy" class="footer-link">プライバシー</a>
+		<a href="/policy" class="footer-link">掲載方針</a>
+		<a href="/contact" class="footer-link">連絡</a>
+		<a href={REPO} class="footer-link sm:ml-auto" rel="noopener">ソース<span aria-hidden="true"> ↗</span></a>
+	</nav>
 </footer>
 
 <style>
