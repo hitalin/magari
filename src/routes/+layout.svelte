@@ -57,7 +57,7 @@ const isActive = (href: string) =>
 <!-- 図像と字だけのナビ。上に固定するが帯は見せない。下を流れる本文は、下端へ向けて消えるぼかしで溶かす（.site-header） -->
 <header class="site-header fixed inset-x-0 top-0 z-50 h-header" style="view-transition-name: header">
 	<div class="flex h-full items-center gap-3 px-4 text-[0.8rem] sm:gap-6 sm:px-5 sm:text-sm">
-		<a href={data.loggedIn ? '/home' : '/'} class="flex shrink-0 items-center" aria-label="まがり"><img src={logo} alt="" class="h-7 w-7" /></a>
+		<a href="/" class="flex shrink-0 items-center" aria-label="まがり"><img src={logo} alt="" class="h-7 w-7" /></a>
 		<!-- タブ（実体の「イベント」「ハコ」だけ）の左端を、本文の左端に揃える（図像は左端、ログインは右端のまま）。狭い画面では図像のすぐ右。
 		     % はこの行の中身の幅（ヘッダー幅 − 左右 2.5rem）。本文の左端 (ヘッダー幅 − content)/2 + 1rem から、左余白・図像・間の 4.5rem を引くと -2.25rem -->
 		<nav class="flex gap-3 font-medium whitespace-nowrap sm:gap-6" style="margin-left: max(0px, calc((100% - var(--container-content)) / 2 - 2.25rem))">

@@ -2,7 +2,7 @@
 	"name": "◱",
 	"short_name": "◱",
 	"description": "間借り・ライブ・自助会・オフ会の間を一箇所で。",
-	"start_url": "/",
+	"start_url": "/home",
 	"display": "standalone",
 	"background_color": "#151617",
 	"theme_color": "#151617",
