@@ -43,12 +43,6 @@ async function unlink(id: string) {
 		: null;
 	await invalidateAll();
 }
-
-const STATUS: Record<string, string> = {
-	draft: "下書き",
-	published: "公開",
-	cancelled: "中止",
-};
 </script>
 
 <svelte:head><title>自分 | ◱</title></svelte:head>
@@ -67,13 +61,11 @@ const STATUS: Record<string, string> = {
 		</div>
 	</div>
 	<div class="mt-5 flex flex-wrap gap-2">
-		<a href="/new" class="btn btn-primary">まがりする</a>
+		<!-- 開ける入口はナビの「まがり」だけ。ログインにまつわるもの（パスキー）は下の「ログイン方法」にまとめる -->
 		<a href="/@{data.actor.handle}" class="btn">自分のページ ›</a>
 		<a href="/@{data.actor.handle}/edit" class="btn">ページを編集</a>
-		<button type="button" class="btn" onclick={addPasskey}>パスキーを登録</button>
 		<form method="POST" action="/logout"><button type="submit" class="btn">ログアウト</button></form>
 	</div>
-	{#if passkeyMsg}<p class="mt-3 text-sm text-accent-ink">{passkeyMsg}</p>{/if}
 </header>
 
 {#snippet list(title: string, items: typeof data.upcoming, empty: string)}
@@ -89,7 +81,8 @@ const STATUS: Record<string, string> = {
 						<span class="min-w-0">
 							<a href="/e/{e.id}/edit" class="block font-serif text-[1.05rem] font-bold hover:text-accent-ink">{e.title}</a>
 							<span class="mt-1 flex flex-wrap gap-2 text-xs text-muted">
-								<span class="chip chip-plain">{STATUS[e.status]}</span>
+								<!-- 下書きは見出しで分かり、公開は既定なので、札は中止だけ -->
+								{#if e.status === 'cancelled'}<span class="chip chip-plain">中止</span>{/if}
 								{#if e.visibility === 'unlisted'}<span class="chip chip-plain">URL 限定</span>{/if}
 								<a href="/e/{e.id}" class="hover:text-accent-ink">見る ›</a>
 								<a href="/new?from={e.id}" class="hover:text-accent-ink">複製 ›</a>
@@ -102,7 +95,7 @@ const STATUS: Record<string, string> = {
 	</section>
 {/snippet}
 
-{@render list('これからの間', data.upcoming, 'まだくねくねしていません。「まがりする」から。')}
+{@render list('これからの間', data.upcoming, 'まだくねくねしていません。上の「まがり」から開けられます。')}
 {#if data.drafts.length}{@render list('下書き', data.drafts, '')}{/if}
 {#if data.past.length}{@render list('これまでの間', data.past, '')}{/if}
 
@@ -158,6 +151,11 @@ const STATUS: Record<string, string> = {
 		<div>
 			<p class="label mb-2 flex items-center gap-1.5"><svg viewBox="0 0 24 24" class="h-4 w-4 shrink-0" fill="currentColor" aria-hidden="true"><path d={MISSKEY_ICON} /></svg><span class="sr-only">Misskey </span>をつなぐ</p>
 			<MisskeyForm callbackURL="/me?linked" action="つなぐ" />
+		</div>
+		<div>
+			<button type="button" class="btn" onclick={addPasskey}>パスキーを登録</button>
+			<p class="mt-2 text-xs text-dim">登録しておくと、X や Misskey を経由せず、指紋や顔で入れます。</p>
+			{#if passkeyMsg}<p class="mt-2 text-sm text-accent-ink" role="status">{passkeyMsg}</p>{/if}
 		</div>
 	</div>
 	{#if linkMsg}<p class="mt-3 text-sm text-accent-ink">{linkMsg}</p>{/if}

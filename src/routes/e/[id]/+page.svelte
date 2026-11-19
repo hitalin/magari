@@ -72,8 +72,6 @@ const cardDescription = $derived(
 </svelte:head>
 
 <article class="mt-4">
-	<p class="text-sm text-muted"><a href="/home" class="hover:text-accent-ink">これからの間</a> › {formatWhen(event).split(' ')[0]}</p>
-
 	{#if opened}
 		<div class="panel mt-4 p-5">
 			<p class="font-serif text-lg font-bold">開けました。あとは貼るだけ。</p>
@@ -91,7 +89,7 @@ const cardDescription = $derived(
 	{#if event.status === 'cancelled'}
 		<p class="mt-4 rounded-sm bg-accent-soft px-4 py-2 text-sm text-accent-ink">中止になりました。</p>
 	{:else if event.status === 'draft'}
-		<p class="mt-4 rounded-sm bg-accent-soft px-4 py-2 text-sm text-accent-ink">下書きです。あなたにだけ見えています。<a href="/e/{event.id}/edit" class="ml-2 underline">編集 ›</a></p>
+		<p class="mt-4 rounded-sm bg-accent-soft px-4 py-2 text-sm text-accent-ink">下書きです。あなたにだけ見えています。</p>
 	{/if}
 
 	<!-- 左にフライヤー（上げた画像が無ければ自動のビラ）、右に会の情報 -->
@@ -148,10 +146,13 @@ const cardDescription = $derived(
 				{#if event.source}{event.space?.name ?? event.hosts[0]?.name ?? '主催'}が公開している予定表から、まがりが写した情報です（ご本人が載せたものではありません）。{:else}載せた人が書いた内容です。{/if}日時や場所は変わることがあるので、行く前に{#if event.url}<a href={event.url} class="underline underline-offset-2 hover:text-accent-ink" rel="noopener">主催の告知</a>{:else}主催の告知{/if}で確かめてください。
 				この掲載に問題があれば<a href="/contact?kind=takedown&about=/e/{event.id}" class="underline underline-offset-2 hover:text-accent-ink">運営に連絡</a>できます。
 			</p>
-			<div class="mt-4 flex flex-wrap gap-3">
-				<a href={shareUrl} class="btn btn-primary" rel="noopener" onclick={warmCard} aria-label="X で共有"><svg viewBox="0 0 24 24" class="h-4 w-4 shrink-0" fill="currentColor" aria-hidden="true"><path d={SNS_ICON.x} /></svg>で共有</a>
-				<a href={misskeyUrl} class="btn" rel="noopener" onclick={warmCard} aria-label="Misskey で共有"><svg viewBox="0 0 24 24" class="h-4 w-4 shrink-0" fill="currentColor" aria-hidden="true"><path d={MISSKEY_ICON} /></svg>で共有</a>
-			</div>
+			<!-- 開けた直後は、上の「あとは貼るだけ」が同じ役目なので出さない -->
+			{#if !opened}
+				<div class="mt-4 flex flex-wrap gap-3">
+					<a href={shareUrl} class="btn btn-primary" rel="noopener" onclick={warmCard} aria-label="X で共有"><svg viewBox="0 0 24 24" class="h-4 w-4 shrink-0" fill="currentColor" aria-hidden="true"><path d={SNS_ICON.x} /></svg>で共有</a>
+					<a href={misskeyUrl} class="btn" rel="noopener" onclick={warmCard} aria-label="Misskey で共有"><svg viewBox="0 0 24 24" class="h-4 w-4 shrink-0" fill="currentColor" aria-hidden="true"><path d={MISSKEY_ICON} /></svg>で共有</a>
+				</div>
+			{/if}
 		</div>
 	</div>
 </article>

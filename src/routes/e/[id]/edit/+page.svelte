@@ -41,7 +41,7 @@ const flyer = $derived({
 					<p class="mt-4 text-center"><button type="submit" class="btn px-4 py-1.5 text-sm">このビラにする</button></p>
 				</form>
 			{/if}
-			<div class="mt-6 border-t border-line pt-5">
+			<div class="mt-6">
 				<form method="POST" action="?/flyer" enctype="multipart/form-data" class="flex items-center gap-2">
 					<input type="file" name="flyer" accept="image/jpeg,image/png,image/webp" required class="input min-w-0 flex-1 text-sm" />
 					<button type="submit" class="btn shrink-0 px-4 py-1.5 text-sm">{data.flyer.url ? '差し替える' : '上げる'}</button>
@@ -52,7 +52,6 @@ const flyer = $derived({
 			</div>
 		</div>
 		<div class="min-w-0">
-			<p class="label mb-6">間を編集</p>
 			{#if data.status === 'cancelled'}
 				<p class="mb-6 rounded-sm bg-accent-soft px-4 py-2 text-sm text-accent-ink">中止にした間です。内容を直して保存しても、中止のままです。</p>
 			{/if}

@@ -150,7 +150,7 @@ function clearFile() {
 			{/if}
 			<!-- 画像を選んでも型と差し色は送る（あとで自動のビラに戻したときに使う） -->
 			<div hidden={!!preview}><FlyerPicker bind:look={chosen} {...flyer} /></div>
-			<div class="mt-6 border-t border-line pt-5">
+			<div class="mt-6">
 				<div class="flex items-center gap-2">
 					<input type="file" name="flyer" accept="image/jpeg,image/png,image/webp" bind:this={fileInput} onchange={pickFile} class="input min-w-0 flex-1 text-sm" />
 					{#if preview}<button type="button" class="btn shrink-0 px-4 py-1.5 text-sm" onclick={clearFile}>やめる</button>{/if}

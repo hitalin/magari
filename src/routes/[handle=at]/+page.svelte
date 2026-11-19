@@ -91,12 +91,7 @@ const description = $derived(actor.catch ?? actor.summary ?? undefined);
 		@{actor.handle} · {KIND_LABEL[actor.kind]}{#if unofficial}<span class="badge-unofficial ml-2 align-middle">非公式</span>{/if}
 	</p>
 	{#if actor.catch}<p class="mt-3 font-serif text-lg text-accent-ink">{actor.catch}</p>{/if}
-	{#if actor.summary}
-		<p class="mt-3 max-w-[34em] whitespace-pre-line">{actor.summary}</p>
-	{:else if canEdit && actor.kind === 'person'}
-		<!-- 本人にだけ: まだ自己紹介が無い -->
-		<p class="mt-3 text-sm"><a href="/@{actor.handle}/edit" class="text-accent-ink underline-offset-2 hover:underline">ひとこと自己紹介を書く ›</a></p>
-	{/if}
+	{#if actor.summary}<p class="mt-3 max-w-[34em] whitespace-pre-line">{actor.summary}</p>{/if}
 	{#if unofficial}
 		<p class="mt-3 max-w-[34em] text-xs text-muted">
 			運営者がまだいない非公式のページで、名前とリンクと、公式ページの店の写真だけを載せています。運営者の方は、<a href="/contact?kind=claim&about=@{actor.handle}" class="underline underline-offset-2 hover:text-accent-ink">ページの引き取り</a>か<a href="/contact?kind=takedown&about=@{actor.handle}" class="underline underline-offset-2 hover:text-accent-ink">掲載の取り下げ</a>をご連絡ください。
