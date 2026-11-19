@@ -33,9 +33,6 @@ export const load: PageServerLoad = async ({ locals }) => {
 		reports: reports.map((r) => ({
 			...r,
 			canHide: r.about !== null && parseModerationTarget(r.about) !== null,
-			// 引き取りの申し出で、対象が @ID なら、その場で管理者に加える欄を出す
-			claimPage:
-				r.kind === "claim" && r.about ? parseHandleInput(r.about) : null,
 		})),
 		blocked,
 		hidden,

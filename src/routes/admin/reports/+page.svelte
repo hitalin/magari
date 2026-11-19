@@ -5,6 +5,8 @@ import { REPORT_KIND_LABEL } from "#lib/report-form.ts";
 import type { PageProps } from "./$types";
 
 let { data, form }: PageProps = $props();
+const open = $derived(data.reports.filter((r) => !r.handledAt));
+const done = $derived(data.reports.filter((r) => r.handledAt));
 const fmt = new Intl.DateTimeFormat("ja-JP", {
 	dateStyle: "medium",
 	timeStyle: "short",
@@ -17,57 +19,62 @@ const fmt = new Intl.DateTimeFormat("ja-JP", {
 	<meta name="robots" content="noindex" />
 </svelte:head>
 
+<!-- 連絡 1 件。カードに置くのは、押すだけで済む操作（非表示・対応済み・消す）だけ。入力が要る操作は下の節でする -->
+{#snippet card(r: (typeof data.reports)[number])}
+	<article class="panel p-5">
+		<p class="label">{REPORT_KIND_LABEL[r.kind]} · {fmt.format(r.createdAt)}{#if r.handledAt} · 対応済み {fmt.format(r.handledAt)}{/if}</p>
+		{#if r.about}<p class="mt-2 font-mono text-sm">{r.about}</p>{/if}
+		<p class="mt-2 text-sm">{r.name} · 返信先 <span class="font-mono">{r.contact}</span></p>
+		<p class="mt-3 text-sm whitespace-pre-wrap">{r.body}</p>
+		{#if r.note}<p class="mt-3 text-sm text-muted">対応: {r.note}</p>{/if}
+		<div class="mt-4 flex flex-wrap items-end gap-3">
+			{#if !r.handledAt}
+				{#if r.canHide}
+					<form method="POST" action="?/hide">
+						<input type="hidden" name="target" value={r.about} />
+						<button type="submit" class="btn btn-primary text-xs">対象を非表示にする</button>
+					</form>
+				{/if}
+				<form method="POST" action="?/handle" class="flex flex-wrap items-end gap-2">
+					<input type="hidden" name="id" value={r.id} />
+					<input name="note" maxlength="500" class="input max-w-xs text-sm" placeholder="何をしたか" aria-label="何をしたか" />
+					<button type="submit" class="btn text-xs">対応済みにする</button>
+				</form>
+			{/if}
+			<form method="POST" action="?/deleteReport" class="ml-auto" onsubmit={(e) => { if (!confirm('この連絡を記録ごと消しますか？')) e.preventDefault(); }}>
+				<input type="hidden" name="id" value={r.id} />
+				<button type="submit" class="text-xs text-muted hover:text-accent-ink">消す</button>
+			</form>
+		</div>
+	</article>
+{/snippet}
+
 <section class="mt-6">
 	<div class="section-head"><h1 class="section-title">運営への連絡</h1></div>
-	{#if data.reports.length === 0}
-		<Empty title="連絡はありません。" />
+	{#if open.length === 0}
+		<Empty title="対応待ちの連絡はありません。" />
 	{:else}
 		<div class="space-y-4">
-			{#each data.reports as r (r.id)}
-				<article class="panel p-5 {r.handledAt ? 'opacity-60' : ''}">
-					<p class="label">{REPORT_KIND_LABEL[r.kind]} · {fmt.format(r.createdAt)}{#if r.handledAt} · 対応済み {fmt.format(r.handledAt)}{/if}</p>
-					{#if r.about}<p class="mt-2 font-mono text-sm">{r.about}</p>{/if}
-					<p class="mt-2 text-sm">{r.name} · 返信先 <span class="font-mono">{r.contact}</span></p>
-					<p class="mt-3 text-sm whitespace-pre-wrap">{r.body}</p>
-					{#if r.note}<p class="mt-3 text-sm text-muted">対応: {r.note}</p>{/if}
-					<div class="mt-4 flex flex-wrap items-end gap-3">
-						{#if r.canHide && !r.handledAt}
-							<form method="POST" action="?/hide">
-								<input type="hidden" name="target" value={r.about} />
-								<button type="submit" class="btn btn-primary text-xs">対象をまず非表示にする</button>
-							</form>
-						{/if}
-						{#if r.claimPage && !r.handledAt}
-							<form method="POST" action="?/handover" class="flex flex-wrap items-end gap-2">
-								<input type="hidden" name="page" value={r.claimPage} />
-								<input name="person" required class="input max-w-[12rem] text-sm" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="渡す人の @ID" aria-label="渡す人の @ID" />
-								<button type="submit" class="btn btn-primary text-xs">@{r.claimPage} の管理を渡す</button>
-							</form>
-						{/if}
-						{#if !r.handledAt}
-							<form method="POST" action="?/handle" class="flex flex-wrap items-end gap-2">
-								<input type="hidden" name="id" value={r.id} />
-								<input name="note" maxlength="500" class="input max-w-xs text-sm" placeholder="何をしたか（非表示、削除、返信など）" />
-								<button type="submit" class="btn text-xs">対応済みにする</button>
-							</form>
-						{/if}
-						<form method="POST" action="?/deleteReport" class="ml-auto" onsubmit={(e) => { if (!confirm('この連絡を記録ごと消しますか？')) e.preventDefault(); }}>
-							<input type="hidden" name="id" value={r.id} />
-							<button type="submit" class="text-xs text-muted hover:text-accent-ink">消す</button>
-						</form>
-					</div>
-				</article>
-			{/each}
+			{#each open as r (r.id)}{@render card(r)}{/each}
 		</div>
+	{/if}
+	<!-- 済んだものは畳んでおく -->
+	{#if done.length}
+		<details class="mt-6">
+			<summary class="cursor-pointer text-sm text-muted hover:text-accent-ink">対応済み {done.length} 件</summary>
+			<div class="mt-4 space-y-4 opacity-70">
+				{#each done as r (r.id)}{@render card(r)}{/each}
+			</div>
+		</details>
 	{/if}
 </section>
 
 <section class="mt-12">
 	<div class="section-head"><h2 class="section-title">非表示</h2></div>
-	<p class="mb-6 text-sm text-muted">申し出があったら、まずここで隠してから判断します。消さないので、いつでも戻せます。ページを隠すと、そこで開かれる会と、その人・団体が主催の会も出なくなります。本人には「運営が非表示にしています」と出ます。</p>
+	<p class="mb-6 text-sm text-muted">消さずに隠すので、いつでも戻せます。ページを隠すと、そこで開かれる間と、そこが主催の間も隠れます。</p>
 	<form method="POST" action="?/hide" class="panel flex flex-wrap items-end gap-4 p-5">
-		{#if form?.hideError}<p class="w-full text-sm text-accent-ink">{form.hideError}</p>{/if}
-		<div class="min-w-0 flex-1"><Field label="対象" hint="@ID か、会の URL"><input name="target" required class="input" autocapitalize="off" placeholder="@example または https://magari.cc/e/…" /></Field></div>
+		{#if form?.hideError}<p class="w-full text-sm text-accent-ink" role="alert">{form.hideError}</p>{/if}
+		<div class="min-w-0 flex-1"><Field label="対象"><input name="target" required class="input" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="@ID か、間の URL" /></Field></div>
 		<button type="submit" class="btn btn-primary">非表示にする</button>
 	</form>
 	{#if data.hidden.length}
@@ -89,22 +96,22 @@ const fmt = new Intl.DateTimeFormat("ja-JP", {
 
 <section class="mt-12" id="handover">
 	<div class="section-head"><h2 class="section-title">ページの引き取り</h2></div>
-	<p class="mb-6 text-sm text-muted">申し出た人がそのハコ・団体の方だと確かめてから、その人をページの管理者に加えます。渡す相手は、先にログインして自分のページを作っている必要があります。管理者がつくと「非公式」の表示が消え、本人が紹介文を書けるようになります。外すのは、そのページの編集画面の「管理者」から。</p>
+	<p class="mb-6 text-sm text-muted">本人だと確かめてから、ハコ・団体のページの管理者に加えます。相手は先にログインして、自分のページを作っている必要があります。</p>
 	<form method="POST" action="?/handover" class="panel grid gap-4 p-5 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
 		{#if form?.handoverError}<p class="text-sm text-accent-ink sm:col-span-3" role="alert">{form.handoverError}</p>{/if}
 		{#if form?.handoverDone}<p class="text-sm text-accent-ink sm:col-span-3" role="status">{form.handoverDone}</p>{/if}
-		<Field label="ページ" hint="ハコ・団体の @ID"><input name="page" required class="input" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="@eden" /></Field>
-		<Field label="渡す人" hint="その人のまがりの @ID"><input name="person" required class="input" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="@example" /></Field>
+		<Field label="ページ"><input name="page" required class="input" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="ハコ・団体の @ID" /></Field>
+		<Field label="渡す人"><input name="person" required class="input" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="その人の @ID" /></Field>
 		<button type="submit" class="btn btn-primary">管理者に加える</button>
 	</form>
 </section>
 
 <section class="mt-12">
 	<div class="section-head"><h2 class="section-title">掲載拒否リスト</h2></div>
-	<p class="mb-6 text-sm text-muted">ここに入れた ID のページは、だれも作れません（取り込みも飛ばします）。すでにあるページは消えないので、別に消してください。</p>
+	<p class="mb-6 text-sm text-muted">入れた ID のページは、だれも作れません（取り込みも飛ばします）。すでにあるページは消えません。</p>
 	<form method="POST" action="?/block" class="panel grid gap-4 p-5 sm:grid-cols-[1fr_2fr_auto] sm:items-end">
-		{#if form?.error}<p class="text-sm text-accent-ink sm:col-span-3">{form.error}</p>{/if}
-		<Field label="ID"><input name="handle" required class="input" autocapitalize="off" placeholder="@example" /></Field>
+		{#if form?.error}<p class="text-sm text-accent-ink sm:col-span-3" role="alert">{form.error}</p>{/if}
+		<Field label="ID"><input name="handle" required class="input" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="@ID" /></Field>
 		<Field label="メモ"><input name="note" maxlength="200" class="input" placeholder="いつ、だれの依頼か" /></Field>
 		<button type="submit" class="btn btn-primary">拒否リストに入れる</button>
 	</form>
