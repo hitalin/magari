@@ -93,6 +93,10 @@ export type SpaceSummary = {
 	hasManager: boolean;
 	// 今から先の公開の間の数
 	upcoming: number;
+	// 今から先でいちばん近い公開の間の開始（ISO）。無ければ null
+	nextAt: string | null;
+	// ハコを載せた日時（ISO）
+	createdAt: string;
 };
 
 // R2 に置いた画像の公開 URL

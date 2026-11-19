@@ -1,5 +1,5 @@
 // 場（ハコ）・団体のページ: 作成、管理者判定、プロフィールの読み書き。
-import { and, asc, count, eq, gte, isNull } from "drizzle-orm";
+import { and, asc, count, eq, gte, isNull, min } from "drizzle-orm";
 import { nameOnlyIfUnmanaged } from "#lib/actor.ts";
 import { compareArea, detectArea } from "#lib/area.ts";
 import type { ParsedSpace } from "#lib/space-form.ts";
@@ -23,7 +23,11 @@ export async function listSpaces(
 	showSamples = false,
 ): Promise<SpaceSummary[]> {
 	const upcoming = db
-		.select({ actorId: events.spaceActorId, n: count().as("n") })
+		.select({
+			actorId: events.spaceActorId,
+			n: count().as("n"),
+			nextAt: min(events.startsAt).as("next_at"),
+		})
 		.from(events)
 		.where(
 			and(
@@ -50,23 +54,28 @@ export async function listSpaces(
 			avatarUrl: actors.avatarUrl,
 			managerId: managers.actorId,
 			upcoming: upcoming.n,
+			nextAt: upcoming.nextAt,
+			createdAt: actors.createdAt,
 		})
 		.from(actors)
 		.leftJoin(upcoming, eq(upcoming.actorId, actors.id))
 		.leftJoin(managers, eq(managers.actorId, actors.id))
 		.where(and(eq(actors.kind, "space"), isNull(actors.hiddenAt)));
 	return rows
-		.map(({ region, headerKey, managerId, upcoming, ...r }) =>
-			nameOnlyIfUnmanaged(
-				{
-					...r,
-					area: detectArea(region),
-					headerUrl: mediaUrl(headerKey),
-					hasManager: managerId !== null,
-					upcoming: upcoming ?? 0,
-				},
-				showSamples,
-			),
+		.map(
+			({ region, headerKey, managerId, upcoming, nextAt, createdAt, ...r }) =>
+				nameOnlyIfUnmanaged(
+					{
+						...r,
+						area: detectArea(region),
+						headerUrl: mediaUrl(headerKey),
+						hasManager: managerId !== null,
+						upcoming: upcoming ?? 0,
+						nextAt: nextAt?.toISOString() ?? null,
+						createdAt: createdAt.toISOString(),
+					},
+					showSamples,
+				),
 		)
 		.sort(
 			(a, b) =>

@@ -1,6 +1,6 @@
 <script lang="ts">
+import { inArea } from "#lib/area-filter.svelte.ts";
 import { monthKey } from "#lib/calendar.ts";
-import AreaFilter from "#lib/components/AreaFilter.svelte";
 import DayList from "#lib/components/DayList.svelte";
 import Empty from "#lib/components/Empty.svelte";
 import EventViews from "#lib/components/EventViews.svelte";
@@ -9,12 +9,7 @@ import { dayKey } from "#lib/date.ts";
 import type { PageProps } from "./$types";
 
 let { data }: PageProps = $props();
-let area = $state<string[]>([]);
-const events = $derived(
-	area.length
-		? data.events.filter((e) => e.area !== null && area.includes(e.area))
-		: data.events,
-);
+const events = $derived(inArea(data.events));
 // スマホではグリッドの題が読めないので、この月の間を下に並べる
 const monthEvents = $derived(
 	events.filter((e) =>
@@ -28,11 +23,6 @@ const monthEvents = $derived(
 </svelte:head>
 
 <EventViews />
-<section class="mb-6">
-	<p class="label mb-2">エリアで絞る</p>
-	<AreaFilter events={data.events} bind:value={area} />
-</section>
-
 <MonthGrid year={data.year} month={data.month} grid={data.grid} {events} />
 
 <section class="mt-10 sm:hidden">

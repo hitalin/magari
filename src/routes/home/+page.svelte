@@ -1,17 +1,13 @@
 <script lang="ts">
-import AreaFilter from "#lib/components/AreaFilter.svelte";
+import { areaFilter, inArea } from "#lib/area-filter.svelte.ts";
 import DayList from "#lib/components/DayList.svelte";
 import Empty from "#lib/components/Empty.svelte";
 import EventViews from "#lib/components/EventViews.svelte";
 import type { PageProps } from "./$types";
 
 let { data }: PageProps = $props();
-let area = $state<string[]>([]);
-const weekEvents = $derived(
-	area.length
-		? data.events.filter((e) => e.area !== null && area.includes(e.area))
-		: data.events,
-);
+const area = $derived(areaFilter.value);
+const weekEvents = $derived(inArea(data.events));
 </script>
 
 <svelte:head>
@@ -22,9 +18,6 @@ const weekEvents = $derived(
 <EventViews />
 <div class="section-head">
 	<h1 class="section-title">これから7日の間</h1>
-</div>
-<div class="mb-8">
-	<AreaFilter events={data.events} bind:value={area} />
 </div>
 
 {#if weekEvents.length === 0}

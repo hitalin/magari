@@ -1,21 +1,25 @@
 <script lang="ts">
 import { onMount } from "svelte";
 import { PRIMARY_AREAS } from "#lib/area.ts";
-import type { EventSummary } from "#lib/types.ts";
 
-// value は選んだエリアの配列。空なら絞らない
+// items は会でもハコでも、エリアを持つものなら何でも。value は選んだエリアの配列。空なら絞らない
 let {
-	events,
+	items,
 	value = $bindable([]),
 	center = false,
-}: { events: EventSummary[]; value: string[]; center?: boolean } = $props();
+}: {
+	items: { area: string | null }[];
+	value: string[];
+	center?: boolean;
+} = $props();
 
 const STORAGE_KEY = "magari-area";
 
 // 件数のあるエリアだけ。主要都市を先に、残りは件数順。
+// 選んでいるエリアは、このページに 1 件も無くても出す（別のページで選んだものを外せるように）
 const areas = $derived.by(() => {
-	const counts = new Map<string, number>();
-	for (const e of events)
+	const counts = new Map<string, number>(value.map((a) => [a, 0]));
+	for (const e of items)
 		if (e.area) counts.set(e.area, (counts.get(e.area) ?? 0) + 1);
 	const primary = PRIMARY_AREAS.filter((a) => counts.has(a)).map((a) => ({
 		area: a,
@@ -44,9 +48,7 @@ const hiddenCount = $derived(areas.length - visible.length);
 
 onMount(() => {
 	if (value.length === 0) {
-		const saved = restore(localStorage.getItem(STORAGE_KEY)).filter((s) =>
-			areas.some((a) => a.area === s),
-		);
+		const saved = restore(localStorage.getItem(STORAGE_KEY));
 		if (saved.length) value = saved;
 	}
 });

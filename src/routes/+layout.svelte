@@ -1,6 +1,8 @@
 <script lang="ts">
+import { areaFilter } from "#lib/area-filter.svelte.ts";
 import favicon from "#lib/assets/favicon.svg";
 import logo from "#lib/assets/logo.svg";
+import AreaFilter from "#lib/components/AreaFilter.svelte";
 import Graffiti from "#lib/components/Graffiti.svelte";
 import { onNavigate } from "$app/navigation";
 import { navigating, page } from "$app/state";
@@ -64,6 +66,14 @@ const isActive = (href: string) =>
 	(href === "/home" ? EVENT_VIEWS : [href]).some((p) =>
 		page.url.pathname.startsWith(p),
 	);
+// エリアの絞り込みは、イベントの各ページとハコの一覧で同じ位置（ナビのすぐ下）に出す。絞る対象はそのページのデータ
+const filterItems = $derived<{ area: string | null }[] | undefined>(
+	EVENT_VIEWS.some((p) => page.url.pathname.startsWith(p))
+		? page.data.events
+		: page.url.pathname === "/spaces"
+			? page.data.spaces
+			: undefined,
+);
 </script>
 
 <svelte:window onscroll={onScroll} />
@@ -121,6 +131,11 @@ const isActive = (href: string) =>
 <Graffiti />
 
 <main id="main" class="mx-auto max-w-content px-4 pt-6 pb-20">
+	{#if filterItems}
+		<div class="mt-4">
+			<AreaFilter items={filterItems} bind:value={areaFilter.value} />
+		</div>
+	{/if}
 	{@render children()}
 </main>
 

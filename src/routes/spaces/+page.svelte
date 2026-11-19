@@ -1,8 +1,13 @@
 <script lang="ts">
+import { areaFilter, inArea } from "#lib/area-filter.svelte.ts";
 import Empty from "#lib/components/Empty.svelte";
+import { SPACE_SORTS, type SpaceSort, sortSpaces } from "#lib/space-sort.ts";
 import type { PageProps } from "./$types";
 
 let { data }: PageProps = $props();
+const area = $derived(areaFilter.value);
+let sort = $state<SpaceSort>("many");
+const spaces = $derived(sortSpaces(inArea(data.spaces), sort));
 </script>
 
 <svelte:head>
@@ -10,18 +15,24 @@ let { data }: PageProps = $props();
 	<meta name="description" content="間が開かれる店や会場（ハコ）の一覧。" />
 </svelte:head>
 
-<section class="mt-4">
+<!-- イベントの「見せ方」と同じ段に、並べ替えを置く -->
+<div class="pills mt-4 mb-6" role="group" aria-label="並べ替え">
+	{#each SPACE_SORTS as o (o.key)}
+		<button type="button" class="chip {sort === o.key ? 'chip-tape' : 'chip-plain'}" aria-pressed={sort === o.key} onclick={() => (sort = o.key)}>{o.label}</button>
+	{/each}
+</div>
+<section>
 	<div class="section-head">
 		<h1 class="section-title">ハコ</h1>
 		<a href="/spaces/new" class="more text-sm">自分のハコを載せる ›</a>
 	</div>
-	<p class="mb-10 text-sm text-muted">間が開かれる店や会場。エリアごとに、これからの間が多い順に並べています。</p>
-	{#if data.spaces.length === 0}
-		<Empty title="ハコはまだありません。" />
+	<p class="mb-10 text-sm text-muted">間が開かれる店や会場。</p>
+	{#if spaces.length === 0}
+		<Empty title={area.length ? `${area.join('・')}のハコはまだありません。` : 'ハコはまだありません。'} />
 	{:else}
 		<!-- 段ボールの看板を壁に貼って並べる。上辺のテープがはみ出すので縦の間隔を広めに。写真の無い看板は低いので上で揃える -->
 		<div class="grid items-start gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
-			{#each data.spaces as s (s.handle)}
+			{#each spaces as s (s.handle)}
 				<a href="/@{s.handle}" class="cardboard group flex flex-col p-3 transition-transform hover:-translate-y-1" data-tape={s.area}>
 					{#if s.headerUrl}
 						<!-- 写真は焼いたプリントを貼ったように、白い縁を付ける -->
