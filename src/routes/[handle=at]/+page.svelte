@@ -4,6 +4,7 @@ import Blocks from "#lib/components/Blocks.svelte";
 import DayList from "#lib/components/DayList.svelte";
 import Empty from "#lib/components/Empty.svelte";
 import MonthGrid from "#lib/components/MonthGrid.svelte";
+import { dayKey } from "#lib/date.ts";
 import { actorSns, SNS_ICON, SNS_NAME } from "#lib/sns.ts";
 import { KIND_LABEL } from "#lib/types.ts";
 import { page } from "$app/state";
@@ -17,6 +18,10 @@ const upcoming = $derived.by(() => {
 		(e) => new Date(e.startsAt).getTime() >= now - 86_400_000,
 	);
 });
+// 下の一覧に出ている日（カレンダーの升から飛べる日）
+const anchorDays = $derived(
+	new Set([...upcoming, ...data.past].map((e) => dayKey(e.startsAt))),
+);
 const canEdit = $derived(data.managed.includes(actor.handle));
 const hasAccess = $derived(
 	!!(
@@ -139,7 +144,7 @@ const description = $derived(actor.catch ?? actor.summary ?? undefined);
 {/if}
 
 <section id="events" class="mb-12 scroll-mt-20">
-	<MonthGrid year={data.calendar.year} month={data.calendar.month} grid={data.calendar.grid} events={data.events} compact />
+	<MonthGrid year={data.calendar.year} month={data.calendar.month} grid={data.calendar.grid} events={data.events} {anchorDays} compact />
 </section>
 
 <div class="section-head">

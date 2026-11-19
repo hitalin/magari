@@ -92,9 +92,9 @@ const KIND_WORD: Record<string, string> = {
 
 		<h3 class="label pt-4">リンク</h3>
 		<div class="grid gap-4 sm:grid-cols-3">
-			<Field label="ウェブサイト"><input name="url" value={v.url} class="input" placeholder="https://" /></Field>
-			<Field label="X"><input name="xHandle" value={v.xHandle} class="input" placeholder="@ユーザー名" autocapitalize="off" /></Field>
-			<Field label="Instagram"><input name="instagram" value={v.instagram} class="input" placeholder="@ユーザー名" autocapitalize="off" /></Field>
+			<Field label="ウェブサイト"><input name="url" value={v.url} class="input" inputmode="url" autocapitalize="off" spellcheck="false" placeholder="https://" /></Field>
+			<Field label="X"><input name="xHandle" value={v.xHandle} class="input" placeholder="@ユーザー名" autocapitalize="off" autocorrect="off" spellcheck="false" /></Field>
+			<Field label="Instagram"><input name="instagram" value={v.instagram} class="input" placeholder="@ユーザー名" autocapitalize="off" autocorrect="off" spellcheck="false" /></Field>
 		</div>
 		<Field label={person ? 'ほかの SNS・リンク' : '関連リンク'} hint={person ? '1 行に 1 つ、URL だけでも「名前 https://...」でも。Misskey・Mastodon・Bluesky・Threads・YouTube・TikTok・GitHub・note・Twitch のプロフィールは、アイコン付きで名前の下に出ます' : '1 行に 1 つ、「名前 https://...」の形で。系列店や関連サイトなど。SNS のプロフィールの URL は、アイコン付きでページの上に出ます'}>
 			<textarea name="links" rows="4" class="input">{v.links}</textarea>

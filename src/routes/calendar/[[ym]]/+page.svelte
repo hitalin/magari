@@ -17,6 +17,9 @@ const monthEvents = $derived(
 		dayKey(e.startsAt).startsWith(monthKey(data.year, data.month)),
 	),
 );
+const anchorDays = $derived(
+	new Set(monthEvents.map((e) => dayKey(e.startsAt))),
+);
 </script>
 
 <svelte:head>
@@ -24,7 +27,7 @@ const monthEvents = $derived(
 </svelte:head>
 
 <EventViews />
-<MonthGrid year={data.year} month={data.month} grid={data.grid} {events} />
+<MonthGrid year={data.year} month={data.month} grid={data.grid} {events} {anchorDays} />
 
 <section class="mt-10 sm:hidden">
 	<h2 class="section-title text-[1.2rem]">この月の間</h2>

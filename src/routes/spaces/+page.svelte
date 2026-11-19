@@ -40,7 +40,7 @@ const spaces = $derived(
 		<!-- 段ボールの看板を壁に貼って並べる。上辺のテープがはみ出すので縦の間隔を広めに。写真の無い看板は低いので上で揃える -->
 		<div class="grid items-start gap-x-6 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
 			{#each spaces as s (s.handle)}
-				<a href="/@{s.handle}" class="cardboard group flex flex-col p-3 transition-transform hover:-translate-y-1" data-tape={s.area}>
+				<a href="/@{s.handle}" class="cardboard group flex flex-col p-3 transition-transform hover:-translate-y-1 active:translate-y-0" data-tape={s.area}>
 					{#if s.headerUrl}
 						<!-- 写真は焼いたプリントを貼ったように、白い縁を付ける -->
 						<img src={s.headerUrl} alt="" loading="lazy" class="space-photo aspect-[16/9] w-full object-cover" />

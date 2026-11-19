@@ -129,7 +129,7 @@ const cardDescription = $derived(
 				{/if}
 				{#if event.url}
 					<dt>告知</dt>
-					<dd class="break-all"><a href={event.url} class="text-accent-ink hover:underline" rel="noopener">{event.url.replace(/^https?:\/\//, '').slice(0, 60)}</a></dd>
+					<dd><a href={event.url} class="block truncate text-accent-ink hover:underline" rel="noopener">{event.url.replace(/^https?:\/\//, '').slice(0, 60)}</a></dd>
 				{/if}
 				{#if event.onlineUrl}
 					<dt>URL</dt>

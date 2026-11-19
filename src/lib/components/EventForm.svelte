@@ -79,7 +79,7 @@ function clearFile() {
 </script>
 
 {#snippet fields()}
-	{#if error}<p class="rounded-sm bg-accent-soft px-4 py-2 text-sm text-accent-ink">{error}</p>{/if}
+	{#if error}<p class="rounded-sm bg-accent-soft px-4 py-2 text-sm text-accent-ink" role="alert">{error}</p>{/if}
 
 	<Field label="ひとこと" hint="これだけ書けば開けられます">
 		<input name="title" bind:value={v.title} required maxlength="200" class="input font-serif text-[1.4rem] font-bold" placeholder="18時から店にいます" />
@@ -95,7 +95,7 @@ function clearFile() {
 	<div class="grid gap-4 sm:grid-cols-2">
 		<Field label="場所" hint="店名、公園、誰かの家など。決まっていなければ空欄で"><input name="locationName" bind:value={v.locationName} class="input" /></Field>
 		<Field label="ハコ" hint="まがりに登録された場なら @ID。その場のページにも載る">
-			<div class="flex items-center gap-1"><span class="text-muted">@</span><input name="space" bind:value={v.space} class="input" autocapitalize="off" placeholder="curry_shop" /></div>
+			<div class="flex items-center gap-1"><span class="text-muted">@</span><input name="space" bind:value={v.space} class="input" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="curry_shop" /></div>
 		</Field>
 	</div>
 
@@ -109,12 +109,12 @@ function clearFile() {
 					<option value="attendees" selected={values.locationVisibility === 'attendees'}>住所は載せず、主催に聞いてもらう（自助会・オフ会向け）</option>
 				</select>
 			</Field>
-			<Field label="オンラインの URL" hint="Zoom や Discord など。オンライン開催なら"><input name="onlineUrl" value={values.onlineUrl} class="input" placeholder="https://" /></Field>
+			<Field label="オンラインの URL" hint="Zoom や Discord など。オンライン開催なら"><input name="onlineUrl" value={values.onlineUrl} class="input" inputmode="url" autocapitalize="off" spellcheck="false" placeholder="https://" /></Field>
 
 			<Field label="説明"><textarea name="description" rows="8" class="input">{values.description}</textarea></Field>
 
 			<Field label="料金"><input name="feeText" value={values.feeText} class="input" placeholder="無料 / 500円 / 投げ銭" /></Field>
-			<Field label="告知ページの URL" hint="X のポスト、こくちーず、自分のサイトなど"><input name="url" value={values.url} class="input" placeholder="https://" /></Field>
+			<Field label="告知ページの URL" hint="X のポスト、こくちーず、自分のサイトなど"><input name="url" value={values.url} class="input" inputmode="url" autocapitalize="off" spellcheck="false" placeholder="https://" /></Field>
 
 			<div class="grid gap-4 sm:grid-cols-2">
 				<Field label="誰に見せるか">

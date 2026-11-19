@@ -95,13 +95,13 @@ const filterItems = $derived<{ area: string | null }[] | undefined>(
 <!-- 図像と字だけのナビ。上に固定するが帯は見せない。下を流れる本文は、下端へ向けて消えるぼかしで溶かす（.site-header） -->
 <header class="site-header fixed inset-x-0 top-0 z-50 h-header" style:--nav-tint={tint}>
 	<div class="flex h-full items-center gap-3 px-4 text-[0.8rem] sm:gap-6 sm:px-5 sm:text-sm">
-		<a href="/" class="flex shrink-0 items-center" aria-label="まがり"><img src={logo} alt="" class="h-7 w-7" /></a>
+		<a href="/" class="-m-2 flex shrink-0 items-center p-2" aria-label="まがり"><img src={logo} alt="" class="h-7 w-7" /></a>
 		<!-- タブ（実体の「イベント」「ハコ」だけ）の左端を、本文の左端に揃える（図像は左端、「まがり」は右端のまま）。狭い画面では図像のすぐ右。
 		     % はこの行の中身の幅（ヘッダー幅 − 左右 2.5rem）。本文の左端 (ヘッダー幅 − content)/2 + 1rem から、左余白・図像・間の 4.5rem を引くと -2.25rem -->
 		<nav class="flex gap-3 font-medium whitespace-nowrap sm:gap-6" style="margin-left: max(0px, calc((100% - var(--container-content)) / 2 - 2.25rem))">
 			{#each nav as item (item.href)}
 				{@const active = isActive(item.href)}
-				<a href={item.href} class="flex items-center gap-1.5 transition hover:text-text {active ? 'text-text' : 'text-muted'}" aria-current={active ? 'page' : undefined}>
+				<a href={item.href} class="nav-link -my-3 flex items-center gap-1.5 py-3 transition hover:text-text {active ? 'text-text' : 'text-muted'}" aria-current={active ? 'page' : undefined}>
 					<svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d={item.icon} /></svg>
 					{item.label}
 				</a>
@@ -116,7 +116,7 @@ const filterItems = $derived<{ area: string | null }[] | undefined>(
 				<a href="/new" class="btn btn-primary px-3 py-1 text-xs sm:text-[0.8rem]">まがり</a>
 			{/if}
 			{#if data.loggedIn}
-				<a href="/me" aria-label={data.me?.name ?? '自分'} title={data.me?.name ?? '自分'} aria-current={isActive('/me') ? 'page' : undefined}>
+				<a href="/me" class="-m-1.5 rounded-full p-1.5" aria-label={data.me?.name ?? '自分'} title={data.me?.name ?? '自分'} aria-current={isActive('/me') ? 'page' : undefined}>
 					{#if data.me?.avatarUrl}
 						<img src={data.me.avatarUrl} alt="" class="h-7 w-7 rounded-full object-cover" />
 					{:else}
@@ -134,7 +134,7 @@ const filterItems = $derived<{ area: string | null }[] | undefined>(
 	{#if filterItems}
 		<!-- 狭い画面では検索を上、エリアを下。広い画面ではエリアの右に検索 -->
 		<div class="mt-4 flex flex-col gap-3 sm:flex-row-reverse sm:items-start sm:justify-between sm:gap-6">
-			<input type="search" class="input py-1 text-sm sm:w-56" placeholder="名前や場所で探す" aria-label="名前や場所で探す" bind:value={areaFilter.query} />
+			<input type="search" class="input py-1.5 text-base sm:w-56 sm:py-1 sm:text-sm" placeholder="名前や場所で探す" aria-label="名前や場所で探す" bind:value={areaFilter.query} />
 			<div class="min-w-0 sm:flex-1">
 				<AreaFilter items={filterItems} bind:value={areaFilter.value} />
 			</div>
@@ -157,6 +157,18 @@ const filterItems = $derived<{ area: string | null }[] | undefined>(
 </footer>
 
 <style>
+	/* いまいる所の印。字の明るさだけに頼らず、下にテープを一本引く */
+	.nav-link {
+		position: relative;
+	}
+	.nav-link[aria-current]::after {
+		content: "";
+		position: absolute;
+		inset: auto 0 0.45rem;
+		height: 2px;
+		background: var(--color-accent);
+		transform: rotate(-1deg);
+	}
 	.footer-link {
 		text-decoration: underline;
 		text-decoration-color: var(--color-line);

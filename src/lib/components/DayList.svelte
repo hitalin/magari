@@ -29,7 +29,7 @@ const days = $derived.by(() => {
 {#each days as day (day.key)}
 	<section class="mb-10" id="d-{day.key}">
 		<h3 class="day-rule mb-3">{formatDay(day.list[0].startsAt)}</h3>
-		<div class="rule-list">
+		<div class="rule-list times">
 			{#each day.items as item, i (item.kind === 'event' ? item.event.id : `g-${item.actor.handle}-${i}`)}
 				{#if item.kind === 'event'}
 					<EventRow event={item.event} />

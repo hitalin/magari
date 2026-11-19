@@ -21,7 +21,7 @@ let { data, form }: PageProps = $props();
 		<p class="panel mt-8 p-6">送信しました。内容を確認して、いただいた返信先にお返事します。</p>
 	{:else}
 		<form method="POST" class="panel mt-8 space-y-5 p-6">
-			{#if form?.error}<p class="text-sm text-accent-ink">{form.error}</p>{/if}
+			{#if form?.error}<p class="rounded-sm bg-accent-soft px-4 py-2 text-sm text-accent-ink" role="alert">{form.error}</p>{/if}
 			<Field label="種別">
 				<select name="kind" class="input">
 					{#each REPORT_KINDS as k (k)}

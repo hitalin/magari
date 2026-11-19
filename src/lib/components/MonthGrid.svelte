@@ -10,12 +10,15 @@ let {
 	grid,
 	events,
 	compact = false,
+	anchorDays,
 }: {
 	year: number;
 	month: number;
 	grid: string[][];
 	events: EventSummary[];
 	compact?: boolean;
+	// 同じページの一覧（DayList）に出ている日。狭い画面では、その日の升を押すと一覧のその日へ飛ぶ
+	anchorDays?: Set<string>;
 } = $props();
 
 const WEEKDAYS = ["日", "月", "火", "水", "木", "金", "土"];
@@ -55,8 +58,9 @@ const next = $derived(shiftMonth(year, month, 1));
 			{#each week as day, i (day)}
 				{@const items = collapseByActor(byDay.get(day) ?? [], 3)}
 				{@const inMonth = day.startsWith(thisMonth)}
+				{@const count = byDay.get(day)?.length ?? 0}
 				<div
-					class="border-r border-line p-1 last:border-r-0 sm:p-1.5 {compact ? 'min-h-[4rem] sm:min-h-[5.5rem]' : 'min-h-[5.5rem] sm:min-h-[7rem]'} {inMonth ? '' : 'opacity-40'}"
+					class="relative min-h-[3.5rem] border-r border-line p-1 last:border-r-0 sm:p-1.5 {compact ? 'sm:min-h-[5.5rem]' : 'sm:min-h-[7rem]'} {inMonth ? '' : 'opacity-40'}"
 				>
 					<p class="mb-1 text-xs {i === 0 ? 'text-accent-ink' : 'text-muted'}">
 						<span
@@ -64,6 +68,15 @@ const next = $derived(shiftMonth(year, month, 1));
 							>{Number(day.slice(-2))}</span
 						>
 					</p>
+					<!-- 狭い画面の升には題が 2〜3 文字しか入らないので、件数だけを出す。押すと下の一覧のその日へ -->
+					{#if count > 0}
+						{#if inMonth && anchorDays?.has(day)}
+							<a href="#d-{day}" class="day-tap" aria-label="{Number(day.slice(5, 7))}月{Number(day.slice(-2))}日の間 {count} 件"><span>{count}</span></a>
+						{:else}
+							<span class="day-tap"><span>{count}</span><span class="sr-only">件</span></span>
+						{/if}
+					{/if}
+					<div class="hidden sm:block">
 					{#each items.slice(0, MAX_VISIBLE) as item, j (item.kind === 'event' ? item.event.id : `g-${item.actor.handle}-${j}`)}
 						{#if item.kind === 'event'}
 							<a
@@ -87,8 +100,41 @@ const next = $derived(shiftMonth(year, month, 1));
 					{#if items.length > MAX_VISIBLE}
 						<p class="px-1 text-[0.7rem] text-muted">+{items.length - MAX_VISIBLE}</p>
 					{/if}
+					</div>
 				</div>
 			{/each}
 		</div>
 	{/each}
 </div>
+
+<style>
+	/* 升いっぱいを押せる面にして、件数は下に小さなテープの切れ端で出す */
+	.day-tap {
+		position: absolute;
+		inset: 0;
+		display: flex;
+		align-items: flex-end;
+		justify-content: center;
+		padding-bottom: 0.4rem;
+	}
+	.day-tap > span:first-child {
+		min-width: 1.5rem;
+		padding: 0.05rem 0.3rem;
+		border-radius: 2px;
+		background: var(--color-accent-soft);
+		color: var(--color-accent-ink);
+		font-size: 0.7rem;
+		font-weight: 700;
+		line-height: 1.4;
+		text-align: center;
+		font-variant-numeric: tabular-nums;
+	}
+	a.day-tap:active {
+		background: var(--color-accent-soft);
+	}
+	@media (min-width: 40rem) {
+		.day-tap {
+			display: none;
+		}
+	}
+</style>

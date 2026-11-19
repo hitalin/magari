@@ -22,7 +22,7 @@ async function addPasskey() {
 	<p class="mt-3 text-sm text-muted">ID と表示名を決めると <code>/@ID</code> があなたのページになり、まがりできます。</p>
 
 	<form method="POST" class="panel mt-8 space-y-5 p-6">
-		{#if form?.error}<p class="text-sm text-accent-ink">{form.error}</p>{/if}
+		{#if form?.error}<p class="rounded-sm bg-accent-soft px-4 py-2 text-sm text-accent-ink" role="alert">{form.error}</p>{/if}
 		{#if data.image}
 			<div class="flex items-center gap-3">
 				<img src={data.image} alt="" class="h-14 w-14 rounded-full border border-line object-cover" />
@@ -30,7 +30,7 @@ async function addPasskey() {
 			</div>
 		{/if}
 		<Field label="ID" hint="小文字の英数字と _ で 3〜20 文字。あとから変えられません">
-			<div class="flex items-center gap-1"><span class="text-muted">@</span><input name="handle" value={form?.handle ?? ''} required pattern={'[a-z0-9_]{3,20}'} class="input" autocapitalize="off" /></div>
+			<div class="flex items-center gap-1"><span class="text-muted">@</span><input name="handle" value={form?.handle ?? ''} required pattern={'[a-z0-9_]{3,20}'} class="input" autocapitalize="off" autocorrect="off" spellcheck="false" /></div>
 		</Field>
 		<Field label="表示名">
 			<input name="name" value={form?.name ?? data.suggestedName} required maxlength="50" class="input" />

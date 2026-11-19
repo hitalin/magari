@@ -16,7 +16,7 @@ let { form }: PageProps = $props();
 	</p>
 
 	<form method="POST" class="panel mt-8 space-y-5 p-6">
-		{#if form?.error}<p class="text-sm text-accent-ink">{form.error}</p>{/if}
+		{#if form?.error}<p class="rounded-sm bg-accent-soft px-4 py-2 text-sm text-accent-ink" role="alert">{form.error}</p>{/if}
 		<Field label="種類">
 			<select name="kind" class="input">
 				<option value="space" selected={(form?.kind ?? 'space') === 'space'}>場（店・会場・スペース）</option>
@@ -24,7 +24,7 @@ let { form }: PageProps = $props();
 			</select>
 		</Field>
 		<Field label="ID" hint="小文字の英数字と _ で 3〜20 文字。あとから変えられません">
-			<div class="flex items-center gap-1"><span class="text-muted">@</span><input name="handle" value={form?.handle ?? ''} required pattern={'[a-z0-9_]{3,20}'} class="input" autocapitalize="off" placeholder="curry_shop" /></div>
+			<div class="flex items-center gap-1"><span class="text-muted">@</span><input name="handle" value={form?.handle ?? ''} required pattern={'[a-z0-9_]{3,20}'} class="input" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="curry_shop" /></div>
 		</Field>
 		<Field label="名前">
 			<input name="name" value={form?.name ?? ''} required maxlength="50" class="input" placeholder="例: カレー屋○○" />

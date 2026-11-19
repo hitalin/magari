@@ -155,7 +155,8 @@ const REPO = "https://github.com/hitalin/magari";
 		.landing {
 			grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
 			gap: 3rem;
-			min-height: calc(100svh - var(--spacing-header) - 12rem);
+			/* 縦に長い画面で間延びしないよう、上限を置く */
+			min-height: min(calc(100svh - var(--spacing-header) - 12rem), 40rem);
 		}
 	}
 	/* ビラ 3 枚を少しずらして重ねる。近い会が手前 */
