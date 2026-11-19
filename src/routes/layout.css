@@ -797,7 +797,8 @@ h4 {
 		height: 3px;
 		width: 0;
 		background: var(--color-accent);
-		animation: progress 1.6s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+		/* すぐ終わる遷移では線を出さない（一瞬だけ光るのを避ける） */
+		animation: progress 1.6s cubic-bezier(0.1, 0.8, 0.3, 1) 0.2s forwards;
 	}
 	@keyframes progress {
 		to {
@@ -851,16 +852,12 @@ h4 {
 	}
 }
 
-/* ページ遷移: 短いクロスフェード。ヘッダーは動かさない */
-::view-transition-old(root),
-::view-transition-new(root) {
-	animation-duration: 0.18s;
+/* ページ遷移: 前のページを透かさず、一度に差し替える（+layout.svelte の onNavigate） */
+::view-transition-group(*),
+::view-transition-old(*),
+::view-transition-new(*) {
+	animation: none;
 }
-@media (prefers-reduced-motion: reduce) {
-	::view-transition-group(*),
-	::view-transition-old(*),
-	::view-transition-new(*) {
-		/* biome-ignore lint/complexity/noImportantStyles: 「視差効果を減らす」はどの指定よりも優先して動きを止める */
-		animation: none !important;
-	}
+::view-transition-old(*) {
+	display: none;
 }

@@ -8,16 +8,34 @@ import type { LayoutProps } from "./$types";
 import "./layout.css";
 
 let { children, data }: LayoutProps = $props();
-// ページ遷移を短いクロスフェードに。対応していないブラウザでは何もしない
+// ページ遷移: 前のページを画面に残したまま次を組み、見えている画像が出せるようになってから一度に差し替える。
+// フェードはしない（前のページが透けて重なる）。対応していないブラウザでは何もしない
 onNavigate((navigation) => {
 	if (!document.startViewTransition) return;
 	return new Promise((resolve) => {
 		document.startViewTransition(async () => {
 			resolve();
 			await navigation.complete;
+			await imagesReady();
 		});
 	});
 });
+// 画面に入っている画像の読み込みと復号を待つ。初めての画像で遷移が止まって見えないよう、待つのは短い間だけ
+function imagesReady() {
+	const pending = [...document.images]
+		.filter((img) => {
+			const r = img.getBoundingClientRect();
+			return r.bottom > 0 && r.top < innerHeight;
+		})
+		.map((img) => {
+			img.loading = "eager";
+			return img.decode().catch(() => {});
+		});
+	return Promise.race([
+		Promise.all(pending),
+		new Promise((r) => setTimeout(r, 300)),
+	]);
+}
 const nav = [
 	// icon は 24×24 の線画（svg の path）。イベントは切符、ハコは店先
 	{
@@ -65,7 +83,7 @@ const isActive = (href: string) =>
 {#if navigating.to}<div class="progress" role="progressbar" aria-label="読み込み中"></div>{/if}
 
 <!-- 図像と字だけのナビ。上に固定するが帯は見せない。下を流れる本文は、下端へ向けて消えるぼかしで溶かす（.site-header） -->
-<header class="site-header fixed inset-x-0 top-0 z-50 h-header" style:--nav-tint={tint} style="view-transition-name: header">
+<header class="site-header fixed inset-x-0 top-0 z-50 h-header" style:--nav-tint={tint}>
 	<div class="flex h-full items-center gap-3 px-4 text-[0.8rem] sm:gap-6 sm:px-5 sm:text-sm">
 		<a href="/" class="flex shrink-0 items-center" aria-label="まがり"><img src={logo} alt="" class="h-7 w-7" /></a>
 		<!-- タブ（実体の「イベント」「ハコ」だけ）の左端を、本文の左端に揃える（図像は左端、「まがり」は右端のまま）。狭い画面では図像のすぐ右。
