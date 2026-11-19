@@ -122,6 +122,7 @@ export async function createPersonActor(
 		handle: string;
 		name: string;
 		avatarUrl: string | null;
+		xHandle: string | null;
 	},
 ): Promise<MyActor | { error: string }> {
 	const [taken] = await db
@@ -140,6 +141,7 @@ export async function createPersonActor(
 			name: input.name,
 			userId: input.userId,
 			avatarUrl: largeAvatarUrl(input.avatarUrl),
+			xHandle: input.xHandle,
 		})
 		.returning({
 			id: actors.id,

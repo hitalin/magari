@@ -1,11 +1,12 @@
 import { passkey } from "@better-auth/passkey";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { eq } from "drizzle-orm";
+import { and, eq, isNull } from "drizzle-orm";
 import type { Db } from "./db";
 import * as schema from "./db/schema";
 import { adoptOnLink } from "./link-empty-user.ts";
 import { miauth } from "./miauth.ts";
+import { rememberX, xUserFields } from "./x-username.ts";
 
 export type AuthEnv = {
 	PUBLIC_ORIGIN: string;
@@ -38,6 +39,15 @@ export function createAuth(db: Db, env: AuthEnv) {
 		]);
 		return rows.every((r) => r.length === 0);
 	};
+	const adopt = adoptOnLink(isEmptyUser);
+	const remember = rememberX(async (userId, x) => {
+		await db
+			.update(schema.actors)
+			.set({ xHandle: x, updatedAt: new Date() })
+			.where(
+				and(eq(schema.actors.userId, userId), isNull(schema.actors.xHandle)),
+			);
+	});
 	return betterAuth({
 		baseURL: env.PUBLIC_ORIGIN,
 		secret: env.BETTER_AUTH_SECRET,
@@ -46,7 +56,12 @@ export function createAuth(db: Db, env: AuthEnv) {
 		// 本人によるアカウント削除（メール確認なしで即時）
 		user: {
 			deleteUser: { enabled: true },
-			validateUserInfo: adoptOnLink(isEmptyUser),
+			additionalFields: xUserFields,
+			// 寄せてから覚える（寄せられなかった X は覚えない）
+			validateUserInfo: async (data, ctx) => {
+				await adopt(data, ctx);
+				await remember(data, ctx);
+			},
 		},
 		// ログイン中の本人が X / Misskey をつなぐ。メールは使っていないので、メール不一致を理由に拒まない
 		account: {
@@ -72,6 +87,7 @@ export function createAuth(db: Db, env: AuthEnv) {
 									"_normal.",
 									"_400x400.",
 								),
+								xUsername: profile.data.username,
 							}),
 						},
 					}

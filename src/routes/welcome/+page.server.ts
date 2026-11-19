@@ -32,6 +32,7 @@ export const actions: Actions = {
 			handle: parsed.handle,
 			name: parsed.name,
 			avatarUrl: session.user.image ?? null,
+			xHandle: session.user.xUsername ?? null,
 		});
 		if ("error" in result)
 			return fail(400, {
