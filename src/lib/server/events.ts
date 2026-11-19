@@ -49,6 +49,7 @@ function selectEvents(db: Db) {
 			spaceHandle: actors.handle,
 			spaceName: actors.name,
 			spaceKind: actors.kind,
+			spaceAvatarUrl: actors.avatarUrl,
 		})
 		.from(events)
 		.leftJoin(actors, eq(events.spaceActorId, actors.id))
@@ -91,8 +92,7 @@ async function hostsByEvent(
 			.from(eventHosts)
 			.innerJoin(actors, eq(eventHosts.actorId, actors.id))
 			.where(inArray(eventHosts.eventId, eventIds.slice(i, i + CHUNK)));
-		for (const { eventId, avatarUrl, ...actor } of rows) {
-			const host = actor.kind === "person" ? { ...actor, avatarUrl } : actor;
+		for (const { eventId, ...host } of rows) {
 			map.set(eventId, [...(map.get(eventId) ?? []), host]);
 		}
 	}
@@ -124,7 +124,12 @@ function toDetail(row: Row, hosts: ActorRef[]): EventDetail {
 		flyerLook: parseFlyerLook(row.flyerVariant, row.flyerColor),
 		space:
 			row.spaceHandle && row.spaceName && row.spaceKind
-				? { handle: row.spaceHandle, name: row.spaceName, kind: row.spaceKind }
+				? {
+						handle: row.spaceHandle,
+						name: row.spaceName,
+						kind: row.spaceKind,
+						avatarUrl: row.spaceAvatarUrl,
+					}
 				: null,
 		hosts,
 	};
@@ -242,7 +247,7 @@ export async function getEventForUser(
 export async function getActorByHandle(
 	db: Db,
 	handle: string,
-	// 開発環境で、取り込んだ見本のハコをアイコンと紹介文つきで出す（nameOnlyIfUnmanaged）
+	// 開発環境で、取り込んだ見本のハコを紹介文つきで出す（nameOnlyIfUnmanaged）
 	showSamples = false,
 ): Promise<ActorProfile | null> {
 	const [row] = await db

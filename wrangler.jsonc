@@ -42,7 +42,7 @@
 	"migrations": [{ "tag": "v1", "new_sqlite_classes": ["GraffitiRoom"] }],
 	"vars": {
 		"PUBLIC_ORIGIN": "https://magari.cc",
-		// 外部カレンダーの取り込みを動かす。見本用の IMPORT_SAMPLES は本番に置かない（店の写真は写すが、X のアイコンと紹介文は写さない）
+		// 外部カレンダーの取り込みを動かす。見本用の IMPORT_SAMPLES は本番に置かない（店の写真と X のアイコンは写すが、紹介文は写さない）
 		"IMPORT_ENABLED": "1",
 		// 運営者の handle。/admin/reports（連絡の受信箱と掲載拒否リスト）を見られる
 		"ADMIN_HANDLE": "hitalin"

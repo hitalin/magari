@@ -5,7 +5,7 @@ export type ActorRef = {
 	handle: string;
 	name: string;
 	kind: "person" | "space" | "group";
-	// 一覧で名前の横に出す顔。人だけ（ハコ・団体は管理者がいないと画像を出せないので付けない）
+	// 一覧で名前の横に出す顔
 	avatarUrl?: string | null;
 };
 

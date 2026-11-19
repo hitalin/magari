@@ -47,7 +47,7 @@ async function fetchCalendar(
 	return parseIcs(await res.text());
 }
 
-// 取り込み元のページは名前・公式へのリンク・エリアと、公式ページの店の写真。紹介文と X のアイコンは
+// 取り込み元のページは名前・公式へのリンク・エリアと、X のアイコン、公式ページの店の写真。紹介文は
 // 見本を出す環境（IMPORT_SAMPLES=1。開発だけ）でしか写さない
 const withSamples = () => env.IMPORT_SAMPLES === "1";
 
@@ -129,7 +129,7 @@ async function syncImages(
 			await setHeaderKey(db, actor.id, key);
 		}
 	}
-	if (icon && withSamples()) {
+	if (icon) {
 		const key = await imageKey("avatars", actor.id, icon);
 		if (actor.avatarUrl !== mediaUrl(key)) {
 			await copyImage(key, icon);

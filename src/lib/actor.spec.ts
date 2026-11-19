@@ -21,11 +21,11 @@ describe("nameOnlyIfUnmanaged", () => {
 			hasManager: false,
 		});
 	});
-	it("管理者がいなければアイコンと紹介文を落とし、名前・リンク・店の写真は残す", () => {
+	it("管理者がいなければ紹介文を落とし、名前・リンク・アイコン・店の写真は残す", () => {
 		expect(nameOnlyIfUnmanaged({ ...a, hasManager: false })).toEqual({
 			name: "あるハコ",
 			url: "https://example.com",
-			avatarUrl: null,
+			avatarUrl: "/i/avatars/x",
 			headerUrl: "/i/headers/x",
 			summary: null,
 			hasManager: false,
