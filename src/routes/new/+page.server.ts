@@ -9,6 +9,7 @@ import {
 } from "#lib/event-form.ts";
 import { type FlyerLook, parseFlyerLook } from "#lib/flyer.ts";
 import { isShortId, shortId } from "#lib/id.ts";
+import { warmCard } from "#lib/server/card.ts";
 import { toFormValues } from "#lib/server/event-values.ts";
 import { checkFlyer, putFlyer } from "#lib/server/flyer-upload.ts";
 import {
@@ -52,7 +53,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 };
 
 export const actions: Actions = {
-	save: async ({ request, locals }) => {
+	save: async ({ request, locals, url }) => {
 		const { session, actor } = requireActor(locals);
 		const form = await request.formData();
 		const values = readEventForm((k) => (form.get(k) as string | null) ?? null);
@@ -87,6 +88,8 @@ export const actions: Actions = {
 		if (id) {
 			if (file)
 				await setEventFlyer(locals.db, id, await putFlyer(env.MEDIA, id, file));
+			// 開けた直後に「貼る」を押されても間に合うよう、カード画像を作り始めておく
+			if (parsed.event.status !== "draft") warmCard(locals.db, id, url.origin);
 			done(id);
 		}
 		// その ID がもう使われている。二度押しで自分が今作った間なら、そのまま続きへ

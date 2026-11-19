@@ -6,6 +6,7 @@ import {
 	statusAfterEdit,
 } from "#lib/event-form.ts";
 import { flyerStyle, parseFlyerLook } from "#lib/flyer.ts";
+import { warmCard } from "#lib/server/card.ts";
 import { toFormValues } from "#lib/server/event-values.ts";
 import { checkFlyer, putFlyer } from "#lib/server/flyer-upload.ts";
 import {
@@ -59,7 +60,7 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 
 export const actions: Actions = {
 	// フライヤーを上げる。自動のビラと入れ替わり、X で共有したときの画像にもなる
-	flyer: async ({ request, locals, params }) => {
+	flyer: async ({ request, locals, params, url }) => {
 		const ev = await editable(locals, params.id);
 		const form = await request.formData();
 		const file = form.get("flyer");
@@ -70,14 +71,16 @@ export const actions: Actions = {
 		const key = await putFlyer(env.MEDIA, ev.id, file);
 		await setEventFlyer(locals.db, ev.id, key);
 		if (ev.coverKey) await env.MEDIA.delete(ev.coverKey);
+		warmCard(locals.db, ev.id, url.origin);
 		return { flyerSaved: true };
 	},
 	// 自動のビラに戻す
-	removeFlyer: async ({ locals, params }) => {
+	removeFlyer: async ({ locals, params, url }) => {
 		const ev = await editable(locals, params.id);
 		if (ev.coverKey) {
 			await setEventFlyer(locals.db, ev.id, null);
 			await env.MEDIA.delete(ev.coverKey);
+			warmCard(locals.db, ev.id, url.origin);
 		}
 		return { flyerSaved: true };
 	},
@@ -90,6 +93,7 @@ export const actions: Actions = {
 			form.get("flyerColor") as string | null,
 		);
 		if (!look) return fail(400, { flyerError: "型と色を選んでください" });
+		// 何度も替えて試すものなので、カード画像は作り直さない（共有のときに作る）
 		await setEventFlyerLook(locals.db, ev.id, look);
 		return { flyerSaved: true };
 	},
@@ -103,7 +107,7 @@ export const actions: Actions = {
 		if (actorId === locals.actor?.id) redirect(303, `/e/${params.id}`);
 		return { hostRemoved: true };
 	},
-	save: async ({ request, locals, params }) => {
+	save: async ({ request, locals, params, url }) => {
 		const current = await editable(locals, params.id);
 		const form = await request.formData();
 		const values = readEventForm((k) => (form.get(k) as string | null) ?? null);
@@ -113,6 +117,7 @@ export const actions: Actions = {
 		if ("error" in ev) return fail(400, { error: ev.error, values });
 		const status = statusAfterEdit(current.status, parsed.event.status);
 		await updateEvent(locals.db, params.id, { ...ev, status });
+		warmCard(locals.db, params.id, url.origin);
 		redirect(303, status === "draft" ? "/me" : `/e/${params.id}`);
 	},
 	cancel: async ({ locals, params }) => {
