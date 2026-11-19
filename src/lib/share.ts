@@ -48,6 +48,15 @@ export function mentionHandles(text: string): string[] {
 	return [...new Set(handles)];
 }
 
+// X は @name を X の ID として読む。まがりにいて X を出している人なら、その人の X の ID に置き換える
+export function xShareText(text: string, mentions: ShareMention[]): string {
+	return text.replace(MENTION_RE, (whole, name: string, host?: string) => {
+		if (host) return whole;
+		const to = mentions.find((m) => m.handle === name.toLowerCase());
+		return to?.x ? `@${to.x}` : whole;
+	});
+}
+
 // Misskey はホストの無い @name を自分のサーバーの人へのメンションにしてしまう。
 // まがりにいる人なら、その人の Fediverse のアカウントへのメンションか、X へのリンクに置き換える。
 // 分からなければ、いちばん人の多い misskey.io の人とみなす

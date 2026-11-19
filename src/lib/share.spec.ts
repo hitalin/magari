@@ -6,6 +6,7 @@ import {
 	mentionParts,
 	misskeyShareText,
 	misskeyShareUrl,
+	xShareText,
 	xShareUrl,
 } from "./share";
 
@@ -106,6 +107,23 @@ describe("misskeyShareText", () => {
 		expect(misskeyShareText("@taka@misskey.io", mentions)).toBe(
 			"@taka@misskey.io",
 		);
+	});
+});
+
+describe("xShareText", () => {
+	const mentions = [
+		{ handle: "hitalin", x: "hitalin_x", fediverse: "@taka@yami.ski" },
+		{ handle: "nosns", x: null, fediverse: null },
+	];
+	it("まがりにいて X を出している人は、X の ID に置き換える", () => {
+		expect(xShareText("しょぼい朝カフェ by @Hitalin", mentions)).toBe(
+			"しょぼい朝カフェ by @hitalin_x",
+		);
+	});
+	it("まがりにいない、X を出していない、@name@host はそのまま", () => {
+		expect(
+			xShareText("かほ@03skybar28 @nosns @hitalin@yami.ski", mentions),
+		).toBe("かほ@03skybar28 @nosns @hitalin@yami.ski");
 	});
 });
 

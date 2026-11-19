@@ -8,6 +8,7 @@ import {
 	mentionParts,
 	misskeyShareText,
 	misskeyShareUrl,
+	xShareText,
 	xShareUrl,
 } from "#lib/share.ts";
 import { MISSKEY_ICON, SNS_ICON } from "#lib/sns.ts";
@@ -18,7 +19,9 @@ let { data }: PageProps = $props();
 const event = $derived(data.event);
 // ?opened を付けずに貼る
 const cleanUrl = $derived(page.url.origin + page.url.pathname);
-const shareUrl = $derived(xShareUrl(eventShareText(event), cleanUrl));
+const shareUrl = $derived(
+	xShareUrl(xShareText(eventShareText(event), event.mentions), cleanUrl),
+);
 const misskeyUrl = $derived(
 	misskeyShareUrl(
 		misskeyShareText(eventShareText(event), event.mentions),
