@@ -3,6 +3,7 @@ import {
 	eventPlace,
 	eventShareText,
 	mentionHandles,
+	mentionParts,
 	misskeyShareText,
 	misskeyShareUrl,
 	xShareUrl,
@@ -104,6 +105,24 @@ describe("misskeyShareText", () => {
 	it("@name@host はそのまま", () => {
 		expect(misskeyShareText("@taka@misskey.io", mentions)).toBe(
 			"@taka@misskey.io",
+		);
+	});
+});
+
+describe("mentionParts", () => {
+	const mentions = [{ handle: "taka", x: null, fediverse: null }];
+	it("まがりにいる @name はその人のページへ、いなければ X へ", () => {
+		expect(mentionParts("語る(@Taka と かほ@03skybar28 )", mentions)).toEqual([
+			{ text: "語る(", href: null },
+			{ text: "@Taka", href: "/@taka" },
+			{ text: " と かほ", href: null },
+			{ text: "@03skybar28", href: "https://x.com/03skybar28" },
+			{ text: " )", href: null },
+		]);
+	});
+	it("@name@host や X の ID の形でないものはリンクにしない", () => {
+		expect(mentionParts("@taka@yami.ski @too_long_for_x_id_ @a-b", [])).toEqual(
+			[{ text: "@taka@yami.ski @too_long_for_x_id_ @a-b", href: null }],
 		);
 	});
 });

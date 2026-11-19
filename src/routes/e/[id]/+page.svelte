@@ -5,6 +5,7 @@ import { flyerStyle } from "#lib/flyer.ts";
 import {
 	eventPlace,
 	eventShareText,
+	mentionParts,
 	misskeyShareText,
 	misskeyShareUrl,
 	xShareUrl,
@@ -103,7 +104,7 @@ const cardDescription = $derived(
 		</div>
 		<div class="min-w-0">
 			<p class="font-serif text-lg text-muted">{formatWhen(event)}</p>
-			<h1 class="mt-2 text-[clamp(1.7rem,3.5vw,2.4rem)]">{event.title}</h1>
+			<h1 class="mt-2 text-[clamp(1.7rem,3.5vw,2.4rem)]">{#each mentionParts(event.title, event.mentions) as part, i (i)}{#if part.href}<a href={part.href} class="text-accent-ink hover:underline" rel="noopener">{part.text}</a>{:else}{part.text}{/if}{/each}</h1>
 			{#if canEdit}
 				<a href="/e/{event.id}/edit" class="btn mt-5 px-4 py-1.5 text-sm">この間を編集</a>
 			{/if}

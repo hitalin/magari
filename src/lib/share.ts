@@ -63,3 +63,30 @@ export function misskeyShareText(
 		return `@${name}@misskey.io`;
 	});
 }
+
+// 題の中の @name をリンクに分ける。まがりにいる人はその人のページへ。
+// いなければ X のプロフィールへ（取り込んだ会の題は X の ID で書かれている）
+export function mentionParts(
+	text: string,
+	mentions: ShareMention[],
+): { text: string; href: string | null }[] {
+	const parts: { text: string; href: string | null }[] = [];
+	let rest = 0;
+	for (const m of text.matchAll(MENTION_RE)) {
+		const [whole, name, host] = m;
+		let href: string | null = null;
+		if (!host) {
+			if (mentions.some((to) => to.handle === name.toLowerCase()))
+				href = `/@${name.toLowerCase()}`;
+			else if (/^[A-Za-z0-9_]{1,15}$/.test(name))
+				href = `https://x.com/${name}`;
+		}
+		if (!href) continue;
+		if (m.index > rest)
+			parts.push({ text: text.slice(rest, m.index), href: null });
+		parts.push({ text: whole, href });
+		rest = m.index + whole.length;
+	}
+	if (rest < text.length) parts.push({ text: text.slice(rest), href: null });
+	return parts;
+}
