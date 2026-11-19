@@ -102,8 +102,11 @@ async function upsertActor(
 const imageKey = async (dir: string, actorId: string, url: string) =>
 	`${dir}/${actorId}/src-${await stableId(url)}`;
 
+// url が / で始まるものは、このリポジトリの static/ に置いた画像（公式ページから直接は取れない店）
 async function copyImage(key: string, url: string): Promise<void> {
-	const res = await fetch(url);
+	const res = url.startsWith("/")
+		? await env.ASSETS.fetch(new URL(url, env.PUBLIC_ORIGIN))
+		: await fetch(url);
 	if (!res.ok) throw new Error(`HTTP ${res.status}`);
 	const type = res.headers.get("content-type")?.split(";")[0] ?? "";
 	if (!type.startsWith("image/")) throw new Error(`画像ではない: ${type}`);

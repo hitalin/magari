@@ -10,7 +10,8 @@ export type SourceActor = {
 	summary: string;
 	url?: string;
 	xHandle?: string;
-	// ハコ一覧のバナー（公式ページの og:image など）。取り込みのときに R2 へ写す
+	// ハコ一覧のバナー（公式ページの og:image など）。取り込みのときに R2 へ写す。
+	// photo と icon は、/ で始めると static/ に置いた画像を指す
 	photo?: string;
 	// ハコのページで名前の左に丸く出すアイコン（X のアイコン）。見本を出す環境だけ、取り込みのときに R2 へ写す
 	icon?: string;
@@ -207,5 +208,31 @@ export const SOURCES: Source[] = [
 		role: "space",
 		calendars: [{ id: "main", url: gcal("ebe.fukuoka@gmail.com") }],
 		storeHours: { hours: ["17:00", "23:00"] },
+	},
+	// 早稲田あかね。店が公開している Google カレンダー（早稲田あかねイベントカレンダー）。
+	{
+		id: "waseda-akane",
+		area: "東京",
+		actor: {
+			handle: "waseda_akane",
+			kind: "space",
+			name: "早稲田あかね",
+			summary: "みんなで自主営業している、早稲田の非営利の交流バー。",
+			url: "https://waseda-akane.jimdosite.com/",
+			photo: "/sources/waseda-akane.webp",
+			xHandle: "waseda_akane",
+			icon: "/sources/waseda-akane-icon.webp",
+		},
+		role: "space",
+		calendars: [
+			{
+				id: "main",
+				url: gcal(
+					"b0dafb1ab08dc20f4344a8ea5d3fd233cadddbce0f684797d6e3460373828a1b@group.calendar.google.com",
+				),
+			},
+		],
+		// 公式の表記は「19:00頃〜終電頃」
+		storeHours: { hours: ["19:00", "24:00"] },
 	},
 ];
