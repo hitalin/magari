@@ -11,8 +11,11 @@ type Row = Record<string, unknown>;
 function stubMisskey(who: () => string | null) {
 	vi.stubGlobal(
 		"fetch",
-		vi.fn(async (input: string | URL) => {
+		vi.fn(async (input: string | URL, init?: RequestInit) => {
 			const url = new URL(String(input));
+			// User-Agent の無い要求を断るサーバーがある
+			if (!new Headers(init?.headers).get("user-agent"))
+				return new Response("forbidden", { status: 403 });
 			if (url.pathname === "/api/meta")
 				return Response.json({ version: "2025.1.0" });
 			const username = who();

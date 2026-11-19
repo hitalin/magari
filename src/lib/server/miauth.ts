@@ -32,6 +32,9 @@ type MiAuthCheck = {
 	};
 };
 
+// Workers の fetch は User-Agent を付けない。付いていない要求を 403 で断るサーバーがある（yami.ski など）
+const USER_AGENT = "magari.cc (MiAuth)";
+
 type State = { host: string; callbackURL: string; linkUserId: string | null };
 
 // MiAuth の画面へ飛ばす前に、Misskey（とその派生）のサーバーか確かめる。違えば飛んだ先で 404 になるだけなので
@@ -39,7 +42,10 @@ async function isMisskey(host: string): Promise<boolean> {
 	try {
 		const res = await fetch(`https://${host}/api/meta`, {
 			method: "POST",
-			headers: { "content-type": "application/json" },
+			headers: {
+				"content-type": "application/json",
+				"user-agent": USER_AGENT,
+			},
 			body: JSON.stringify({ detail: false }),
 			signal: AbortSignal.timeout(5000),
 		});
@@ -141,7 +147,7 @@ export const miauth = (opts: {
 
 					const res = await fetch(
 						`https://${host}/api/miauth/${session}/check`,
-						{ method: "POST" },
+						{ method: "POST", headers: { "user-agent": USER_AGENT } },
 					).catch(() => null);
 					const check = (
 						res?.ok ? await res.json() : { ok: false }
