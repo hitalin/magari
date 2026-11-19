@@ -1,4 +1,5 @@
 <script lang="ts">
+import DayList from "#lib/components/DayList.svelte";
 import Flyer from "#lib/components/Flyer.svelte";
 import { dayKey, formatWhen } from "#lib/date.ts";
 import type { PageProps } from "./$types";
@@ -12,6 +13,8 @@ const SAMPLES = [
 ];
 const sampleAt = `${dayKey(new Date())}T18:00:00+09:00`;
 const fan = $derived(data.events.slice(0, 3));
+// 説明より先に実物を見せる。近い順に 5 つ
+const soon = $derived(data.events.slice(0, 5));
 // 上を流れる帯。どんな間が開いているか
 const WORDS = [
 	"間借り店舗",
@@ -95,6 +98,16 @@ const REPO = "https://github.com/hitalin/magari";
 	</div>
 </section>
 
+{#if soon.length}
+	<section class="block">
+		<div class="section-head">
+			<h2 class="section-title">これから開く間</h2>
+			<a href="/home" class="more">ぜんぶ見る ›</a>
+		</div>
+		<DayList events={soon} />
+	</section>
+{/if}
+
 <section class="block">
 	<h2 class="section-title">なにがうれしい</h2>
 	<ul class="why">
@@ -107,9 +120,28 @@ const REPO = "https://github.com/hitalin/magari";
 			</li>
 		{/each}
 	</ul>
-	<p class="mt-2 border-t border-line pt-6 text-sm leading-loose text-muted">
-		無料で、広告はありません。メールアドレスも、誰がどこへ行くかも預かりません。<a href={REPO} class="more" rel="noopener">ソースは公開</a>しています。
-	</p>
+</section>
+
+<section class="block">
+	<h2 class="section-title">しないこと</h2>
+	<dl class="nots">
+		<div>
+			<dt>お金をとらない</dt>
+			<dd>個人が無償で動かしています。広告もありません。</dd>
+		</div>
+		<div>
+			<dt>預からない</dt>
+			<dd>メールアドレスも、誰がどこへ行くかも持ちません。</dd>
+		</div>
+		<div>
+			<dt>取り持たない</dt>
+			<dd>予約も決済もありません。行く前の確認は、開けた人の告知で。</dd>
+		</div>
+		<div>
+			<dt>隠さない</dt>
+			<dd>ソースは<a href={REPO} class="more" rel="noopener">公開</a>していて、だれでも読めて、直せます。</dd>
+		</div>
+	</dl>
 </section>
 
 <style>
@@ -160,19 +192,35 @@ const REPO = "https://github.com/hitalin/magari";
 	.fan > :global(a:hover) {
 		z-index: 3;
 	}
-	.why {
+	.why,
+	.nots {
 		display: grid;
 		margin-top: 2.5rem;
 	}
 	/* カードにはせず、一覧と同じ 1px の線で区切る */
-	.why > li {
+	.why > li,
+	.nots > div {
 		padding-block: 1.5rem;
 		border-top: 1px solid var(--color-line);
 	}
 	.block {
 		padding-block: 3.5rem;
 	}
+	.nots dt {
+		font-family: var(--font-serif);
+		font-size: 1.1rem;
+	}
+	.nots dd {
+		margin-top: 0.35rem;
+		font-size: 0.875rem;
+		line-height: 1.8;
+		color: var(--color-muted);
+	}
 	@media (min-width: 48rem) {
+		.nots {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			column-gap: 2.5rem;
+		}
 		.why {
 			grid-template-columns: repeat(3, minmax(0, 1fr));
 			column-gap: 2.5rem;
