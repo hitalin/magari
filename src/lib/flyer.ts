@@ -26,9 +26,9 @@ export const FLYER_COLORS = ["red", "blue", "green", "pink", "mono"] as const;
 export type FlyerColor = (typeof FLYER_COLORS)[number];
 export const FLYER_COLOR_LABEL: Record<FlyerColor, string> = {
 	red: "赤",
-	blue: "青",
-	green: "緑",
-	pink: "桃",
+	blue: "紫",
+	green: "黄緑",
+	pink: "ピンク",
 	mono: "色なし",
 };
 
@@ -44,19 +44,21 @@ export function parseFlyerLook(
 	return v && c ? { variant: v, color: c } : null;
 }
 
-// 明るい紙に載せる濃い色（マジック、インク）と、黒い紙に載せる明るい色（落書きのチョークと同じ色）
+// 明るい紙に載せる濃い色（マジック、インク）と、黒い紙に載せる明るい色（蛍光のペンやスプレー）。
+// ライブハウスの壁やミニコミの刷り色に寄せる: 血の赤、謄写版の紫、毒々しい黄緑、ショッキングピンク。
+// 鍵（red / blue / green / pink）は保存してあるので変えず、色みだけ差し替えている
 const DEEP: Record<FlyerColor, string> = {
-	red: "#c2321f",
-	blue: "#23408e",
-	green: "#1c6148",
-	pink: "#b8305f",
+	red: "#b0141e",
+	blue: "#4a1f9c",
+	green: "#3f5a0c",
+	pink: "#c4126e",
 	mono: "#1f1d1a",
 };
 const BRIGHT: Record<FlyerColor, string> = {
-	red: "#f0433a",
-	blue: "#2f9bff",
-	green: "#3ecf6b",
-	pink: "#ff5fa2",
+	red: "#ff2d2d",
+	blue: "#a86bff",
+	green: "#b8f02a",
+	pink: "#ff3d9a",
 	mono: "#edeae3",
 };
 // おたよりを色なしで刷るときのインク。墨は訃報の黒枠に寄るので焦げ茶にする

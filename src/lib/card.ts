@@ -21,7 +21,7 @@ type CardEvent = Pick<
 >;
 
 // カードの絵柄を変えたら上げる（作り置きの画像を全部作り直す）
-const DESIGN = 2;
+const DESIGN = 3;
 
 // カードに出るものから決まる版。変わったら画像を作り直す
 export function cardVersion(e: CardEvent): string {
