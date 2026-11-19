@@ -103,7 +103,7 @@ const STATUS: Record<string, string> = {
 
 {@render list('これからの間', data.upcoming, 'まだくねくねしていません。「まがりする」から。')}
 {#if data.drafts.length}{@render list('下書き', data.drafts, '')}{/if}
-{#if data.past.length}{@render list('過去の間', data.past, '')}{/if}
+{#if data.past.length}{@render list('これまでの間', data.past, '')}{/if}
 
 <section class="mb-10">
 	<div class="section-head">
