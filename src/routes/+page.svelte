@@ -1,5 +1,4 @@
 <script lang="ts">
-import DayList from "#lib/components/DayList.svelte";
 import Flyer from "#lib/components/Flyer.svelte";
 import { dayKey, formatWhen } from "#lib/date.ts";
 import type { PageProps } from "./$types";
@@ -13,8 +12,6 @@ const SAMPLES = [
 ];
 const sampleAt = `${dayKey(new Date())}T18:00:00+09:00`;
 const fan = $derived(data.events.slice(0, 3));
-// 説明より先に実物を見せる。近い順に 5 つ
-const soon = $derived(data.events.slice(0, 5));
 // 上を流れる帯。どんな間が開いているか
 const WORDS = [
 	"間借り店舗",
@@ -30,34 +27,23 @@ const WHY = [
 	{
 		who: "行く人",
 		title: "今日どこが開いているか、ひと目で",
-		body: "X の告知やカレンダーに散らばった「いつ・どこで・誰が」を、これから 7 日ぶん並べています。見るのにログインはいりません。行くと知らせる必要もありません。",
+		body: "散らばった告知を、これから 7 日ぶん並べています。ログインも、行くと知らせる必要もありません。",
 		href: "/home",
 		cta: "開いている所を見る",
 	},
 	{
 		who: "開ける人",
 		title: "ひとことで、ビラが 1 枚",
-		body: "要るのは、ひとこと・日時・場所だけ。ビラは打つそばから刷り上がり、X に貼れば告知は終わりです。「18時から店にいます」で十分。",
+		body: "要るのは、ひとこと・日時・場所だけ。X に貼れば告知は終わりです。",
 		href: "/new",
 		cta: "とりあえず開ける",
 	},
 	{
 		who: "ハコを貸す人",
 		title: "ホームページの代わりに",
-		body: "紹介・アクセス・設備を書いたページに、そこで開かれる間のカレンダーが勝手に付きます。借りたい人は X で声をかけるだけ。",
+		body: "ハコのページに、そこで開かれる間のカレンダーが勝手に付きます。",
 		href: "/spaces/new",
 		cta: "ハコを載せる",
-	},
-];
-const STEPS = [
-	{ title: "X でログイン", body: "メールも実名もいりません。" },
-	{
-		title: "ひとこと・日時・場所",
-		body: "住所や料金は、書きたければ。",
-	},
-	{
-		title: "ビラを貼る",
-		body: "審査はなく、書いたらすぐ一覧と壁に載ります。",
 	},
 ];
 const REPO = "https://github.com/hitalin/magari";
@@ -109,16 +95,6 @@ const REPO = "https://github.com/hitalin/magari";
 	</div>
 </section>
 
-{#if soon.length}
-	<section class="block">
-		<div class="section-head">
-			<h2 class="section-title">これから開く間</h2>
-			<a href="/home" class="more">ぜんぶ見る ›</a>
-		</div>
-		<DayList events={soon} />
-	</section>
-{/if}
-
 <section class="block">
 	<h2 class="section-title">なにがうれしい</h2>
 	<ul class="why">
@@ -131,60 +107,9 @@ const REPO = "https://github.com/hitalin/magari";
 			</li>
 		{/each}
 	</ul>
-</section>
-
-<section class="block">
-	<h2 class="section-title">開けかた</h2>
-	<ol class="steps">
-		{#each STEPS as step, i (step.title)}
-			<li>
-				<span class="step-no" aria-hidden="true">{i + 1}</span>
-				<div>
-					<h3 class="text-lg">{step.title}</h3>
-					<p class="mt-1 text-sm leading-relaxed text-muted">{step.body}</p>
-				</div>
-			</li>
-		{/each}
-	</ol>
-</section>
-
-<section class="block">
-	<h2 class="section-title">しないこと</h2>
-	<dl class="nots">
-		<div>
-			<dt>お金をとらない</dt>
-			<dd>個人が無償で動かしています。広告もありません。</dd>
-		</div>
-		<div>
-			<dt>預からない</dt>
-			<dd>メールアドレスも、誰がどこへ行くかも持ちません。</dd>
-		</div>
-		<div>
-			<dt>取り持たない</dt>
-			<dd>予約も決済もありません。行く前の確認は、開けた人の告知で。</dd>
-		</div>
-		<div>
-			<dt>隠さない</dt>
-			<dd>ソースは<a href={REPO} class="more" rel="noopener">公開</a>していて、だれでも読めて、直せます。</dd>
-		</div>
-	</dl>
-</section>
-
-<section class="block ends">
-	<div class="panel">
-		<div>
-			<h2 class="text-xl">とりあえず開ける</h2>
-			<p class="mt-2 text-sm leading-relaxed text-muted">ひとこと・日時・場所を書けば、ビラが 1 枚できます。</p>
-		</div>
-		<a href="/new" class="btn btn-primary">開ける</a>
-	</div>
-	<div class="panel">
-		<div>
-			<h2 class="text-xl">ハコを載せる</h2>
-			<p class="mt-2 text-sm leading-relaxed text-muted">貸せる場所があるなら、看板を 1 枚出しておけます。</p>
-		</div>
-		<a href="/spaces/new" class="btn">載せる</a>
-	</div>
+	<p class="mt-2 border-t border-line pt-6 text-sm leading-loose text-muted">
+		無料で、広告はありません。メールアドレスも、誰がどこへ行くかも預かりません。<a href={REPO} class="more" rel="noopener">ソースは公開</a>しています。
+	</p>
 </section>
 
 <style>
@@ -235,66 +160,21 @@ const REPO = "https://github.com/hitalin/magari";
 	.fan > :global(a:hover) {
 		z-index: 3;
 	}
-	.block {
-		padding-block: 3.5rem;
-	}
-	/* カードにはせず、一覧と同じ 1px の線で区切る */
-	.why,
-	.steps,
-	.nots {
+	.why {
 		display: grid;
 		margin-top: 2.5rem;
 	}
-	.why > li,
-	.steps > li,
-	.nots > div {
+	/* カードにはせず、一覧と同じ 1px の線で区切る */
+	.why > li {
 		padding-block: 1.5rem;
 		border-top: 1px solid var(--color-line);
 	}
-	.steps > li {
-		display: flex;
-		gap: 1rem;
-		align-items: baseline;
-	}
-	.step-no {
-		font-family: var(--font-serif);
-		font-size: 2rem;
-		line-height: 1;
-		color: var(--color-accent-ink);
-	}
-	.nots dt {
-		font-family: var(--font-serif);
-		font-size: 1.1rem;
-	}
-	.nots dd {
-		margin-top: 0.35rem;
-		font-size: 0.875rem;
-		line-height: 1.8;
-		color: var(--color-muted);
-	}
-	.ends {
-		display: grid;
-		gap: 1rem;
-	}
-	.ends > .panel {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: center;
-		justify-content: space-between;
-		gap: 1.25rem;
-		padding: 1.5rem;
+	.block {
+		padding-block: 3.5rem;
 	}
 	@media (min-width: 48rem) {
-		.ends {
-			grid-template-columns: repeat(2, minmax(0, 1fr));
-		}
-		.why,
-		.steps {
+		.why {
 			grid-template-columns: repeat(3, minmax(0, 1fr));
-			column-gap: 2.5rem;
-		}
-		.nots {
-			grid-template-columns: repeat(2, minmax(0, 1fr));
 			column-gap: 2.5rem;
 		}
 	}
