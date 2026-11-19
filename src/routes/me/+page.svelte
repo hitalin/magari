@@ -3,6 +3,7 @@ import { authClient } from "#lib/auth-client.ts";
 import Empty from "#lib/components/Empty.svelte";
 import MisskeyForm from "#lib/components/MisskeyForm.svelte";
 import { formatWhen } from "#lib/date.ts";
+import { MISSKEY_ICON, SNS_ICON } from "#lib/sns.ts";
 import { invalidateAll } from "$app/navigation";
 import type { PageProps } from "./$types";
 
@@ -136,7 +137,11 @@ const STATUS: Record<string, string> = {
 	<div class="rule-list">
 		{#each data.accounts as a (a.id)}
 			<div class="row items-center">
+				{#if a.providerId === 'twitter' || a.providerId === 'miauth'}
+				<span class="text-muted" role="img" aria-label={a.label}><svg viewBox="0 0 24 24" class="h-4 w-4" fill="currentColor" aria-hidden="true"><path d={a.providerId === 'twitter' ? SNS_ICON.x : MISSKEY_ICON} /></svg></span>
+			{:else}
 				<span class="font-mono text-xs text-muted">{a.label}</span>
+			{/if}
 				<span class="flex flex-wrap items-center gap-3 text-sm">
 					<span class="break-all">{a.detail ?? 'つながっています'}</span>
 					{#if data.accounts.length > 1}
@@ -148,10 +153,10 @@ const STATUS: Record<string, string> = {
 	</div>
 	<div class="mt-4 max-w-md space-y-4">
 		{#if data.xEnabled && !data.accounts.some((a) => a.providerId === 'twitter')}
-			<button type="button" class="btn" onclick={linkX}>X をつなぐ</button>
+			<button type="button" class="btn" onclick={linkX} aria-label="X をつなぐ"><svg viewBox="0 0 24 24" class="h-4 w-4 shrink-0" fill="currentColor" aria-hidden="true"><path d={SNS_ICON.x} /></svg>をつなぐ</button>
 		{/if}
 		<div>
-			<p class="label mb-2">Misskey をつなぐ</p>
+			<p class="label mb-2 flex items-center gap-1.5"><svg viewBox="0 0 24 24" class="h-4 w-4 shrink-0" fill="currentColor" aria-hidden="true"><path d={MISSKEY_ICON} /></svg><span class="sr-only">Misskey </span>をつなぐ</p>
 			<MisskeyForm callbackURL="/me?linked" action="つなぐ" />
 		</div>
 	</div>
