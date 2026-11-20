@@ -85,6 +85,8 @@ export type ActorPage = {
 // /@handle/past の 1 ページぶん。next は続きを取るときの before
 export type ActorPast = {
 	actor: ActorRef;
+	// 管理者のいないハコ・団体のページか（検索に載せない）
+	unofficial: boolean;
 	events: EventSummary[];
 	next: string | null;
 };

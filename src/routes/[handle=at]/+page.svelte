@@ -69,6 +69,8 @@ const description = $derived(actor.catch ?? actor.summary ?? undefined);
 	{#if description}<meta name="description" content={description} />{/if}
 	<meta property="og:title" content={actor.name} />
 	{#if description}<meta property="og:description" content={description} />{/if}
+	<!-- 非公式のページは、店の名前で検索した人に公式より先に見せない。引き取られたら載る -->
+	{#if unofficial}<meta name="robots" content="noindex" />{/if}
 </svelte:head>
 
 {#if actor.headerUrl && actor.kind !== 'space'}

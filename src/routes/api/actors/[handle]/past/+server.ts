@@ -23,6 +23,7 @@ export const GET: RequestHandler = async ({ locals, params, url }) => {
 	const events = rows.slice(0, PAGE);
 	const page: ActorPast = {
 		actor: { handle: actor.handle, name: actor.name, kind: actor.kind },
+		unofficial: actor.kind !== "person" && !actor.hasManager,
 		events,
 		next: rows.length > PAGE ? events[events.length - 1].startsAt : null,
 	};

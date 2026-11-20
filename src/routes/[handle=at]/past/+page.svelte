@@ -6,7 +6,10 @@ import type { PageProps } from "./$types";
 let { data }: PageProps = $props();
 </script>
 
-<svelte:head><title>{data.actor.name} のこれまでの間 | ◱</title></svelte:head>
+<svelte:head>
+	<title>{data.actor.name} のこれまでの間 | ◱</title>
+	{#if data.unofficial}<meta name="robots" content="noindex" />{/if}
+</svelte:head>
 
 <div class="mt-4 mb-8">
 	<p class="label"><a href="/@{data.actor.handle}" class="hover:text-accent-ink">‹ {data.actor.name} · @{data.actor.handle}</a></p>

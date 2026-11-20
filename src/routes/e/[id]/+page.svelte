@@ -69,6 +69,8 @@ const cardDescription = $derived(
 	<meta name="description" content={cardDescription} />
 	<meta property="og:description" content={cardDescription} />
 	<meta name="twitter:card" content="summary_large_image" />
+	<!-- 写した会は元の告知が正。検索には元を出してもらう -->
+	{#if event.source}<meta name="robots" content="noindex" />{/if}
 </svelte:head>
 
 <article class="mt-4">
