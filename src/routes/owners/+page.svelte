@@ -31,5 +31,5 @@
 	</ul>
 	<p>店の X を使えないときは、<a href="/contact?kind=claim">運営への連絡</a>から知らせてください。</p>
 
-	<p class="doc-foot"><a href="/policy">掲載と削除の方針</a> · <a href="/privacy">プライバシーポリシー</a> · <a href="/contact">運営への連絡</a></p>
+	<p class="doc-foot"><a href="/eventers">会を開く方へ</a> · <a href="/policy">掲載と削除の方針</a> · <a href="/privacy">プライバシーポリシー</a> · <a href="/contact">運営への連絡</a></p>
 </article>
