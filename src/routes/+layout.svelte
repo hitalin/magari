@@ -143,7 +143,7 @@ const filterItems = $derived<{ area: string | null }[] | undefined>(
 	{@render children()}
 </main>
 
-<!-- 奥付。ナビと同じものは繰り返さない。左にだれがどう動かしているか（無償・広告なし・ソース公開）、右に規約類と連絡。© は置かない -->
+<!-- 奥付。ナビと同じものは繰り返さない。左にだれがどう動かしているか（無償・広告なし・ソース公開）、右に規約類と連絡、載っている店と主催あての説明。© は置かない -->
 <footer class="border-t border-line">
 	<nav aria-label="フッター" class="mx-auto flex max-w-content flex-wrap items-center gap-x-3 gap-y-1 px-4 pt-4 pb-20 text-xs text-muted sm:gap-x-5 sm:pb-4">
 		<img src={logo} alt="" class="h-4 w-4" />
@@ -151,6 +151,9 @@ const filterItems = $derived<{ area: string | null }[] | undefined>(
 		<a href="/privacy" class="footer-link">プライバシー</a>
 		<a href="/policy" class="footer-link">掲載方針</a>
 		<a href="/contact" class="footer-link">連絡</a>
+		<!-- 知らないうちに載っていた人が、どのページからでも事情を読めるように -->
+		<a href="/owners" class="footer-link">お店の方へ</a>
+		<a href="/eventers" class="footer-link">会を開く方へ</a>
 		{#if !data.loggedIn}<a href="/login" class="footer-link">ログイン</a>{/if}
 		<a href={REPO} class="footer-link sm:ml-auto" rel="noopener">ソース<span aria-hidden="true"> ↗</span></a>
 	</nav>

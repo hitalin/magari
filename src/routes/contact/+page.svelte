@@ -14,6 +14,7 @@ let { data, form }: PageProps = $props();
 	<p class="mt-3 text-sm text-muted">
 		掲載の取り下げ、ページの引き取り、そのほかの連絡を受け付けます。ログインは要りません。
 		取り下げの申し出があった掲載は、まず非表示にしてから確かめます。取り下げたページの ID は、以後だれも使えません（<a href="/policy" class="underline underline-offset-2 hover:text-accent-ink">掲載と削除の方針</a>）。
+		なぜ載っているかは、<a href="/owners" class="underline underline-offset-2 hover:text-accent-ink">お店・団体の方へ</a>と<a href="/eventers" class="underline underline-offset-2 hover:text-accent-ink">会を開く方へ</a>に書いています。
 	</p>
 
 	{#if form?.sent}

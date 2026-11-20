@@ -65,6 +65,9 @@ const spaces = $derived(
 				</a>
 			{/each}
 		</div>
+		{#if spaces.some((s) => !s.hasManager)}
+			<p class="mt-10 text-xs text-dim">「非公式」は、運営者がまだいないページです。店の方は<a href="/owners" class="underline underline-offset-2 hover:text-accent-ink">お店・団体の方へ</a>をご覧ください。</p>
+		{/if}
 	{/if}
 </section>
 
