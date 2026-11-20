@@ -4,13 +4,16 @@ import { parseHandleInput } from "#lib/id.ts";
 import { parseModerationTarget } from "#lib/report-form.ts";
 import {
 	blockHandle,
+	blockTitle,
 	deleteReport,
 	listBlockedHandles,
+	listBlockedTitles,
 	listHidden,
 	listReports,
 	markReportHandled,
 	setHidden,
 	unblockHandle,
+	unblockTitle,
 } from "#lib/server/moderation.ts";
 import { addMember } from "#lib/server/spaces.ts";
 import type { Actions, PageServerLoad } from "./$types";
@@ -23,10 +26,11 @@ function requireAdmin(locals: App.Locals) {
 
 export const load: PageServerLoad = async ({ locals }) => {
 	requireAdmin(locals);
-	const [reports, blocked, hidden] = await Promise.all([
+	const [reports, blocked, hidden, blockedTitles] = await Promise.all([
 		listReports(locals.db),
 		listBlockedHandles(locals.db),
 		listHidden(locals.db),
+		listBlockedTitles(locals.db),
 	]);
 	return {
 		// 連絡の対象が非表示にできる形（@handle か会の URL）なら、その場で非表示にするボタンを出す
@@ -36,6 +40,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 		})),
 		blocked,
 		hidden,
+		blockedTitles,
 	};
 };
 
@@ -98,5 +103,21 @@ export const actions: Actions = {
 		requireAdmin(locals);
 		const form = await request.formData();
 		await unblockHandle(locals.db, String(form.get("handle") ?? ""));
+	},
+	// 載せないでと言われた主催の名前。題にこの語が入った会は、次の取り込みから写さない
+	blockTitle: async ({ request, locals }) => {
+		requireAdmin(locals);
+		const form = await request.formData();
+		const phrase = String(form.get("phrase") ?? "").trim();
+		// 1 文字の語は関係のない会まで巻き込む
+		if (phrase.replace(/\s+/g, "").length < 2 || phrase.length > 50)
+			return fail(400, { titleError: "2〜50 文字で入れてください" });
+		const note = String(form.get("note") ?? "").trim();
+		await blockTitle(locals.db, phrase, note ? note.slice(0, 200) : null);
+	},
+	unblockTitle: async ({ request, locals }) => {
+		requireAdmin(locals);
+		const form = await request.formData();
+		await unblockTitle(locals.db, String(form.get("phrase") ?? ""));
 	},
 };

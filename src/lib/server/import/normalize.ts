@@ -141,3 +141,16 @@ export function unwrapUrl(description: string | null): string | null {
 		return null;
 	}
 }
+
+// 載せないでと言われた主催の名前（運営が控えた語）が題に入っている会は写さない。
+// 全角半角・大文字小文字・空白の違いは同じとみなす
+const fold = (s: string) =>
+	s.normalize("NFKC").toLowerCase().replace(/\s+/g, "");
+
+export function titleBlocked(title: string, phrases: string[]): boolean {
+	const t = fold(title);
+	return phrases.some((p) => {
+		const f = fold(p);
+		return f !== "" && t.includes(f);
+	});
+}

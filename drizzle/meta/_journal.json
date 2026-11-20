@@ -120,6 +120,13 @@
       "when": 1795113030084,
       "tag": "0016_actor_misskey",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "6",
+      "when": 1795161280537,
+      "tag": "0017_blocked_titles",
+      "breakpoints": true
     }
   ]
 }

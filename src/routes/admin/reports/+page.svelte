@@ -130,3 +130,28 @@ const fmt = new Intl.DateTimeFormat("ja-JP", {
 		</ul>
 	{/if}
 </section>
+
+<section class="mt-12">
+	<div class="section-head"><h2 class="section-title">写さない主催</h2></div>
+	<p class="mb-6 text-sm text-muted">題にこの語が入った会は、次の取り込み（毎時）から写しません。すでに写した先の会も消えます。全角半角・大文字小文字・空白の違いは区別しません。</p>
+	<form method="POST" action="?/blockTitle" class="panel grid gap-4 p-5 sm:grid-cols-[1fr_2fr_auto] sm:items-end">
+		{#if form?.titleError}<p class="text-sm text-accent-ink sm:col-span-3" role="alert">{form.titleError}</p>{/if}
+		<Field label="題に入る語"><input name="phrase" required maxlength="50" class="input" placeholder="主催の名前や会の名前" /></Field>
+		<Field label="メモ"><input name="note" maxlength="200" class="input" placeholder="いつ、だれの依頼か" /></Field>
+		<button type="submit" class="btn btn-primary">写さない</button>
+	</form>
+	{#if data.blockedTitles.length}
+		<ul class="mt-6 space-y-2">
+			{#each data.blockedTitles as b (b.phrase)}
+				<li class="panel flex flex-wrap items-center gap-3 p-3 text-sm">
+					<span>{b.phrase}</span>
+					{#if b.note}<span class="text-muted">{b.note}</span>{/if}
+					<form method="POST" action="?/unblockTitle" class="ml-auto">
+						<input type="hidden" name="phrase" value={b.phrase} />
+						<button type="submit" class="btn text-xs">外す</button>
+					</form>
+				</li>
+			{/each}
+		</ul>
+	{/if}
+</section>

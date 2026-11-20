@@ -2,7 +2,13 @@
 import { asc, desc, eq, isNotNull } from "drizzle-orm";
 import type { ModerationTarget, ParsedReport } from "#lib/report-form.ts";
 import type { Db } from "./db/index.ts";
-import { actors, blockedHandles, events, reports } from "./db/schema.ts";
+import {
+	actors,
+	blockedHandles,
+	blockedTitles,
+	events,
+	reports,
+} from "./db/schema.ts";
 
 export async function createReport(db: Db, values: ParsedReport) {
 	await db.insert(reports).values(values);
@@ -138,4 +144,21 @@ export async function blockHandle(db: Db, handle: string, note: string | null) {
 
 export async function unblockHandle(db: Db, handle: string) {
 	await db.delete(blockedHandles).where(eq(blockedHandles.handle, handle));
+}
+
+export type BlockedTitle = typeof blockedTitles.$inferSelect;
+
+export async function listBlockedTitles(db: Db): Promise<BlockedTitle[]> {
+	return db.select().from(blockedTitles).orderBy(asc(blockedTitles.phrase));
+}
+
+export async function blockTitle(db: Db, phrase: string, note: string | null) {
+	await db
+		.insert(blockedTitles)
+		.values({ phrase, note })
+		.onConflictDoUpdate({ target: blockedTitles.phrase, set: { note } });
+}
+
+export async function unblockTitle(db: Db, phrase: string) {
+	await db.delete(blockedTitles).where(eq(blockedTitles.phrase, phrase));
 }

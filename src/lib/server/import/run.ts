@@ -4,7 +4,7 @@ import { detectArea, ONLINE } from "#lib/area.ts";
 import { mediaUrl } from "#lib/types.ts";
 import type { Db } from "../db/index.ts";
 import { actorMembers, actors, eventHosts, events } from "../db/schema.ts";
-import { isBlockedHandle } from "../moderation.ts";
+import { isBlockedHandle, listBlockedTitles } from "../moderation.ts";
 import { setHeaderKey } from "../spaces.ts";
 import { fetchFreecalend, freecalendMemNo } from "./freecalend";
 import { type IcsCalendar, parseIcs } from "./ics";
@@ -13,6 +13,7 @@ import {
 	expandOccurrences,
 	parseEdenTitle,
 	storeHoursFor,
+	titleBlocked,
 	unwrapUrl,
 } from "./normalize";
 import { SOURCES, type Source } from "./sources";
@@ -157,6 +158,7 @@ async function importCalendar(
 	actorId: string,
 	from: Date,
 	to: Date,
+	blockedTitles: string[],
 ): Promise<ImportResult> {
 	const sourceKey = `${src.id}/${cal.id}`;
 	const parsed = await fetchCalendar(cal.url, from, to);
@@ -172,6 +174,8 @@ async function importCalendar(
 	const hostRows: { eventId: string }[] = [];
 
 	for (const ev of parsed.events) {
+		// 載せないでと言われた主催の会は写さない。前に写したぶんは、下の「元から消えた会」と同じく消える
+		if (titleBlocked(ev.summary, blockedTitles)) continue;
 		for (const occ of expandOccurrences(ev, from, to)) {
 			if (
 				!ev.recurrenceId &&
@@ -308,6 +312,7 @@ export async function runImports(
 	const from = new Date(now - (opts.pastDays ?? 1) * DAY_MS);
 	const to = new Date(now + (opts.futureDays ?? 120) * DAY_MS);
 	const results: ImportResult[] = [];
+	const blockedTitles = (await listBlockedTitles(db)).map((b) => b.phrase);
 	for (const src of SOURCES) {
 		// 掲載を断られた取り込み元は飛ばす
 		if (await isBlockedHandle(db, src.actor.handle)) continue;
@@ -322,7 +327,9 @@ export async function runImports(
 		}
 		for (const cal of src.calendars) {
 			try {
-				results.push(await importCalendar(db, src, cal, actorId, from, to));
+				results.push(
+					await importCalendar(db, src, cal, actorId, from, to, blockedTitles),
+				);
 			} catch (e) {
 				results.push({
 					source: src.id,

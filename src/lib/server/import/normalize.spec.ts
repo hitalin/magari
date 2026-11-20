@@ -5,6 +5,7 @@ import {
 	expandOccurrences,
 	parseEdenTitle,
 	storeHoursFor,
+	titleBlocked,
 	unwrapUrl,
 } from "./normalize";
 
@@ -197,5 +198,21 @@ describe("expandOccurrences", () => {
 			"2026-04-08T10:00:00.000Z",
 			"2026-04-15T10:00:00.000Z",
 		]);
+	});
+});
+
+describe("titleBlocked", () => {
+	it("題に断られた名前が入っていれば写さない", () => {
+		expect(titleBlocked("やまだバー 19-23時", ["やまだ"])).toBe(true);
+	});
+	it("全角半角・大文字小文字・空白の違いは同じとみなす", () => {
+		expect(titleBlocked("ＹＡＭＡＤＡ　ＢＡＲ", ["yamada bar"])).toBe(true);
+		expect(titleBlocked("yamadabar", ["Yamada Bar"])).toBe(true);
+	});
+	it("入っていなければ写す", () => {
+		expect(titleBlocked("たなかバー", ["やまだ"])).toBe(false);
+	});
+	it("空の語は何にも当てない", () => {
+		expect(titleBlocked("たなかバー", ["", "  "])).toBe(false);
 	});
 });

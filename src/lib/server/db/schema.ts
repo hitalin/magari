@@ -204,6 +204,13 @@ export const blockedHandles = sqliteTable("blocked_handles", {
 	createdAt: timestamp("created_at").notNull().$defaultFn(now),
 });
 
+// 載せないでと言われた主催の名前。題にこの語が入った会は、取り込みで写さない。
+export const blockedTitles = sqliteTable("blocked_titles", {
+	phrase: text("phrase").primaryKey(),
+	note: text("note"),
+	createdAt: timestamp("created_at").notNull().$defaultFn(now),
+});
+
 // 地面の落書き。1 行 = 1 回ぶんの線（src/lib/graffiti.ts の形）。誰が描いたかは持たない。
 export const graffiti = sqliteTable(
 	"graffiti",
