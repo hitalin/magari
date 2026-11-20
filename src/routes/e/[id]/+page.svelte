@@ -147,6 +147,7 @@ const cardDescription = $derived(
 			<p class="mt-8 text-xs leading-relaxed text-dim">
 				{#if event.source}{event.space?.name ?? event.hosts[0]?.name ?? '主催'}が公開している予定表から、まがりが写した情報です（ご本人が載せたものではありません）。{:else}載せた人が書いた内容です。{/if}日時や場所は変わることがあるので、行く前に{#if event.url}<a href={event.url} class="underline underline-offset-2 hover:text-accent-ink" rel="noopener">主催の告知</a>{:else}主催の告知{/if}で確かめてください。
 				この掲載に問題があれば<a href="/contact?kind=takedown&about=/e/{event.id}" class="underline underline-offset-2 hover:text-accent-ink">運営に連絡</a>できます。
+				{#if event.source}<a href="/owners" class="underline underline-offset-2 hover:text-accent-ink">お店・団体の方へ</a>{/if}
 			</p>
 			<!-- 開けた直後は、上の「あとは貼るだけ」が同じ役目なので出さない -->
 			{#if !opened}

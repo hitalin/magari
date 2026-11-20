@@ -140,6 +140,9 @@ UI/UX の型は「意識が低すぎる、しょぼい Luma」。Luma から借�
 - **写すのは題・日時・場所・元へのリンクと、説明文の頭 120 字だけ**（`normalize.ts` の `excerpt`）。全文は元の告知で読んでもらう。説明文に告知ページが無い会は、取り込み元の公式ページ（`sources.ts` の `url`）を告知のリンクにする。会のページには「予定表から写した情報で、本人が載せたものではない」と出す。
 - **店の写真**: 取り込み元の公式ページにある店の写真（`sources.ts` の `photo`）は、本番でも R2 に写して、ハコの一覧とページに出す。
 - **開発環境の見本**: `IMPORT_SAMPLES=1` の環境だけ、見本として紹介文も写し（`sources.ts` の `summary`）、見た目の確認用にそのまま出す（`nameOnlyIfUnmanaged` の `showSamples`。API の `/api/spaces` と `/api/actors/{handle}` が渡す）。取り込みの有無（`IMPORT_ENABLED`）とは別の旗なので、本番で取り込みを有効にしても紹介文は写さず、出さない。X のアイコン（`sources.ts` の `icon`。R2 へ写す）は本番でも写して出す。
+- **合意の前は検索に載せない。** 写した会（`events.source` あり）と、管理者のいないハコ・団体のページ（`/@handle` と `/@handle/past`）は `noindex`。店の名前で検索した人に、公式より先にまがりを見せない。引き取られたページは載る。
+- **店あての説明は `/owners`。** 何を写しているか、店は何もしなくてよいこと、取り下げ方、引き取り方を 1 枚に。非公式のページと写した会から飛べる。
+- **引き取りは店の X でログインするだけ（`/claim/{handle}`）。** `sources.ts` に控えた店の X の ID（`claimX`）と、ログイン中の人がつないでいる X のいまの ID が同じなら、その場で管理者（owner）にする。ID は引き取りのたびに X へ問い合わせる（better-auth の `accountInfo`）。`user.xUsername` は本人が書き換えられるので使わない。ページの X の欄（`actors.xHandle`）も自己申告なので使わない。控えの無いページと、店の X を使えない人は、今までどおり運営への連絡から。
 - **取り込んだ会は、まがりの中で広げない。** 編集はできない（元のカレンダーが正）。この先、会への反応（参加表明など）や ActivityPub の配送を足すときも、取り込んだ会（`events.source` あり）は対象にしない。
 - **取り込みはオプトイン。** `IMPORT_ENABLED=1` の環境でだけ `POST /api/admin/import` と `scheduled` が動く（無ければ 404 / 何もしない）。開発は `.dev.vars`、本番は `wrangler.jsonc` の vars に置き、本番は Cron（`triggers.crons`）で毎時走る。掲載の合意はまだ取れていないので、申し出があればすぐ外す（掲載拒否リスト）。止めるときは vars と Cron を消す。
 - 取り込み元は `src/lib/server/import/sources.ts`。1 取り込み元 = 1 Actor（場または団体）+ 複数カレンダー。

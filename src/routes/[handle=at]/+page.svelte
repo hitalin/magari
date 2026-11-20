@@ -96,7 +96,7 @@ const description = $derived(actor.catch ?? actor.summary ?? undefined);
 	{#if actor.summary}<p class="mt-3 max-w-[34em] whitespace-pre-line">{actor.summary}</p>{/if}
 	{#if unofficial}
 		<p class="mt-3 max-w-[34em] text-xs text-muted">
-			運営者がまだいない非公式のページで、名前とリンクと、公式ページの店の写真だけを載せています。運営者の方は、<a href="/contact?kind=claim&about=@{actor.handle}" class="underline underline-offset-2 hover:text-accent-ink">ページの引き取り</a>か<a href="/contact?kind=takedown&about=@{actor.handle}" class="underline underline-offset-2 hover:text-accent-ink">掲載の取り下げ</a>をご連絡ください。
+			運営者がまだいない非公式のページです。運営者の方は、いつでも<a href="/claim/{actor.handle}" class="underline underline-offset-2 hover:text-accent-ink">ページの引き取り</a>と<a href="/contact?kind=takedown&about=@{actor.handle}" class="underline underline-offset-2 hover:text-accent-ink">掲載の取り下げ</a>ができます（<a href="/owners" class="underline underline-offset-2 hover:text-accent-ink">お店・団体の方へ</a>）。
 		</p>
 	{/if}
 	<div class="pills mt-5">
