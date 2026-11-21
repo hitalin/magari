@@ -154,6 +154,7 @@ const cardDescription = $derived(
 				<div class="mt-4 flex flex-wrap gap-3">
 					<a href={shareUrl} class="btn btn-primary" rel="noopener" onclick={warmCard} aria-label="X で共有"><svg viewBox="0 0 24 24" class="h-4 w-4 shrink-0" fill="currentColor" aria-hidden="true"><path d={SNS_ICON.x} /></svg>で共有</a>
 					<a href={misskeyUrl} class="btn" rel="noopener" onclick={warmCard} aria-label="Misskey で共有"><svg viewBox="0 0 24 24" class="h-4 w-4 shrink-0" fill="currentColor" aria-hidden="true"><path d={MISSKEY_ICON} /></svg>で共有</a>
+					{#if event.status !== 'draft' && !event.hidden}<a href="/e/{event.id}/event.ics" class="btn" download>カレンダーに入れる</a>{/if}
 				</div>
 			{/if}
 		</div>

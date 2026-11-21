@@ -67,7 +67,8 @@ UI/UX の型は「意識が低すぎる、しょぼい Luma」。Luma から借�
 | URL | 内容 | 将来の AP |
 |---|---|---|
 | `/@{handle}` | Actor ページ | Accept: activity+json で Actor オブジェクト |
-| `/@{handle}/feed.ics` | Actor の iCal | — |
+| `/@{handle}/feed.ics` | Actor のこれからの間の iCal。ページの「カレンダーで購読」（`webcal://`）から | — |
+| `/e/{id}/event.ics` | 会 1 件の iCal。会のページの「カレンダーに入れる」から。下書きと非表示は出さない（`src/lib/ics.ts`） | — |
 | `/e/{id}` | 会ページ（短い。X で共有しやすい） | Event オブジェクト |
 | `/.well-known/webfinger` | 将来 | `acct:{handle}@magari.cc` |
 

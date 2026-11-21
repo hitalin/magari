@@ -146,7 +146,10 @@ const description = $derived(actor.catch ?? actor.summary ?? undefined);
 
 <div class="section-head">
 	<h2 class="section-title">これからの間</h2>
-	<span class="chip">{upcoming.length} 間</span>
+	<span class="flex items-center gap-3">
+		<a href="webcal://{page.url.host}/@{actor.handle}/feed.ics" class="more text-sm">カレンダーで購読</a>
+		<span class="chip">{upcoming.length} 間</span>
+	</span>
 </div>
 
 {#if upcoming.length === 0}
