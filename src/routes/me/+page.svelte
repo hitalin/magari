@@ -163,6 +163,12 @@ async function unlink(id: string) {
 </section>
 
 <section class="mt-16 border-t border-line pt-8">
+	<p class="label">データの書き出し</p>
+	<p class="mt-2 text-sm text-muted">自分のページ、管理しているハコ・団体、自分で開いた間、ログイン方法を、1 つの JSON にして持ち出せます。</p>
+	<a href="/me/export.json" download class="btn mt-3">JSON で書き出す</a>
+</section>
+
+<section class="mt-8 border-t border-line pt-8">
 	<p class="label">アカウントの削除</p>
 	<p class="mt-2 text-sm text-muted">自分で開いた間、自分のページ、ログイン方法をすべて消します。取り込み元（エデンなど）のデータには影響しません。元に戻せません。</p>
 	<form
