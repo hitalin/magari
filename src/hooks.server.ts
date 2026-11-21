@@ -1,9 +1,13 @@
+import * as workers from "cloudflare:workers";
 import { env } from "cloudflare:workers";
 import type { Handle } from "@sveltejs/kit/hooks";
 import { createAuth } from "#lib/server/auth.ts";
+import { cacheHeaders, PURGE_TAG, shouldPurge } from "#lib/server/cache.ts";
 import { isCrossSite } from "#lib/server/cross-site.ts";
 import { getDb } from "#lib/server/db/index.ts";
 import { getActorForUser, syncAvatar } from "#lib/server/me.ts";
+import { listManagedActors } from "#lib/server/spaces.ts";
+import { encodeViewer, VIEWER_COOKIE } from "#lib/viewer.ts";
 
 // 認証は一貫性が要るので常に primary。モジュールスコープで1回だけ生成する。
 const auth = createAuth(getDb(env.DB), env);
@@ -21,6 +25,47 @@ const SECURITY_HEADERS = {
 	"strict-transport-security": "max-age=31536000",
 	"permissions-policy": "camera=(), microphone=(), geolocation=()",
 };
+
+// Workers Cache の purge。ローカル（vite dev、wrangler dev）には無いので、あるときだけ呼ぶ。
+// 失敗しても書き込みは通す（古い中身は CACHE_PUBLIC の 5 分で切れる）
+async function purgePublic() {
+	const cache = workers.cache;
+	if (!cache) return;
+	try {
+		const result = await cache.purge({ tags: [PURGE_TAG] });
+		if (!result.success)
+			console.error("cache purge failed", JSON.stringify(result.errors));
+	} catch (e) {
+		console.error("cache purge failed", e);
+	}
+}
+
+// 表示専用の Cookie（src/lib/viewer.ts）を、今と違うときだけ書き直す。変えなくてよければ null
+async function viewerCookie(
+	event: Parameters<Handle>[0]["event"],
+): Promise<string | null> {
+	const { session, actor, db } = event.locals;
+	const current = event.cookies.get(VIEWER_COOKIE, { decode: (v) => v });
+	if (!session)
+		return current === undefined
+			? null
+			: `${VIEWER_COOKIE}=; Path=/; SameSite=Lax; Max-Age=0`;
+	const wanted = encodeViewer({
+		loggedIn: true,
+		me: actor && {
+			handle: actor.handle,
+			name: actor.name,
+			avatarUrl: actor.avatarUrl,
+		},
+		managed: [
+			...(actor ? [actor.handle] : []),
+			...(await listManagedActors(db, session.user.id)).map((a) => a.handle),
+		],
+	});
+	if (wanted === current) return null;
+	// ブラウザの JS が読むので HttpOnly にしない
+	return `${VIEWER_COOKIE}=${wanted}; Path=/; SameSite=Lax; Max-Age=31536000${event.url.protocol === "https:" ? "; Secure" : ""}`;
+}
 
 export const handle: Handle = async ({ event, resolve }) => {
 	if (isCrossSite(event.request, event.url.origin))
@@ -48,9 +93,30 @@ export const handle: Handle = async ({ event, resolve }) => {
 				)
 			: actor;
 
-	const response = await resolve(event);
+	const response = await resolve(event, {
+		// 公開ページの load が、元にした API の cache-control を読んで HTML にも付ける（src/lib/cache.ts）
+		filterSerializedResponseHeaders: (name) => name === "cache-control",
+	});
 	for (const [name, value] of Object.entries(SECURITY_HEADERS))
 		response.headers.set(name, value);
+
+	// キャッシュに載せるのは、公開と書いた応答だけ（src/lib/server/cache.ts）
+	const path = event.url.pathname;
+	const cache = cacheHeaders(response.headers.get("cache-control"), path);
+	for (const [name, value] of Object.entries(cache))
+		response.headers.set(name, value);
+	// 書き込みが通ったら、公開の応答をキャッシュから消す。このあとの転送先で古い中身を見せないよう、消してから返す
+	if (shouldPurge(event.request.method, response.status, path))
+		await purgePublic();
+	// 表示専用の Cookie を今のログイン状態に合わせる。公開の応答には付けない（Set-Cookie の付いた応答はキャッシュに載らない）
+	if (
+		!cache["cache-control"].includes("public") &&
+		!path.startsWith("/api/") &&
+		!path.endsWith("/__data.json")
+	) {
+		const cookie = await viewerCookie(event);
+		if (cookie) response.headers.append("set-cookie", cookie);
+	}
 
 	const bookmark = session.getBookmark();
 	if (event.request.method !== "GET" && bookmark) {

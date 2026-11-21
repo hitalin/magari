@@ -51,7 +51,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 		}
 	}
 	// ビラの傾きと、型と差し色の最初の組は ID から決まるので、先に ID を決めて画面のビラと保存後のビラを同じにする
-	return { values, look, id: shortId() };
+	return { values, look, id: shortId(), host: actor.name };
 };
 
 export const actions: Actions = {

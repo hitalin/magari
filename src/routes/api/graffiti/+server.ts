@@ -2,7 +2,7 @@ import { env } from "cloudflare:workers";
 import { error, json } from "@sveltejs/kit";
 import { desc } from "drizzle-orm";
 import { parseStrokes, VISIBLE } from "#lib/graffiti.ts";
-import { CACHE_PUBLIC } from "#lib/server/cache.ts";
+import { CACHE_GRAFFITI } from "#lib/server/cache.ts";
 import { graffiti } from "#lib/server/db/schema.ts";
 import type { RequestHandler } from "./$types";
 
@@ -16,7 +16,7 @@ export const GET: RequestHandler = async ({ locals }) => {
 		.from(graffiti)
 		.orderBy(desc(graffiti.createdAt))
 		.limit(VISIBLE);
-	return json(rows.reverse(), { headers: { "cache-control": CACHE_PUBLIC } });
+	return json(rows.reverse(), { headers: { "cache-control": CACHE_GRAFFITI } });
 };
 
 // 落書きを残す。ログイン不要。誰が描いたかは残さない

@@ -4,12 +4,15 @@ import favicon from "#lib/assets/favicon.svg";
 import logo from "#lib/assets/logo.svg";
 import AreaFilter from "#lib/components/AreaFilter.svelte";
 import Graffiti from "#lib/components/Graffiti.svelte";
-import { onNavigate } from "$app/navigation";
+import { refreshViewer, viewer } from "#lib/viewer.svelte.ts";
+import { afterNavigate, onNavigate } from "$app/navigation";
 import { navigating, page } from "$app/state";
 import type { LayoutProps } from "./$types";
 import "./layout.css";
 
-let { children, data }: LayoutProps = $props();
+let { children }: LayoutProps = $props();
+// だれが見ているかは HTML に入っていない（公開ページは全員に同じものを配る）。開いた直後と、ページを移るたびに Cookie から読む
+afterNavigate(refreshViewer);
 // ページ遷移: 前のページを画面に残したまま次を組み、見えている画像が出せるようになってから一度に差し替える。
 // フェードはしない（前のページが透けて重なる）。対応していないブラウザでは何もしない
 onNavigate((navigation) => {
@@ -115,10 +118,10 @@ const filterItems = $derived<{ area: string | null }[] | undefined>(
 			{:else}
 				<a href="/new" class="btn btn-primary px-3 py-1 text-xs sm:text-[0.8rem]">まがり</a>
 			{/if}
-			{#if data.loggedIn}
-				<a href="/me" class="-m-1.5 rounded-full p-1.5" aria-label={data.me?.name ?? '自分'} title={data.me?.name ?? '自分'} aria-current={isActive('/me') ? 'page' : undefined}>
-					{#if data.me?.avatarUrl}
-						<img src={data.me.avatarUrl} alt="" class="h-7 w-7 rounded-full object-cover" />
+			{#if viewer.loggedIn}
+				<a href="/me" class="-m-1.5 rounded-full p-1.5" aria-label={viewer.me?.name ?? '自分'} title={viewer.me?.name ?? '自分'} aria-current={isActive('/me') ? 'page' : undefined}>
+					{#if viewer.me?.avatarUrl}
+						<img src={viewer.me.avatarUrl} alt="" class="h-7 w-7 rounded-full object-cover" />
 					{:else}
 						<span class="block h-7 w-7 rounded-full bg-accent-soft"></span>
 					{/if}
@@ -154,7 +157,7 @@ const filterItems = $derived<{ area: string | null }[] | undefined>(
 		<!-- 知らないうちに載っていた人が、どのページからでも事情を読めるように -->
 		<a href="/owners" class="footer-link">お店の方へ</a>
 		<a href="/eventers" class="footer-link">会を開く方へ</a>
-		{#if !data.loggedIn}<a href="/login" class="footer-link">ログイン</a>{/if}
+		{#if !viewer.loggedIn}<a href="/login" class="footer-link">ログイン</a>{/if}
 		<a href={REPO} class="footer-link sm:ml-auto" rel="noopener">ソース<span aria-hidden="true"> ↗</span></a>
 	</nav>
 </footer>

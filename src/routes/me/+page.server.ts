@@ -69,6 +69,8 @@ export const actions: Actions = {
 		const session = requireLogin(locals);
 		await deleteMyData(locals.db, session.user.id, locals.actor);
 		await locals.auth.api.deleteUser({ headers: request.headers, body: {} });
+		// 表示専用の Cookie を hooks が消すように
+		locals.session = null;
 		redirect(303, "/");
 	},
 };

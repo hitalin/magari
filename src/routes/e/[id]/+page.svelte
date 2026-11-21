@@ -12,6 +12,7 @@ import {
 	xShareUrl,
 } from "#lib/share.ts";
 import { MISSKEY_ICON, SNS_ICON } from "#lib/sns.ts";
+import { viewer } from "#lib/viewer.svelte.ts";
 import { page } from "$app/state";
 import type { PageProps } from "./$types";
 
@@ -30,7 +31,7 @@ const misskeyUrl = $derived(
 );
 // 主催（本人か、管理しているハコ・団体）なら編集できる。取り込んだ会は元のカレンダーが正なので編集しない
 const canEdit = $derived(
-	!event.source && event.hosts.some((h) => data.managed.includes(h.handle)),
+	!event.source && event.hosts.some((h) => viewer.managed.includes(h.handle)),
 );
 // 開けた直後（/new からの ?opened）。あとは貼るだけ、を先頭に出す
 const opened = $derived(

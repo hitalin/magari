@@ -5,6 +5,7 @@ import {
 	formatTime,
 	formatTimeRange,
 	formatWhen,
+	weekAhead,
 } from "./date";
 
 describe("JST 表示", () => {
@@ -62,5 +63,19 @@ describe("formatWhen", () => {
 				allDay: false,
 			}),
 		).toBe("11月8日(日) 19:00");
+	});
+});
+
+describe("weekAhead", () => {
+	it("7 日先を、次の正時に丸める（同じ時間帯なら同じ URL になり、キャッシュが効く）", () => {
+		expect(weekAhead(new Date("2026-11-08T10:00:01Z")).toISOString()).toBe(
+			"2026-11-15T11:00:00.000Z",
+		);
+		expect(weekAhead(new Date("2026-11-08T10:59:59Z")).toISOString()).toBe(
+			"2026-11-15T11:00:00.000Z",
+		);
+		expect(weekAhead(new Date("2026-11-08T11:00:00Z")).toISOString()).toBe(
+			"2026-11-15T11:00:00.000Z",
+		);
 	});
 });

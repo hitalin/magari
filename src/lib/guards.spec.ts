@@ -62,3 +62,32 @@ describe("日時", () => {
 		expect(untimed).toEqual([]);
 	});
 });
+
+describe("キャッシュ", () => {
+	it("公開ページの HTML に、だれが見ているかを入れない", () => {
+		// 公開の応答は Cookie を見ずに全員へ同じものを配る（src/lib/server/cache.ts）。
+		// ルートの +layout.server.ts は全ページの HTML にデータを入れるので、置かない。
+		// ヘッダーの顔と「編集」リンクは、ブラウザが表示専用の Cookie から読む（src/lib/viewer.ts）
+		expect(
+			files
+				.map(([path]) => path)
+				.filter((path) => path === "/src/routes/+layout.server.ts"),
+		).toEqual([]);
+	});
+	it("公開の応答を返す所は、ログインしている人を見ない", () => {
+		// CACHE_PUBLIC を付けた応答は全員に配られる。中身を人によって変えるなら、その応答は private にする
+		const allowed = [
+			// 公開の間は CACHE_PUBLIC、下書きは本人にだけ private, no-store で返す
+			"/src/routes/api/events/[id]/+server.ts",
+		];
+		expect(
+			violations(
+				/locals\.(session|actor)/,
+				(path) =>
+					path.startsWith("/src/routes/") &&
+					sources[path].includes("CACHE_PUBLIC"),
+				allowed,
+			),
+		).toEqual([]);
+	});
+});

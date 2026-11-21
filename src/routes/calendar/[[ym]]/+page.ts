@@ -1,4 +1,5 @@
 import { error } from "@sveltejs/kit";
+import { cacheLike } from "#lib/cache.ts";
 import {
 	currentMonth,
 	gridRange,
@@ -8,7 +9,7 @@ import {
 import type { EventSummary } from "#lib/types.ts";
 import type { PageLoad } from "./$types";
 
-export const load: PageLoad = async ({ fetch, params }) => {
+export const load: PageLoad = async ({ fetch, params, setHeaders }) => {
 	const ym = params.ym ? parseMonth(params.ym) : currentMonth();
 	if (!ym) error(404, "その月はありません");
 	const { from, to } = gridRange(ym.year, ym.month);
@@ -16,6 +17,7 @@ export const load: PageLoad = async ({ fetch, params }) => {
 		`/api/events?${new URLSearchParams({ from: from.toISOString(), to: to.toISOString() })}`,
 	);
 	if (!res.ok) error(res.status, "間の一覧を取得できませんでした");
+	cacheLike(res, setHeaders);
 	return {
 		...ym,
 		grid: monthGrid(ym.year, ym.month),

@@ -62,3 +62,9 @@ export function formatWhen(e: {
 		e.endsAt && new Date(e.endsAt).getTime() === new Date(e.startsAt).getTime();
 	return `${formatDay(e.startsAt)} ${formatTimeRange(e.startsAt, sameTime ? null : e.endsAt)}`;
 }
+
+// 一覧の「この先 1 週間」の終わり。次の正時に丸める（ミリ秒まで入れると URL が毎回変わり、キャッシュに載らない）
+export function weekAhead(now = new Date()): Date {
+	const HOUR = 3_600_000;
+	return new Date(Math.ceil((now.getTime() + 7 * 24 * HOUR) / HOUR) * HOUR);
+}

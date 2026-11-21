@@ -7,6 +7,7 @@ import MonthGrid from "#lib/components/MonthGrid.svelte";
 import { dayKey } from "#lib/date.ts";
 import { actorSns, SNS_ICON, SNS_NAME } from "#lib/sns.ts";
 import { KIND_LABEL } from "#lib/types.ts";
+import { viewer } from "#lib/viewer.svelte.ts";
 import { page } from "$app/state";
 import type { PageProps } from "./$types";
 
@@ -22,7 +23,7 @@ const upcoming = $derived.by(() => {
 const anchorDays = $derived(
 	new Set([...upcoming, ...data.past].map((e) => dayKey(e.startsAt))),
 );
-const canEdit = $derived(data.managed.includes(actor.handle));
+const canEdit = $derived(viewer.managed.includes(actor.handle));
 const hasAccess = $derived(
 	!!(
 		actor.address ||

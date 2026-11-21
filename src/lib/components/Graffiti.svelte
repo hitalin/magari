@@ -307,8 +307,22 @@ $effect(() => {
 	schedule();
 });
 
+// 自分が最後に描き残した時刻。一覧はキャッシュから 60 秒古いものが来うるので、描いた直後だけ別の URL で取り直す
+// （そうしないと、開き直したときに自分の線がいったん消える）。保存できない環境では、古い一覧で我慢する
+const DREW_KEY = "graffiti-drew";
+const STALE_MS = 60_000;
+function drew(): number {
+	try {
+		return Number(localStorage.getItem(DREW_KEY)) || 0;
+	} catch {
+		return 0;
+	}
+}
 function load() {
-	fetch("/api/graffiti")
+	const at = drew();
+	fetch(
+		Date.now() - at < STALE_MS ? `/api/graffiti?after=${at}` : "/api/graffiti",
+	)
 		.then((res) => (res.ok ? res.json() : scribbles))
 		.then((rows) => {
 			scribbles = rows as Scribble[];
@@ -505,6 +519,9 @@ async function save(leaving = false) {
 	if (res?.ok) {
 		const { id } = (await res.json()) as { id: string };
 		scribbles = [...scribbles, { id, d }];
+		try {
+			localStorage.setItem(DREW_KEY, String(Date.now()));
+		} catch {}
 		pending = pending.slice(count);
 		if (pending.length > 0 && !current) save();
 		return;
