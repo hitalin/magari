@@ -25,12 +25,15 @@ export default defineConfig({
 				mode: "hash",
 				directives: {
 					"default-src": ["self"],
-					"script-src": ["self"],
+					// Cloudflare Web Analytics の計測スクリプト。Cloudflare がブラウザ向けの HTML にだけ差し込む
+					// （ローカルや curl では出ない）
+					"script-src": ["self", "https://static.cloudflareinsights.com"],
 					// style 属性（ビラの傾きや色）を使うので inline を許す
 					"style-src": ["self", "unsafe-inline"],
 					// 顔の画像は X と、任意の Misskey サーバーから来る
 					"img-src": ["self", "data:", "blob:", "https:"],
-					"connect-src": ["self"],
+					// 計測の送り先
+					"connect-src": ["self", "https://cloudflareinsights.com"],
 					"object-src": ["none"],
 					"base-uri": ["self"],
 					"frame-ancestors": ["none"],
