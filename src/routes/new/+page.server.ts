@@ -9,6 +9,7 @@ import {
 } from "#lib/event-form.ts";
 import { type FlyerLook, parseFlyerLook } from "#lib/flyer.ts";
 import { isShortId, shortId } from "#lib/id.ts";
+import { parseRepeat, repeatRule } from "#lib/repeat.ts";
 import { warmCard } from "#lib/server/card.ts";
 import { toFormValues } from "#lib/server/event-values.ts";
 import { checkFlyer, putFlyer } from "#lib/server/flyer-upload.ts";
@@ -20,6 +21,7 @@ import {
 	setEventFlyer,
 	toEventValues,
 } from "#lib/server/me.ts";
+import { startSeries } from "#lib/server/series.ts";
 import type { Actions, PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ locals, url }) => {
@@ -61,16 +63,24 @@ export const actions: Actions = {
 			form.get("flyerVariant") as string | null,
 			form.get("flyerColor") as string | null,
 		);
+		const repeat = parseRepeat(form.get("repeat") as string | null);
 		const parsed = parseEventForm(values);
-		if (!parsed.ok) return fail(400, { error: parsed.error, values, look });
+		if (!parsed.ok)
+			return fail(400, { error: parsed.error, values, look, repeat });
 		// 自分のフライヤー（任意）。会を作る前に確かめ、だめな画像で会だけ出来ないようにする
 		const flyer = form.get("flyer");
 		const file = flyer instanceof File && flyer.size > 0 ? flyer : null;
 		const flyerError = file && checkFlyer(file);
 		if (flyerError)
-			return fail(400, { error: `フライヤー: ${flyerError}`, values, look });
+			return fail(400, {
+				error: `フライヤー: ${flyerError}`,
+				values,
+				look,
+				repeat,
+			});
 		const ev = await toEventValues(locals.db, parsed.event);
-		if ("error" in ev) return fail(400, { error: ev.error, values, look });
+		if ("error" in ev)
+			return fail(400, { error: ev.error, values, look, repeat });
 		const wanted = (form.get("id") as string | null) ?? "";
 		const id = await createEvent(
 			locals.db,
@@ -88,6 +98,13 @@ export const actions: Actions = {
 		if (id) {
 			if (file)
 				await setEventFlyer(locals.db, id, await putFlyer(env.MEDIA, id, file));
+			// 繰り返すなら、先の回もここで作る（フライヤーを付けたあと。先の回は同じ画像を指す）
+			if (repeat)
+				await startSeries(
+					locals.db,
+					id,
+					repeatRule(repeat, parsed.event.startsAt),
+				);
 			// 開けた直後に「貼る」を押されても間に合うよう、カード画像を作り始めておく
 			if (parsed.event.status !== "draft") warmCard(locals.db, id, url.origin);
 			done(id);
@@ -104,6 +121,7 @@ export const actions: Actions = {
 			error: "保存できませんでした。もう一度お試しください",
 			values,
 			look,
+			repeat,
 		});
 	},
 };

@@ -5,6 +5,7 @@ import FlyerPicker from "#lib/components/FlyerPicker.svelte";
 import { dayKey } from "#lib/date.ts";
 import type { EventFormValues } from "#lib/event-form.ts";
 import { type FlyerLook, flyerStyle } from "#lib/flyer.ts";
+import { REPEATS, type Repeat, repeatRule, ruleLabel } from "#lib/repeat.ts";
 
 let {
 	values,
@@ -13,6 +14,8 @@ let {
 	flyerId,
 	look = null,
 	host = null,
+	repeat = null,
+	series = null,
 }: {
 	values: EventFormValues;
 	error?: string;
@@ -22,6 +25,10 @@ let {
 	// ビラの型と差し色の初期値（複製元、送り直し）。無ければ ID から決まる組を最初に出す
 	look?: FlyerLook | null;
 	host?: string | null;
+	// 繰り返しの初期値（送り直し）。選べるのは新しく開けるときだけ
+	repeat?: Repeat | null;
+	// 繰り返しの中の回を直すとき、その決まりの言い方（「毎週火曜」）。この先の回もまとめて直すかを聞く
+	series?: string | null;
 } = $props();
 function pickLook(id: string): FlyerLook {
 	const { variant, color } = flyerStyle(id);
@@ -62,6 +69,15 @@ const startsAt = $derived(
 	iso(v.allDay ? "00:00" : v.startTime || "19:00") ?? new Date().toISOString(),
 );
 const endsAt = $derived(v.allDay || !v.endTime ? null : iso(v.endTime));
+// 繰り返しの言い方は選んだ日で変わる（毎週火曜、毎月 第2火曜）
+const repeats = $derived.by(() => {
+	const day = new Date(`${v.date || dayKey(new Date())}T12:00:00+09:00`);
+	if (Number.isNaN(day.getTime())) return [];
+	return REPEATS.map((kind) => ({
+		kind,
+		label: ruleLabel(repeatRule(kind, day), day),
+	}));
+});
 const place = $derived(v.locationName || (v.space ? `@${v.space}` : null));
 
 // 自分のフライヤーを選んだら、自動のビラの代わりにその画像を見せる
@@ -91,6 +107,15 @@ function clearFile() {
 		<Field label="終了" hint="空欄でも可。開始より前なら翌日扱い"><input type="time" name="endTime" bind:value={v.endTime} class="input" disabled={v.allDay} /></Field>
 	</div>
 	<label class="flex items-center gap-2 text-sm"><input type="checkbox" name="allDay" bind:checked={v.allDay} class="accent-accent" /> 終日（時刻を決めない）</label>
+
+	{#if flyerId}
+		<Field label="繰り返し" hint="選ぶと、先の回もまとめて開ける。回ごとに直したり中止にしたりできる">
+			<select name="repeat" class="input">
+				<option value="">この日だけ</option>
+				{#each repeats as r (r.kind)}<option value={r.kind} selected={repeat === r.kind}>{r.label}</option>{/each}
+			</select>
+		</Field>
+	{/if}
 
 	<div class="grid gap-4 sm:grid-cols-2">
 		<Field label="場所" hint="店名、公園、誰かの家など。決まっていなければ空欄で"><input name="locationName" bind:value={v.locationName} class="input" /></Field>
@@ -126,6 +151,13 @@ function clearFile() {
 			</div>
 		</div>
 	</details>
+
+	{#if series}
+		<div class="border-t border-line pt-4">
+			<label class="flex items-center gap-2 text-sm"><input type="checkbox" name="following" class="accent-accent" /> この先の回もまとめて直す（{series}）</label>
+			<p class="mt-2 text-xs text-dim">印を付けなければ、この回だけを直して、繰り返しから外します。日付を変えられるのは、この回だけを直すときです。</p>
+		</div>
+	{/if}
 
 	<div class="flex flex-wrap gap-3 pt-2">
 		<button type="submit" name="status" value="published" class="btn btn-primary">{submitLabel}</button>

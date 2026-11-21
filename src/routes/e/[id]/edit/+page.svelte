@@ -58,7 +58,7 @@ const flyer = $derived({
 			{#if data.status === 'cancelled'}
 				<p class="mb-6 rounded-sm bg-accent-soft px-4 py-2 text-sm text-accent-ink">中止にした間です。内容を直して保存しても、中止のままです。</p>
 			{/if}
-			<EventForm values={form?.values ?? data.values} error={form?.error} submitLabel={data.status === 'cancelled' ? '保存する' : '保存して公開'} />
+			<EventForm values={form?.values ?? data.values} error={form?.error} submitLabel={data.status === 'cancelled' ? '保存する' : '保存して公開'} series={data.series} />
 
 	<section class="mt-12 border-t border-line pt-6">
 		<h2 class="section-title text-[1.25rem]">主催</h2>
@@ -97,8 +97,13 @@ const flyer = $derived({
 			</form>
 		{/if}
 		<form method="POST" action="?/delete" onsubmit={(e) => { if (!confirm('この間を削除しますか？元に戻せません。')) e.preventDefault(); }}>
-			<button type="submit" class="btn text-accent-ink">削除する</button>
+			<button type="submit" class="btn text-accent-ink">{data.series ? 'この回を削除する' : '削除する'}</button>
 		</form>
+		{#if data.series}
+			<form method="POST" action="?/deleteFollowing" onsubmit={(e) => { if (!confirm('この回と、この先の回をすべて削除して、繰り返しを終えますか？元に戻せません。')) e.preventDefault(); }}>
+				<button type="submit" class="btn text-accent-ink">この回から先を削除する</button>
+			</form>
+		{/if}
 	</div>
 		</div>
 	</div>

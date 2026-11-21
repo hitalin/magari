@@ -305,6 +305,8 @@ export async function updateEvent(
 	id: string,
 	input: Omit<EventValues, "status"> & {
 		status: "draft" | "published" | "cancelled";
+		// null で繰り返しから外す
+		seriesId?: null;
 	},
 ): Promise<void> {
 	await db

@@ -1,5 +1,7 @@
 import { env } from "cloudflare:workers";
 import { error, fail, redirect } from "@sveltejs/kit";
+import { eq } from "drizzle-orm";
+import { dayKey } from "#lib/date.ts";
 import {
 	parseEventForm,
 	readEventForm,
@@ -7,7 +9,9 @@ import {
 } from "#lib/event-form.ts";
 import { flyerStyle, parseFlyerLook } from "#lib/flyer.ts";
 import { parseHandleInput } from "#lib/id.ts";
+import { ruleLabel } from "#lib/repeat.ts";
 import { warmCard } from "#lib/server/card.ts";
+import { eventSeries } from "#lib/server/db/schema.ts";
 import { toFormValues } from "#lib/server/event-values.ts";
 import { checkFlyer, putFlyer } from "#lib/server/flyer-upload.ts";
 import {
@@ -24,6 +28,11 @@ import {
 	toEventValues,
 	updateEvent,
 } from "#lib/server/me.ts";
+import {
+	deleteFollowing,
+	flyerInUse,
+	updateFollowing,
+} from "#lib/server/series.ts";
 import { mediaUrl } from "#lib/types.ts";
 import type { Actions, PageServerLoad } from "./$types";
 
@@ -35,15 +44,29 @@ async function editable(locals: App.Locals, id: string) {
 	return ev;
 }
 
+// フライヤーの画像を R2 から消す。繰り返しのほかの回がまだ同じ画像を使っているなら残す
+async function dropFlyer(locals: App.Locals, key: string | null) {
+	if (key && !(await flyerInUse(locals.db, key))) await env.MEDIA.delete(key);
+}
+
 export const load: PageServerLoad = async ({ locals, params }) => {
 	const ev = await editable(locals, params.id);
 	const { variant, color } = flyerStyle(
 		ev.id,
 		parseFlyerLook(ev.flyerVariant, ev.flyerColor),
 	);
+	const [series] = ev.seriesId
+		? await locals.db
+				.select({ rrule: eventSeries.rrule })
+				.from(eventSeries)
+				.where(eq(eventSeries.id, ev.seriesId))
+				.limit(1)
+		: [];
 	return {
 		id: ev.id,
 		status: ev.status,
+		// 繰り返しの中の回なら、その決まりの言い方（「毎週火曜」）
+		series: series ? ruleLabel(series.rrule, ev.startsAt) : null,
 		values: toFormValues(ev),
 		hosts: await listEventHosts(locals.db, ev.id),
 		myActorId: locals.actor?.id ?? null,
@@ -72,7 +95,7 @@ export const actions: Actions = {
 		if (flyerError) return fail(400, { flyerError });
 		const key = await putFlyer(env.MEDIA, ev.id, file);
 		await setEventFlyer(locals.db, ev.id, key);
-		if (ev.coverKey) await env.MEDIA.delete(ev.coverKey);
+		await dropFlyer(locals, ev.coverKey);
 		warmCard(locals.db, ev.id, url.origin);
 		return { flyerSaved: true };
 	},
@@ -81,7 +104,7 @@ export const actions: Actions = {
 		const ev = await editable(locals, params.id);
 		if (ev.coverKey) {
 			await setEventFlyer(locals.db, ev.id, null);
-			await env.MEDIA.delete(ev.coverKey);
+			await dropFlyer(locals, ev.coverKey);
 			warmCard(locals.db, ev.id, url.origin);
 		}
 		return { flyerSaved: true };
@@ -129,7 +152,27 @@ export const actions: Actions = {
 		const ev = await toEventValues(locals.db, parsed.event);
 		if ("error" in ev) return fail(400, { error: ev.error, values });
 		const status = statusAfterEdit(current.status, parsed.event.status);
-		await updateEvent(locals.db, params.id, { ...ev, status });
+		if (current.seriesId && form.get("following") !== null) {
+			// この先の回もまとめて直す。回の日付は決まりから来ているので、ここでは動かさない
+			if (dayKey(ev.startsAt) !== dayKey(current.startsAt))
+				return fail(400, {
+					error:
+						"日付を変えるときは「この先の回もまとめて直す」の印を外して、この回だけを直してください",
+					values,
+				});
+			await updateFollowing(
+				locals.db,
+				{ seriesId: current.seriesId, startsAt: current.startsAt },
+				ev,
+			);
+		} else {
+			// この回だけを直す。繰り返しの中の回は同じ内容という決まりなので、繰り返しから外す
+			await updateEvent(locals.db, params.id, {
+				...ev,
+				status,
+				seriesId: null,
+			});
+		}
 		warmCard(locals.db, params.id, url.origin);
 		redirect(303, status === "draft" ? "/me" : `/e/${params.id}`);
 	},
@@ -146,8 +189,21 @@ export const actions: Actions = {
 	delete: async ({ locals, params }) => {
 		const ev = await editable(locals, params.id);
 		await deleteEvent(locals.db, params.id);
-		if (ev.coverKey) await env.MEDIA.delete(ev.coverKey);
+		await dropFlyer(locals, ev.coverKey);
 		await env.MEDIA.delete(`cards/${ev.id}.png`);
+		redirect(303, "/me");
+	},
+	// この回から先の回をすべて消して、繰り返しを終える。前の回は残る
+	deleteFollowing: async ({ locals, params }) => {
+		const ev = await editable(locals, params.id);
+		if (!ev.seriesId) error(400, "繰り返しの間ではありません");
+		const gone = await deleteFollowing(locals.db, {
+			seriesId: ev.seriesId,
+			startsAt: ev.startsAt,
+		});
+		for (const key of new Set(gone.map((g) => g.coverKey)))
+			await dropFlyer(locals, key);
+		await env.MEDIA.delete(gone.map((g) => `cards/${g.id}.png`));
 		redirect(303, "/me");
 	},
 };

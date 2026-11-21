@@ -11,8 +11,8 @@
 	"observability": { "enabled": true },
 	// 本番ドメイン。Workers のカスタムドメインとして割り当てる（DNS も自動）
 	"routes": [{ "pattern": "magari.cc", "custom_domain": true }],
-	// 外部カレンダーの取り込み（vars の IMPORT_ENABLED=1 とセット）。毎時 15 分に worker.ts の scheduled が走る。
-	// 止めるときは、この triggers を "crons": [] にし、IMPORT_ENABLED を消す
+	// 毎時 15 分に worker.ts の scheduled が走る: 繰り返しの間の先の回を足し、vars に IMPORT_ENABLED=1 があれば外部カレンダーを取り込む。
+	// 取り込みを止めるときは IMPORT_ENABLED だけを消す（この triggers を消すと、繰り返しの間が先へ延びなくなる）
 	"triggers": { "crons": ["15 * * * *"] },
 	// 読み取りが東京 PoP に近くなるよう primary は apac に置く（wrangler d1 create --location apac）
 	"d1_databases": [

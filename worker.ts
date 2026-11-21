@@ -14,25 +14,32 @@ export default {
 		if (!generated.fetch) return new Response(null, { status: 500 });
 		return generated.fetch(request, env, ctx);
 	},
-	// 毎時の取り込み（wrangler.jsonc の triggers.crons）。手動用の POST /api/admin/import と同じ処理を、
-	// Worker 内で自分の fetch に投げて走らせる。
+	// 毎時（wrangler.jsonc の triggers.crons）。繰り返しの間の先の回を足し、取り込みが有効なら取り込む。
+	// どちらも手動用の POST と同じ処理を、Worker 内で自分の fetch に投げて走らせる。
 	async scheduled(_controller, env, ctx) {
-		if (!generated.fetch || env.IMPORT_ENABLED !== "1") return;
-		const request = new Request(`${env.PUBLIC_ORIGIN}/api/admin/import`, {
-			method: "POST",
-			// SvelteKit の CSRF 検査（フォーム POST の origin 照合）を通すため origin と JSON を明示
-			headers: {
-				authorization: `Bearer ${env.IMPORT_TOKEN}`,
-				origin: env.PUBLIC_ORIGIN,
-				"content-type": "application/json",
-			},
-		});
-		const res = await generated.fetch(
-			request as unknown as Parameters<NonNullable<typeof generated.fetch>>[0],
-			env,
-			ctx,
-		);
-		if (!res.ok)
-			throw new Error(`import failed: ${res.status} ${await res.text()}`);
+		const fetch = generated.fetch;
+		if (!fetch) return;
+		const paths = ["/api/admin/series"];
+		if (env.IMPORT_ENABLED === "1") paths.push("/api/admin/import");
+		const failed: string[] = [];
+		for (const path of paths) {
+			const request = new Request(`${env.PUBLIC_ORIGIN}${path}`, {
+				method: "POST",
+				// SvelteKit の CSRF 検査（フォーム POST の origin 照合）を通すため origin と JSON を明示
+				headers: {
+					authorization: `Bearer ${env.IMPORT_TOKEN}`,
+					origin: env.PUBLIC_ORIGIN,
+					"content-type": "application/json",
+				},
+			});
+			const res = await fetch(
+				request as unknown as Parameters<typeof fetch>[0],
+				env,
+				ctx,
+			);
+			// 片方がこけても、もう片方は走らせる
+			if (!res.ok) failed.push(`${path}: ${res.status} ${await res.text()}`);
+		}
+		if (failed.length) throw new Error(`cron failed: ${failed.join(" / ")}`);
 	},
 } satisfies ExportedHandler<Env>;
