@@ -86,6 +86,8 @@ body {
 	background-blend-mode: screen, multiply, screen, normal;
 	padding-top: var(--spacing-header);
 	min-height: 100dvh;
+	/* html の clip だけだと、スマホでははみ出しのぶん画面の幅が広がって横に動く。body でも切る */
+	overflow-x: clip;
 	/* 短いページでも奥付を画面の下端に置く */
 	display: flex;
 	flex-direction: column;
