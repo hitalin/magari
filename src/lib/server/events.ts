@@ -3,22 +3,26 @@ import {
 	asc,
 	desc,
 	eq,
+	gt,
 	gte,
 	inArray,
 	isNotNull,
 	isNull,
 	lt,
+	ne,
 	notInArray,
 	or,
 } from "drizzle-orm";
 import { type LinkedSns, nameOnlyIfUnmanaged, shownSns } from "#lib/actor.ts";
 import { parseFlyerLook } from "#lib/flyer.ts";
+import { ruleLabel } from "#lib/repeat.ts";
 import { mentionHandles } from "#lib/share.ts";
 import { actorSns } from "#lib/sns.ts";
 import {
 	type ActorProfile,
 	type ActorRef,
 	type EventDetail,
+	type EventSeriesInfo,
 	type EventSummary,
 	mediaUrl,
 	type ShareMention,
@@ -29,6 +33,7 @@ import {
 	actorMembers,
 	actors,
 	eventHosts,
+	eventSeries,
 	events,
 	user,
 } from "./db/schema.ts";
@@ -57,6 +62,7 @@ function selectEvents(db: Db) {
 			flyerVariant: events.flyerVariant,
 			flyerColor: events.flyerColor,
 			hiddenAt: events.hiddenAt,
+			seriesId: events.seriesId,
 			spaceHandle: actors.handle,
 			spaceName: actors.name,
 			spaceKind: actors.kind,
@@ -110,12 +116,63 @@ async function hostsByEvent(
 	return map;
 }
 
+// 繰り返しの中の回なら、その決まりと前後の回。下書きと、運営が非表示にした回は並べない
+async function seriesOf(db: Db, row: Row): Promise<EventSeriesInfo | null> {
+	if (!row.seriesId) return null;
+	const [series] = await db
+		.select({ rrule: eventSeries.rrule, until: eventSeries.until })
+		.from(eventSeries)
+		.where(eq(eventSeries.id, row.seriesId))
+		.limit(1);
+	if (!series) return null;
+	const shown = and(
+		eq(events.seriesId, row.seriesId),
+		ne(events.status, "draft"),
+		isNull(events.hiddenAt),
+	);
+	const fields = {
+		id: events.id,
+		startsAt: events.startsAt,
+		status: events.status,
+	};
+	const [prev, next] = await Promise.all([
+		db
+			.select(fields)
+			.from(events)
+			.where(and(shown, lt(events.startsAt, row.startsAt)))
+			.orderBy(desc(events.startsAt))
+			.limit(1),
+		db
+			.select(fields)
+			.from(events)
+			.where(and(shown, gt(events.startsAt, row.startsAt)))
+			.orderBy(asc(events.startsAt))
+			.limit(4),
+	]);
+	const occurrence = (o: (typeof prev)[number]) => ({
+		id: o.id,
+		startsAt: o.startsAt.toISOString(),
+		cancelled: o.status === "cancelled",
+	});
+	return {
+		label: ruleLabel(series.rrule, row.startsAt),
+		// until は「この時刻より前の回まで」。画面には最後の回の日として出す
+		until: series.until
+			? new Date(series.until.getTime() - 1).toISOString()
+			: null,
+		prev: prev[0] ? occurrence(prev[0]) : null,
+		next: next.map(occurrence),
+	};
+}
+
 function toDetail(
 	row: Row,
 	hosts: ActorRef[],
 	mentions: ShareMention[] = [],
+	series: EventSeriesInfo | null = null,
 ): EventDetail {
 	return {
+		series,
 		id: row.id,
 		title: row.title,
 		description: row.description,
@@ -331,7 +388,12 @@ export async function getEvent(
 		.limit(1);
 	if (!row || row.status === "draft") return null;
 	const hosts = await hostsByEvent(db, [row.id]);
-	return toDetail(row, hosts.get(row.id) ?? [], await mentionsOf(db, row));
+	return toDetail(
+		row,
+		hosts.get(row.id) ?? [],
+		await mentionsOf(db, row),
+		await seriesOf(db, row),
+	);
 }
 
 // 下書き・非公開も含めて、作成者か主催者（管理している Actor を含む）なら返す
@@ -352,7 +414,12 @@ export async function getEventForUser(
 		hostRows.some((h) => actorIds.includes(h.actorId));
 	if (!mine) return null;
 	const hosts = await hostsByEvent(db, [row.id]);
-	return toDetail(row, hosts.get(row.id) ?? [], await mentionsOf(db, row));
+	return toDetail(
+		row,
+		hosts.get(row.id) ?? [],
+		await mentionsOf(db, row),
+		await seriesOf(db, row),
+	);
 }
 
 export async function getActorByHandle(

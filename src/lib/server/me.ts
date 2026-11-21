@@ -2,7 +2,6 @@ import { redirect } from "@sveltejs/kit";
 import { and, asc, desc, eq, inArray, isNull, or } from "drizzle-orm";
 import { eventArea } from "#lib/area.ts";
 import type { ParsedEvent } from "#lib/event-form.ts";
-import type { FlyerLook } from "#lib/flyer.ts";
 import { withNext } from "#lib/next.ts";
 import type { Db } from "./db/index.ts";
 import { actorMembers, actors, eventHosts, events } from "./db/schema.ts";
@@ -408,22 +407,6 @@ export async function removeEventHost(
 			and(eq(eventHosts.eventId, eventId), eq(eventHosts.actorId, actorId)),
 		);
 	return true;
-}
-
-// 自動のビラの型と差し色
-export async function setEventFlyerLook(
-	db: Db,
-	id: string,
-	look: FlyerLook,
-): Promise<void> {
-	await db
-		.update(events)
-		.set({
-			flyerVariant: look.variant,
-			flyerColor: look.color,
-			updatedAt: new Date(),
-		})
-		.where(eq(events.id, id));
 }
 
 // 会のフライヤー（R2 のキー）。null で自動のビラに戻す

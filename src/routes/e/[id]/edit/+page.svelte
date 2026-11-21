@@ -21,6 +21,13 @@ const flyer = $derived({
 
 <svelte:head><title>間を編集 | ◱</title></svelte:head>
 
+<!-- 繰り返しの中の回で、フライヤーやビラの型を替えるとき。見た目は先の回も揃えるのが普通なので、印は最初から付けておく -->
+{#snippet following()}
+	{#if data.series}
+		<label class="mt-3 flex items-start gap-2 text-xs text-muted"><input type="checkbox" name="following" checked class="mt-0.5 accent-accent" /><span>この先の回にも（{data.series}）。外すと、この回だけを替えて、繰り返しから外します</span></label>
+	{/if}
+{/snippet}
+
 <section class="mt-4">
 	<!-- 間のページと同じ 2 列。左にフライヤーとその差し替え、右に中身 -->
 	<div class="detail-cols mt-8">
@@ -36,16 +43,23 @@ const flyer = $derived({
 			{#if !data.flyer.url}
 				<form method="POST" action="?/look" class="mt-8">
 					<FlyerPicker bind:look {...flyer} />
+					{@render following()}
 					<p class="mt-4 text-center"><button type="submit" class="btn px-4 py-1.5 text-sm">このビラにする</button></p>
 				</form>
 			{/if}
 			<div class="mt-6">
-				<form method="POST" action="?/flyer" enctype="multipart/form-data" class="flex items-center gap-2">
-					<input type="file" name="flyer" accept="image/jpeg,image/png,image/webp" required class="input min-w-0 flex-1 text-sm" />
-					<button type="submit" class="btn shrink-0 px-4 py-1.5 text-sm">{data.flyer.url ? '差し替える' : '上げる'}</button>
+				<form method="POST" action="?/flyer" enctype="multipart/form-data">
+					<div class="flex items-center gap-2">
+						<input type="file" name="flyer" accept="image/jpeg,image/png,image/webp" required class="input min-w-0 flex-1 text-sm" />
+						<button type="submit" class="btn shrink-0 px-4 py-1.5 text-sm">{data.flyer.url ? '差し替える' : '上げる'}</button>
+					</div>
+					{@render following()}
 				</form>
 				{#if data.flyer.url}
-					<form method="POST" action="?/removeFlyer" class="mt-3"><button type="submit" class="text-xs text-muted underline underline-offset-2 hover:text-accent-ink">自動のビラに戻す</button></form>
+					<form method="POST" action="?/removeFlyer" class="mt-3">
+						<button type="submit" class="text-xs text-muted underline underline-offset-2 hover:text-accent-ink">自動のビラに戻す</button>
+						{@render following()}
+					</form>
 				{/if}
 			</div>
 		</div>

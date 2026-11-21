@@ -47,6 +47,24 @@ export type EventDetail = EventSummary & {
 	// 運営が非表示にしている（主催にだけ見える）
 	hidden: boolean;
 	mentions: ShareMention[];
+	// 繰り返しの中の回なら、その決まりと前後の回
+	series: EventSeriesInfo | null;
+};
+
+export type SeriesOccurrence = {
+	id: string;
+	startsAt: string;
+	cancelled: boolean;
+};
+
+export type EventSeriesInfo = {
+	// 「毎週火曜」
+	label: string;
+	// 最後の回の日（決めていなければ null）
+	until: string | null;
+	prev: SeriesOccurrence | null;
+	// この先の回（近い順に 4 つまで）
+	next: SeriesOccurrence[];
 };
 
 export type ActorProfile = ActorRef & {

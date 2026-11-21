@@ -1,6 +1,7 @@
-import { and, desc, eq, gte, isNull, lt, or } from "drizzle-orm";
+import { and, desc, eq, gte, inArray, isNull, lt, or } from "drizzle-orm";
 import { RRule } from "rrule";
 import { statusAfterEdit } from "#lib/event-form.ts";
+import type { FlyerLook } from "#lib/flyer.ts";
 import { shortId } from "#lib/id.ts";
 import { moveToDay } from "#lib/repeat.ts";
 import type { Db } from "./db/index.ts";
@@ -196,6 +197,54 @@ export async function deleteFollowing(
 		.where(eq(events.seriesId, ev.seriesId));
 	await db.delete(eventSeries).where(eq(eventSeries.id, ev.seriesId));
 	return gone;
+}
+
+// フライヤーやビラの型を替える先。繰り返しの中の回で「この先の回にも」なら、この回から先の回すべて。
+// そうでなければこの回だけ（繰り返しの中の回なら、leaveSeries で繰り返しから外す）
+export async function flyerTargets(
+	db: Db,
+	ev: Occurrence & { id: string; coverKey: string | null },
+	withFollowing: boolean,
+): Promise<{ id: string; coverKey: string | null }[]> {
+	if (!withFollowing || !ev.seriesId)
+		return [{ id: ev.id, coverKey: ev.coverKey }];
+	return db
+		.select({ id: events.id, coverKey: events.coverKey })
+		.from(events)
+		.where(following({ seriesId: ev.seriesId, startsAt: ev.startsAt }));
+}
+
+// フライヤー（R2 のキー）を付け替える。null で自動のビラに戻す
+export async function setFlyerFor(
+	db: Db,
+	ids: string[],
+	coverKey: string | null,
+): Promise<void> {
+	await db
+		.update(events)
+		.set({ coverKey, updatedAt: new Date() })
+		.where(inArray(events.id, ids.slice(0, 90)));
+}
+
+// 自動のビラの型と差し色
+export async function setLookFor(
+	db: Db,
+	ids: string[],
+	look: FlyerLook,
+): Promise<void> {
+	await db
+		.update(events)
+		.set({
+			flyerVariant: look.variant,
+			flyerColor: look.color,
+			updatedAt: new Date(),
+		})
+		.where(inArray(events.id, ids.slice(0, 90)));
+}
+
+// この回だけ見た目を替えたら、繰り返しから外す（繰り返しの中の回は同じ内容、という決まりを保つ）
+export async function leaveSeries(db: Db, id: string): Promise<void> {
+	await db.update(events).set({ seriesId: null }).where(eq(events.id, id));
 }
 
 // 繰り返しの終わりの日を決め直す。手前にしたら、その日より後の回を消す（消した会を返す）。

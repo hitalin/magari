@@ -1,5 +1,6 @@
 // 運営への連絡（reports）、運営による非表示（hidden_at）、掲載拒否リスト（blocked_handles）の読み書き。
 import { asc, desc, eq, isNotNull } from "drizzle-orm";
+import { onePerSeries } from "#lib/repeat.ts";
 import type { ModerationTarget, ParsedReport } from "#lib/report-form.ts";
 import type { Db } from "./db/index.ts";
 import {
@@ -60,26 +61,37 @@ export async function notifyOperator(
 }
 
 // 運営による非表示。消さずに隠す（申し出があればまず隠し、あとで判断する）。
-// 対象が無ければ false
+// 繰り返しの中の回を指すと、その繰り返しの回すべてに効く（1 回だけ隠しても、同じ中身の回が並んだまま。
+// 先の回は、いちばん先の回を写して作るので、隠したまま延びる）。対象が無ければ false
 export async function setHidden(
 	db: Db,
 	target: ModerationTarget,
 	hidden: boolean,
 ): Promise<boolean> {
 	const hiddenAt = hidden ? new Date() : null;
-	const rows =
-		target.type === "actor"
-			? await db
-					.update(actors)
-					.set({ hiddenAt })
-					.where(eq(actors.handle, target.handle))
-					.returning({ id: actors.id })
-			: await db
-					.update(events)
-					.set({ hiddenAt })
-					.where(eq(events.id, target.id))
-					.returning({ id: events.id });
-	return rows.length > 0;
+	if (target.type === "actor") {
+		const rows = await db
+			.update(actors)
+			.set({ hiddenAt })
+			.where(eq(actors.handle, target.handle))
+			.returning({ id: actors.id });
+		return rows.length > 0;
+	}
+	const [event] = await db
+		.select({ seriesId: events.seriesId })
+		.from(events)
+		.where(eq(events.id, target.id))
+		.limit(1);
+	if (!event) return false;
+	await db
+		.update(events)
+		.set({ hiddenAt })
+		.where(
+			event.seriesId
+				? eq(events.seriesId, event.seriesId)
+				: eq(events.id, target.id),
+		);
+	return true;
 }
 
 export type HiddenItem = {
@@ -99,9 +111,15 @@ export async function listHidden(db: Db): Promise<HiddenItem[]> {
 			.from(actors)
 			.where(isNotNull(actors.hiddenAt)),
 		db
-			.select({ id: events.id, title: events.title, hiddenAt: events.hiddenAt })
+			.select({
+				id: events.id,
+				title: events.title,
+				hiddenAt: events.hiddenAt,
+				seriesId: events.seriesId,
+			})
 			.from(events)
-			.where(isNotNull(events.hiddenAt)),
+			.where(isNotNull(events.hiddenAt))
+			.orderBy(asc(events.startsAt)),
 	]);
 	return [
 		...a.map((r) => ({
@@ -109,10 +127,11 @@ export async function listHidden(db: Db): Promise<HiddenItem[]> {
 			label: r.name,
 			hiddenAt: r.hiddenAt as Date,
 		})),
-		...e.map((r) => ({
-			target: r.id,
-			label: r.title,
-			hiddenAt: r.hiddenAt as Date,
+		// 繰り返しは 1 行にまとめる（戻すときも、どの回を指しても全部に効く）
+		...onePerSeries(e).map(({ row, count }) => ({
+			target: row.id,
+			label: count > 1 ? `${row.title}（繰り返しの ${count} 回）` : row.title,
+			hiddenAt: row.hiddenAt as Date,
 		})),
 	].sort((x, y) => y.hiddenAt.getTime() - x.hiddenAt.getTime());
 }

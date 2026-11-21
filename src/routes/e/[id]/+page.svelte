@@ -1,7 +1,7 @@
 <script lang="ts">
 import Flyer from "#lib/components/Flyer.svelte";
 import Picture from "#lib/components/Picture.svelte";
-import { formatWhen } from "#lib/date.ts";
+import { formatDay, formatWhen } from "#lib/date.ts";
 import { flyerStyle } from "#lib/flyer.ts";
 import {
 	eventPlace,
@@ -117,6 +117,20 @@ const cardDescription = $derived(
 				{#if event.hosts.length}
 					<dt>主催</dt>
 					<dd>{#each event.hosts as h, i (h.handle)}{#if i > 0}、{/if}<a href="/@{h.handle}" class="font-serif font-bold hover:text-accent-ink">{h.name}</a>{/each}</dd>
+				{/if}
+				{#if event.series}
+					{@const s = event.series}
+					<dt>繰り返し</dt>
+					<dd>
+						{s.label}{#if s.until}<span class="ml-2 text-sm text-muted">{formatDay(s.until)} まで</span>{/if}
+						{#if s.prev || s.next.length}
+							<!-- 前後の回。別の日を探している人が、そのまま移れるように -->
+							<span class="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-sm text-muted">
+								{#if s.prev}<span>前は <a href="/e/{s.prev.id}" class="text-accent-ink hover:underline">{formatDay(s.prev.startsAt)}</a>{#if s.prev.cancelled}（中止）{/if}</span>{/if}
+								{#if s.next.length}<span>次は {#each s.next as o, i (o.id)}{#if i > 0}、{/if}<a href="/e/{o.id}" class="text-accent-ink hover:underline">{formatDay(o.startsAt)}</a>{#if o.cancelled}（中止）{/if}{/each}</span>{/if}
+							</span>
+						{/if}
+					</dd>
 				{/if}
 				{#if event.space}
 					<dt>ハコ</dt>

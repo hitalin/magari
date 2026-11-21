@@ -28,8 +28,6 @@ import {
 	listManagedActorIds,
 	removeEventHost,
 	requireActor,
-	setEventFlyer,
-	setEventFlyerLook,
 	setEventStatus,
 	toEventValues,
 	updateEvent,
@@ -38,6 +36,10 @@ import { deleteMedia, imageSize } from "#lib/server/media.ts";
 import {
 	deleteFollowing,
 	flyerInUse,
+	flyerTargets,
+	leaveSeries,
+	setFlyerFor,
+	setLookFor,
 	setSeriesUntil,
 	startSeries,
 	updateFollowing,
@@ -51,6 +53,18 @@ async function editable(locals: App.Locals, id: string) {
 	const ev = await getEditableEvent(locals.db, id, session.user.id, actorIds);
 	if (!ev) error(404, "その間は見つからないか、編集できません");
 	return ev;
+}
+
+// フライヤーやビラの型を替える先。繰り返しの中の回は、「この先の回にも」の印があればこの回から先の回すべて、
+// 無ければこの回だけを替えて、繰り返しから外す
+async function scope(
+	locals: App.Locals,
+	ev: Awaited<ReturnType<typeof editable>>,
+	form: FormData,
+) {
+	const withFollowing = form.get("following") !== null;
+	if (ev.seriesId && !withFollowing) await leaveSeries(locals.db, ev.id);
+	return flyerTargets(locals.db, ev, withFollowing);
 }
 
 // フライヤーの画像を R2 から消す。繰り返しのほかの回がまだ同じ画像を使っているなら残す
@@ -105,25 +119,35 @@ export const actions: Actions = {
 			return fail(400, { flyerError: "画像を選んでください" });
 		const flyerError = checkFlyer(file);
 		if (flyerError) return fail(400, { flyerError });
+		const targets = await scope(locals, ev, form);
 		const key = await putFlyer(
 			env.MEDIA,
 			ev.id,
 			file,
 			await imageSize(env.IMAGES, file),
 		);
-		await setEventFlyer(locals.db, ev.id, key);
-		await dropFlyer(locals, ev.coverKey);
+		await setFlyerFor(
+			locals.db,
+			targets.map((t) => t.id),
+			key,
+		);
+		for (const old of new Set(targets.map((t) => t.coverKey)))
+			await dropFlyer(locals, old);
 		warmCard(locals.db, ev.id, url.origin);
 		return { flyerSaved: true };
 	},
 	// 自動のビラに戻す
-	removeFlyer: async ({ locals, params, url }) => {
+	removeFlyer: async ({ request, locals, params, url }) => {
 		const ev = await editable(locals, params.id);
-		if (ev.coverKey) {
-			await setEventFlyer(locals.db, ev.id, null);
-			await dropFlyer(locals, ev.coverKey);
-			warmCard(locals.db, ev.id, url.origin);
-		}
+		const targets = await scope(locals, ev, await request.formData());
+		await setFlyerFor(
+			locals.db,
+			targets.map((t) => t.id),
+			null,
+		);
+		for (const old of new Set(targets.map((t) => t.coverKey)))
+			await dropFlyer(locals, old);
+		warmCard(locals.db, ev.id, url.origin);
 		return { flyerSaved: true };
 	},
 	// 自動のビラの型と差し色を替える
@@ -136,7 +160,12 @@ export const actions: Actions = {
 		);
 		if (!look) return fail(400, { flyerError: "型と色を選んでください" });
 		// 何度も替えて試すものなので、カード画像は作り直さない（共有のときに作る）
-		await setEventFlyerLook(locals.db, ev.id, look);
+		const targets = await scope(locals, ev, form);
+		await setLookFor(
+			locals.db,
+			targets.map((t) => t.id),
+			look,
+		);
 		return { flyerSaved: true };
 	},
 	// 一緒に開く人・ハコ・団体を主催に加える

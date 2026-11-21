@@ -78,3 +78,22 @@ export function untilDay(until: Date | null | undefined): string {
 		? new Date(until.getTime() - 1 + JST).toISOString().slice(0, 10)
 		: "";
 }
+
+// 同じ繰り返しの回を 1 つにまとめる（最初に出てきた回を残し、回の数を添える）。単発はそのまま
+export function onePerSeries<T extends { seriesId: string | null }>(
+	rows: T[],
+): { row: T; count: number }[] {
+	const out: { row: T; count: number }[] = [];
+	const bySeries = new Map<string, { row: T; count: number }>();
+	for (const row of rows) {
+		const seen = row.seriesId ? bySeries.get(row.seriesId) : undefined;
+		if (seen) {
+			seen.count++;
+			continue;
+		}
+		const item = { row, count: 1 };
+		if (row.seriesId) bySeries.set(row.seriesId, item);
+		out.push(item);
+	}
+	return out;
+}

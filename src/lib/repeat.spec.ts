@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
 	moveToDay,
+	onePerSeries,
 	parseRepeat,
 	parseUntil,
 	repeatRule,
@@ -95,5 +96,23 @@ describe("untilDay", () => {
 	it("欄に出す日付へ戻す（切る時刻の前の日）", () => {
 		expect(untilDay(new Date("2026-12-16T00:00:00+09:00"))).toBe("2026-12-15");
 		expect(untilDay(null)).toBe("");
+	});
+});
+
+describe("onePerSeries", () => {
+	it("繰り返しの回は 1 つにまとめ、回の数を添える。単発はそのまま", () => {
+		const rows = [
+			{ id: "a", seriesId: "s1" },
+			{ id: "b", seriesId: null },
+			{ id: "c", seriesId: "s1" },
+			{ id: "d", seriesId: "s2" },
+			{ id: "e", seriesId: null },
+		];
+		expect(onePerSeries(rows)).toEqual([
+			{ row: rows[0], count: 2 },
+			{ row: rows[1], count: 1 },
+			{ row: rows[3], count: 1 },
+			{ row: rows[4], count: 1 },
+		]);
 	});
 });

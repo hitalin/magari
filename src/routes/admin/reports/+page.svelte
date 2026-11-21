@@ -71,7 +71,7 @@ const fmt = new Intl.DateTimeFormat("ja-JP", {
 
 <section class="mt-12">
 	<div class="section-head"><h2 class="section-title">非表示</h2></div>
-	<p class="mb-6 text-sm text-muted">消さずに隠すので、いつでも戻せます。ページを隠すと、そこで開かれる間と、そこが主催の間も隠れます。</p>
+	<p class="mb-6 text-sm text-muted">消さずに隠すので、いつでも戻せます。ページを隠すと、そこで開かれる間と、そこが主催の間も隠れます。繰り返しの間は、どの回を指しても、その繰り返しの回すべてに効きます。</p>
 	<form method="POST" action="?/hide" class="panel flex flex-wrap items-end gap-4 p-5">
 		{#if form?.hideError}<p class="w-full text-sm text-accent-ink" role="alert">{form.hideError}</p>{/if}
 		<div class="min-w-0 flex-1"><Field label="対象"><input name="target" required class="input" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="@ID か、間の URL" /></Field></div>
