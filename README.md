@@ -35,7 +35,7 @@ pnpm dev                         # http://localhost:5173
 curl -X POST -H "Authorization: Bearer $IMPORT_TOKEN" http://localhost:5173/api/admin/import
 ```
 
-検査: `pnpm check` / `pnpm lint` / `pnpm test`
+検査: `pnpm check` / `pnpm lint` / `pnpm test`（push と pull request のたびに GitHub Actions でも走る。`.github/workflows/ci.yml`）
 
 ## デプロイ
 

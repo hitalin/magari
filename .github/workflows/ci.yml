@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 12
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 26
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # worker-configuration.d.ts（bindings の型）は git に入れていないので、ここで作る。
+      # secrets の型は .dev.vars の名前から作られるので、見本を置いておく（値は使わない）
+      - run: cp .dev.vars.example .dev.vars
+      - run: pnpm cf-typegen
+      - run: pnpm lint
+      - run: pnpm check
+      - run: pnpm test
+      # adapter と Service Worker まで通るか
+      - run: pnpm build
