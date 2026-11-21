@@ -795,20 +795,29 @@ h4 {
 		);
 	}
 
-	/* 流れるラベル: ヒーロー上端の pill に、テープのラベル + マーキー（notedeck の tickers）。装飾なので aria-hidden */
+	/* 流れるラベル: ヒーロー上端に斜めに張った帯に、テープのラベル + マーキー（notedeck の tickers）。装飾なので aria-hidden */
 	.ticker {
 		display: flex;
 		align-items: center;
 		gap: 0.75rem;
-		padding: 0.3rem 0.5rem 0.3rem 0.4rem;
-		border: 1px solid var(--color-line);
-		border-radius: 9999px;
-		background: color-mix(in srgb, var(--color-surface) 80%, transparent);
+		/* 立入禁止テープのように、画面の端から端へ斜めに張る。両端は画面の外へ逃がし、切れ目を見せない（はみ出しは html の overflow-x: clip が切る） */
+		--bleed: calc(50vw - 50% + 3rem);
+		margin-inline: calc(var(--bleed) * -1);
+		padding: 0.45rem var(--bleed) 0.45rem calc(var(--bleed) + 0.4rem);
+		border-block: 1px solid var(--color-line);
+		background: color-mix(in srgb, var(--color-surface) 92%, transparent);
+		/* 地から少し浮かせて、張ってある物に見せる */
+		box-shadow: 0 0.5rem 1.25rem rgb(0 0 0 / 0.28);
+		/* 短い帯ほど傾きが弱く見えるので、狭い画面では強めに振る */
+		transform: rotate(-5deg);
 	}
-	/* ラベルは立入禁止テープのように斜めに貼り、pill からはみ出させる */
+	@media (min-width: 48rem) {
+		.ticker {
+			transform: rotate(-4deg);
+		}
+	}
 	.ticker-label {
 		flex-shrink: 0;
-		transform: rotate(-7deg);
 	}
 	.ticker-items {
 		flex: 1;
