@@ -1,4 +1,5 @@
 import { shortId } from "#lib/id.ts";
+import { sizedName } from "#lib/media.ts";
 
 const IMAGE_TYPES: Record<string, string> = {
 	"image/jpeg": "jpg",
@@ -20,8 +21,10 @@ export async function putFlyer(
 	media: R2Bucket,
 	eventId: string,
 	file: File,
+	// 画像の大きさ（imageSize）。分かれば名前に入れる
+	size: { width: number; height: number } | null = null,
 ): Promise<string> {
-	const key = `flyers/${eventId}/${shortId()}.${IMAGE_TYPES[file.type]}`;
+	const key = `flyers/${eventId}/${sizedName(shortId(), IMAGE_TYPES[file.type], size)}`;
 	await media.put(key, await file.arrayBuffer(), {
 		httpMetadata: { contentType: file.type },
 	});

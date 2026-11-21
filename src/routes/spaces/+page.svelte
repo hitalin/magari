@@ -6,6 +6,7 @@ import {
 	inQuery,
 } from "#lib/area-filter.svelte.ts";
 import Empty from "#lib/components/Empty.svelte";
+import Picture from "#lib/components/Picture.svelte";
 import { spaceText } from "#lib/search.ts";
 import { SPACE_SORTS, type SpaceSort, sortSpaces } from "#lib/space-sort.ts";
 import type { PageProps } from "./$types";
@@ -43,7 +44,7 @@ const spaces = $derived(
 				<a href="/@{s.handle}" class="cardboard group flex flex-col p-3 transition-transform hover:-translate-y-1 active:translate-y-0" data-tape={s.area}>
 					{#if s.headerUrl}
 						<!-- 写真は焼いたプリントを貼ったように、白い縁を付ける -->
-						<img src={s.headerUrl} alt="" loading="lazy" class="space-photo aspect-[16/9] w-full object-cover" />
+						<Picture src={s.headerUrl} alt="" sizes="(min-width: 40rem) 24rem, 100vw" lazy class="space-photo aspect-[16/9] w-full object-cover" />
 					{/if}
 					<div class="px-1.5 {s.headerUrl ? 'pt-3' : 'pt-4'} pb-1.5">
 						<div class="min-w-0">
@@ -73,7 +74,8 @@ const spaces = $derived(
 
 <style>
 	/* 貼ったプリント: 白い縁と、紙の厚みの影 */
-	.space-photo {
+	/* img は Picture の中にあるので :global で当てる */
+	.cardboard :global(.space-photo) {
 		border: 3px solid #f3eee2;
 		border-radius: 1px;
 		box-shadow:

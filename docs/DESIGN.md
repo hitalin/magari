@@ -121,7 +121,13 @@ UI/UX の型は「意識が低すぎる、しょぼい Luma」。Luma から借�
    - はじめて開いたページは Service Worker が動き出す前に読み込まれているので、ページの側から URL を知らせて取っておく（`+layout.svelte` の `warm`）。回線に出るのはページの HTML の 1 回ぶんだけ。
    - 型は `src/service-worker/tsconfig.json`（Kit 3 の決まりで、ルートの tsconfig からは外す）。`pnpm check` が合わせて見る。確かめるのは `pnpm preview`（`vite dev` では動かない前提で見ない）。
 6. **管理画面は SPA 寄り。** Worker は JSON を返すだけにして 10ms に収める。
-7. Early Hints / HTTP/3 / Tiered Cache / Brotli を有効化。画像は AVIF + サイズ指定。
+7. Early Hints / HTTP/3 / Tiered Cache / Brotli を有効化。
+   - **画像は、縮めた AVIF を先に出す**（`Picture.svelte`、`src/lib/media.ts`、`src/routes/i`）。`/i/{key}?w=480|960|1600` が、その幅までに縮めた AVIF を返す（元より大きくはしない）。`<picture>` の `<source type="image/avif">` に並べ、AVIF を読めないブラウザは元の画像（`<img>`）を読む。
+   - 縮小版は、初めて求められたときに Cloudflare Images（`IMAGES`）で 1 度だけ作り、R2 の `variants/{key}@{幅}.avif` に置く。以後は R2 から返すので、同じ画像・同じ幅の変換は 1 回きり。前に上げた画像にも、取り込んだ店の写真にも、そのまま効く。幅を 3 つに限るのは、好きな幅で変換と置き場を増やさせないため。
+   - 無料枠は月 5,000 件の変換（1 枚につき多くて 3 件）。超えたり変換できなかったりしたら、その URL で元の画像を 1 時間だけ返し、あとでまた試す（課金はされない）。
+   - 元の画像を消すときは、縮小版も消す（`deleteMedia`）。
+   - **フライヤーは、上げるときに大きさを調べて名前に入れる**（`flyers/{会}/{乱数}-1200x1700.jpg`。`imageSize`、Images の `info` は変換に数えない）。`<img>` に `width` / `height` を書いて、読み込む前から場所を取る（壁でビラが後からずれない）。表は足さない。前に上げたフライヤーには大きさが無く、今までどおり。店の写真は CSS で縦横比を決めているので要らない。
+   - 外の画像（X や Misskey のアイコン）はそのまま出す。
 8. `data-sveltekit-preload-data` と Speculation Rules で次ページを先読み。
 
 ## 段階
@@ -263,7 +269,7 @@ UI/UX の型は「意識が低すぎる、しょぼい Luma」。Luma から借�
 
 - 管理者のいないハコ・団体は、名前・エリア・公式へのリンクと、取り込みで写した X のアイコン・店の写真だけを出す。紹介文は、載せた本人がいないのでサーバーが落とす（`nameOnlyIfUnmanaged`。DB に残っていても出さない）。一覧とページに「非公式」の印を出す。看板から `/contact` へ、ページの引き取りと掲載の取り下げの連絡ができる。
 - **ハコへの問い合わせフォームは持たない。** 名前・メールアドレス・電話番号を他人から預かる機能は権利や個人情報の問題に発展しやすく、間借りの相談は X の DM などで足りる。`inquiries` テーブルは `0006_drop_inquiries` で消す。
-- 画像は R2 に生のまま置く（変換なし）。JPEG / PNG / WebP、5MB まで。
+- 画像は R2 に生のまま置く。JPEG / PNG / WebP、5MB まで。出すときは縮めた AVIF を先に出す（「速さの規約」7）。
 
 ## フライヤー
 

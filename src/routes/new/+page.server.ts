@@ -21,6 +21,7 @@ import {
 	setEventFlyer,
 	toEventValues,
 } from "#lib/server/me.ts";
+import { imageSize } from "#lib/server/media.ts";
 import { startSeries } from "#lib/server/series.ts";
 import type { Actions, PageServerLoad } from "./$types";
 
@@ -97,7 +98,16 @@ export const actions: Actions = {
 			);
 		if (id) {
 			if (file)
-				await setEventFlyer(locals.db, id, await putFlyer(env.MEDIA, id, file));
+				await setEventFlyer(
+					locals.db,
+					id,
+					await putFlyer(
+						env.MEDIA,
+						id,
+						file,
+						await imageSize(env.IMAGES, file),
+					),
+				);
 			// 繰り返すなら、先の回もここで作る（フライヤーを付けたあと。先の回は同じ画像を指す）
 			if (repeat)
 				await startSeries(

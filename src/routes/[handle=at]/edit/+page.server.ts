@@ -4,6 +4,7 @@ import { type LinkedSns, shownSns } from "#lib/actor.ts";
 import { parseHandleInput, shortId } from "#lib/id.ts";
 import { linkedSns } from "#lib/server/events.ts";
 import { requireActor } from "#lib/server/me.ts";
+import { deleteMedia } from "#lib/server/media.ts";
 import {
 	addMember,
 	getManagedActor,
@@ -163,14 +164,14 @@ export const actions: Actions = {
 			httpMetadata: { contentType: file.type },
 		});
 		await setHeaderKey(locals.db, actor.id, key);
-		if (actor.headerKey) await env.MEDIA.delete(actor.headerKey);
+		if (actor.headerKey) await deleteMedia(env.MEDIA, actor.headerKey);
 		return { section: "header", ok: true };
 	},
 	removeHeader: async ({ locals, params }) => {
 		const actor = await managed(locals, params.handle);
 		if (actor.headerKey) {
 			await setHeaderKey(locals.db, actor.id, null);
-			await env.MEDIA.delete(actor.headerKey);
+			await deleteMedia(env.MEDIA, actor.headerKey);
 		}
 		return { section: "header", ok: true };
 	},

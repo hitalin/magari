@@ -31,4 +31,12 @@ describe("putFlyer", () => {
 			httpMetadata: { contentType: "image/png" },
 		});
 	});
+	it("大きさが分かれば、名前に入れる（<img> の width / height に使う）", async () => {
+		const media = { put: vi.fn(async () => null) } as unknown as R2Bucket;
+		const key = await putFlyer(media, "ev1", file("image/png"), {
+			width: 1200,
+			height: 1700,
+		});
+		expect(key).toMatch(/^flyers\/ev1\/[^/]+-1200x1700\.png$/);
+	});
 });

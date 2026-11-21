@@ -4,6 +4,7 @@ import Blocks from "#lib/components/Blocks.svelte";
 import DayList from "#lib/components/DayList.svelte";
 import Empty from "#lib/components/Empty.svelte";
 import MonthGrid from "#lib/components/MonthGrid.svelte";
+import Picture from "#lib/components/Picture.svelte";
 import { dayKey } from "#lib/date.ts";
 import { actorSns, SNS_ICON, SNS_NAME } from "#lib/sns.ts";
 import { KIND_LABEL } from "#lib/types.ts";
@@ -75,7 +76,7 @@ const description = $derived(actor.catch ?? actor.summary ?? undefined);
 </svelte:head>
 
 {#if actor.headerUrl && actor.kind !== 'space'}
-	<img src={actor.headerUrl} alt="" class="mt-4 aspect-[21/9] w-full rounded-lg border border-line object-cover sm:aspect-[3/1]" />
+	<Picture src={actor.headerUrl} alt="" sizes="(min-width: 64rem) 60rem, 100vw" class="mt-4 aspect-[21/9] w-full rounded-lg border border-line object-cover sm:aspect-[3/1]" />
 {/if}
 
 <!-- ハコ（箱）のページは段ボールの看板 -->
@@ -83,7 +84,7 @@ const description = $derived(actor.catch ?? actor.summary ?? undefined);
 	<!-- 名刺は X や Misskey のプロフィールと同じ並び: 左上に顔、右上に編集、その下に名前・@ID・ひとこと・リンク -->
 	<div class="flex items-start justify-between gap-4">
 		{#if icon}
-			<img src={icon} alt="" class="h-20 w-20 shrink-0 rounded-full border border-line object-cover sm:h-24 sm:w-24" />
+			<Picture src={icon} alt="" sizes="6rem" class="h-20 w-20 shrink-0 rounded-full border border-line object-cover sm:h-24 sm:w-24" />
 		{:else}
 			<span class="grid h-20 w-20 shrink-0 place-items-center rounded-full border border-line bg-accent-soft font-serif text-3xl text-accent-ink sm:h-24 sm:w-24" aria-hidden="true">{[...actor.name][0]}</span>
 		{/if}

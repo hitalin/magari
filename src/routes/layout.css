@@ -603,6 +603,8 @@ h4 {
 	.flyer-pin img {
 		display: block;
 		width: 100%;
+		/* width / height を書いた画像（Picture）を、幅に合わせて縦横比のまま縮める */
+		height: auto;
 	}
 	.flyer-pin::before {
 		content: "";

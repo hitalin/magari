@@ -1,5 +1,6 @@
 <script lang="ts">
 import Flyer from "#lib/components/Flyer.svelte";
+import Picture from "#lib/components/Picture.svelte";
 import { formatWhen } from "#lib/date.ts";
 import { flyerStyle } from "#lib/flyer.ts";
 import {
@@ -100,7 +101,7 @@ const cardDescription = $derived(
 		<div class="detail-flyer">
 			<div class="flyer-pin mx-auto w-full max-w-[20rem] md:max-w-none" style="--tilt: {flyerStyle(event.id).tilt / 2}deg">
 				{#if event.flyerUrl}
-					<img src={event.flyerUrl} alt="{event.title} のフライヤー" />
+					<Picture src={event.flyerUrl} alt="{event.title} のフライヤー" sizes="(min-width: 48rem) 25rem, 20rem" />
 				{:else}
 					<Flyer id={event.id} title={event.title} startsAt={event.startsAt} endsAt={event.endsAt} allDay={event.allDay} place={event.space?.name ?? event.locationName} host={event.hosts[0]?.name ?? null} look={event.flyerLook} />
 				{/if}

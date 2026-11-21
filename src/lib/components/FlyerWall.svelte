@@ -1,4 +1,5 @@
 <script lang="ts">
+import Picture from "#lib/components/Picture.svelte";
 import { dayKey, formatDay, formatWhen } from "#lib/date.ts";
 import { flyerStyle } from "#lib/flyer.ts";
 import { collapseByActor } from "#lib/group.ts";
@@ -37,7 +38,7 @@ const place = (e: EventSummary) => e.space?.name ?? e.locationName ?? null;
 			{@const e = item.event}
 			<a href="/e/{e.id}" class="flyer-pin" style="--tilt: {flyerStyle(e.id).tilt}deg" aria-label="{e.title}（{formatWhen(e)}）">
 				{#if e.flyerUrl}
-					<img src={e.flyerUrl} alt="" loading="lazy" />
+					<Picture src={e.flyerUrl} alt="" sizes="180px" lazy />
 				{:else}
 					<Flyer id={e.id} title={e.title} startsAt={e.startsAt} endsAt={e.endsAt} allDay={e.allDay} place={place(e)} host={e.hosts[0]?.name ?? null} look={e.flyerLook} />
 				{/if}

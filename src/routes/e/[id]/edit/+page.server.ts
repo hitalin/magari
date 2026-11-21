@@ -28,6 +28,7 @@ import {
 	toEventValues,
 	updateEvent,
 } from "#lib/server/me.ts";
+import { deleteMedia, imageSize } from "#lib/server/media.ts";
 import {
 	deleteFollowing,
 	flyerInUse,
@@ -46,7 +47,8 @@ async function editable(locals: App.Locals, id: string) {
 
 // フライヤーの画像を R2 から消す。繰り返しのほかの回がまだ同じ画像を使っているなら残す
 async function dropFlyer(locals: App.Locals, key: string | null) {
-	if (key && !(await flyerInUse(locals.db, key))) await env.MEDIA.delete(key);
+	if (key && !(await flyerInUse(locals.db, key)))
+		await deleteMedia(env.MEDIA, key);
 }
 
 export const load: PageServerLoad = async ({ locals, params }) => {
@@ -93,7 +95,12 @@ export const actions: Actions = {
 			return fail(400, { flyerError: "画像を選んでください" });
 		const flyerError = checkFlyer(file);
 		if (flyerError) return fail(400, { flyerError });
-		const key = await putFlyer(env.MEDIA, ev.id, file);
+		const key = await putFlyer(
+			env.MEDIA,
+			ev.id,
+			file,
+			await imageSize(env.IMAGES, file),
+		);
 		await setEventFlyer(locals.db, ev.id, key);
 		await dropFlyer(locals, ev.coverKey);
 		warmCard(locals.db, ev.id, url.origin);

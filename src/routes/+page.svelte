@@ -1,6 +1,7 @@
 <script lang="ts">
 import DayList from "#lib/components/DayList.svelte";
 import Flyer from "#lib/components/Flyer.svelte";
+import Picture from "#lib/components/Picture.svelte";
 import { dayKey, formatWhen } from "#lib/date.ts";
 import type { PageProps } from "./$types";
 
@@ -86,7 +87,7 @@ const REPO = "https://github.com/hitalin/magari";
 		{#each fan as e (e.id)}
 			<a href="/e/{e.id}" class="flyer-pin" aria-label="{e.title}（{formatWhen(e)}）">
 				{#if e.flyerUrl}
-					<img src={e.flyerUrl} alt="" />
+					<Picture src={e.flyerUrl} alt="" sizes="240px" />
 				{:else}
 					<Flyer id={e.id} title={e.title} startsAt={e.startsAt} endsAt={e.endsAt} allDay={e.allDay} place={e.space?.name ?? e.locationName} host={e.hosts[0]?.name ?? null} look={e.flyerLook} />
 				{/if}
