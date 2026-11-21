@@ -41,6 +41,7 @@ export const GET: RequestHandler = async ({ locals, request }) => {
 				event: events,
 				spaceHandle: space.handle,
 				repeat: eventSeries.rrule,
+				repeatUntil: eventSeries.until,
 			})
 			.from(events)
 			.leftJoin(space, eq(events.spaceActorId, space.id))
@@ -67,6 +68,7 @@ export const GET: RequestHandler = async ({ locals, request }) => {
 			...r.event,
 			spaceHandle: r.spaceHandle,
 			repeat: r.repeat,
+			repeatUntil: r.repeatUntil,
 			hosts: hosts.filter((h) => h.eventId === r.event.id).map((h) => h.handle),
 		})),
 	});

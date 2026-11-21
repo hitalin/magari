@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { occurrencesAfter } from "./series";
+import { expandLimit, occurrencesAfter } from "./series";
 
 const jst = (s: string) => new Date(`${s}:00+09:00`);
 
@@ -61,5 +61,31 @@ describe("occurrencesAfter", () => {
 				jst("2026-12-23T00:00"),
 			),
 		).toEqual([jst("2026-12-22T19:00")]);
+	});
+});
+
+describe("expandLimit", () => {
+	const horizon = jst("2027-02-20T00:00");
+	it("終わりの日が無ければ、作っておく先まで", () => {
+		expect(expandLimit(horizon, null)).toEqual(horizon);
+	});
+	it("終わりの日が手前にあれば、そこまで", () => {
+		const until = jst("2026-12-16T00:00");
+		expect(expandLimit(horizon, until)).toEqual(until);
+	});
+	it("終わりの日が先なら、作っておく先まで", () => {
+		expect(expandLimit(horizon, jst("2027-06-01T00:00"))).toEqual(horizon);
+	});
+	it("終わりの日の回は入り、次の日の回は入らない", () => {
+		const start = jst("2026-12-01T19:00");
+		const until = jst("2026-12-16T00:00");
+		expect(
+			occurrencesAfter(
+				"FREQ=WEEKLY",
+				start,
+				start,
+				expandLimit(horizon, until),
+			),
+		).toEqual([jst("2026-12-08T19:00"), jst("2026-12-15T19:00")]);
 	});
 });

@@ -15,6 +15,8 @@ let {
 	look = null,
 	host = null,
 	repeat = null,
+	repeatUntil = "",
+	repeatable = true,
 	series = null,
 }: {
 	values: EventFormValues;
@@ -25,8 +27,11 @@ let {
 	// ビラの型と差し色の初期値（複製元、送り直し）。無ければ ID から決まる組を最初に出す
 	look?: FlyerLook | null;
 	host?: string | null;
-	// 繰り返しの初期値（送り直し）。選べるのは新しく開けるときだけ
+	// 繰り返しと、その終わりの日の初期値（送り直し）
 	repeat?: Repeat | null;
+	repeatUntil?: string;
+	// 繰り返しを選べるか。もう繰り返しの中の回と、中止した間では選べない
+	repeatable?: boolean;
 	// 繰り返しの中の回を直すとき、その決まりの言い方（「毎週火曜」）。この先の回もまとめて直すかを聞く
 	series?: string | null;
 } = $props();
@@ -108,13 +113,18 @@ function clearFile() {
 	</div>
 	<label class="flex items-center gap-2 text-sm"><input type="checkbox" name="allDay" bind:checked={v.allDay} class="accent-accent" /> 終日（時刻を決めない）</label>
 
-	{#if flyerId}
-		<Field label="繰り返し" hint="選ぶと、先の回もまとめて開ける。回ごとに直したり中止にしたりできる">
-			<select name="repeat" class="input">
-				<option value="">この日だけ</option>
-				{#each repeats as r (r.kind)}<option value={r.kind} selected={repeat === r.kind}>{r.label}</option>{/each}
-			</select>
-		</Field>
+	{#if repeatable}
+		<div class="grid gap-4 sm:grid-cols-2">
+			<Field label="繰り返し" hint="選ぶと、先の回もまとめて開ける。回ごとに直したり中止にしたりできる">
+				<select name="repeat" class="input">
+					<option value="">この日だけ</option>
+					{#each repeats as r (r.kind)}<option value={r.kind} selected={repeat === r.kind}>{r.label}</option>{/each}
+				</select>
+			</Field>
+			<Field label="いつまで" hint="繰り返しの終わりの日。空欄なら、やめるまで続く">
+				<input type="date" name="repeatUntil" value={repeatUntil} class="input" />
+			</Field>
+		</div>
 	{/if}
 
 	<div class="grid gap-4 sm:grid-cols-2">

@@ -49,3 +49,32 @@ export function moveToDay(
 		endsAt: endsAt && new Date(endsAt.getTime() + delta),
 	};
 }
+
+// 繰り返しの終わりの日（YYYY-MM-DD、JST）。その日の回までを含むよう、次の日の JST 0 時を返す。空なら終わりを決めない
+export function parseUntil(
+	value: string | null | undefined,
+	startsAt: Date,
+): { ok: true; until: Date | null } | { ok: false; error: string } {
+	const v = (value ?? "").trim();
+	if (!v) return { ok: true, until: null };
+	const day = /^\d{4}-\d{2}-\d{2}$/.test(v)
+		? new Date(`${v}T00:00:00+09:00`)
+		: new Date(Number.NaN);
+	if (Number.isNaN(day.getTime()))
+		return { ok: false, error: "繰り返しの終わりの日が正しくありません" };
+	const until = new Date(day.getTime() + 86_400_000);
+	if (until <= startsAt)
+		return {
+			ok: false,
+			error:
+				"繰り返しの終わりは、この回と同じ日か、それより後の日にしてください",
+		};
+	return { ok: true, until };
+}
+
+// 欄に出す日付（YYYY-MM-DD）へ戻す
+export function untilDay(until: Date | null | undefined): string {
+	return until
+		? new Date(until.getTime() - 1 + JST).toISOString().slice(0, 10)
+		: "";
+}

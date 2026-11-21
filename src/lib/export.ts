@@ -58,6 +58,8 @@ export function toExport(input: {
 			visibility: e.visibility,
 			// 繰り返しの決まり（iCal の RRULE）。単発なら null
 			repeat: e.repeat ?? null,
+			// 繰り返しの終わり（この時刻より前の回まで）。決めていなければ null
+			repeatUntil: iso(e.repeatUntil),
 			hosts: e.hosts ?? [],
 			space: e.spaceHandle ?? null,
 			locationName: e.locationName ?? null,

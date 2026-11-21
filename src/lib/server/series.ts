@@ -34,7 +34,12 @@ export function occurrencesAfter(
 		.map((d) => new Date(d.getTime() - JST));
 }
 
-// 先の回を AHEAD まで足す。回が 1 つも残っていない繰り返しは終える。足した数を返す
+// どこまでの回を作るか。作っておく先（horizon）か、繰り返しの終わりの、手前のほう
+export function expandLimit(horizon: Date, until: Date | null): Date {
+	return until && until < horizon ? until : horizon;
+}
+
+// 先の回を AHEAD（か、繰り返しの終わり）まで足す。回が 1 つも残っていない繰り返しは終える。足した数を返す
 export async function extendSeries(
 	db: Db,
 	seriesId: string,
@@ -56,7 +61,7 @@ export async function extendSeries(
 		await db.delete(eventSeries).where(eq(eventSeries.id, seriesId));
 		return 0;
 	}
-	const until = new Date(now.getTime() + AHEAD);
+	const until = expandLimit(new Date(now.getTime() + AHEAD), series.until);
 	// 前に作った所まではもう数えない（消された回を作り直さないため）
 	const after =
 		series.expandedUntil && series.expandedUntil > last.startsAt
@@ -95,15 +100,16 @@ export async function extendSeries(
 	return dates.length;
 }
 
-// 会を繰り返しの最初の回にして、先の回を作る
+// 会を繰り返しの最初の回にして、先の回を作る。until は繰り返しの終わり（parseUntil。無ければ、やめるまで続く）
 export async function startSeries(
 	db: Db,
 	eventId: string,
 	rrule: string,
+	until: Date | null = null,
 ): Promise<void> {
 	const [series] = await db
 		.insert(eventSeries)
-		.values({ rrule })
+		.values({ rrule, until })
 		.returning({ id: eventSeries.id });
 	await db
 		.update(events)
@@ -123,7 +129,14 @@ export async function extendDueSeries(
 		.where(
 			or(
 				isNull(eventSeries.expandedUntil),
-				lt(eventSeries.expandedUntil, new Date(now.getTime() + AHEAD - DAY)),
+				and(
+					lt(eventSeries.expandedUntil, new Date(now.getTime() + AHEAD - DAY)),
+					// 終わりの日まで作り終えた繰り返しは、もう延ばさない
+					or(
+						isNull(eventSeries.until),
+						lt(eventSeries.expandedUntil, eventSeries.until),
+					),
+				),
 			),
 		)
 		.limit(20);
@@ -182,6 +195,40 @@ export async function deleteFollowing(
 		.set({ seriesId: null })
 		.where(eq(events.seriesId, ev.seriesId));
 	await db.delete(eventSeries).where(eq(eventSeries.id, ev.seriesId));
+	return gone;
+}
+
+// 繰り返しの終わりの日を決め直す。手前にしたら、その日より後の回を消す（消した会を返す）。
+// 先へ延ばすか、終わりを無くしたら、足りない回を作る
+export async function setSeriesUntil(
+	db: Db,
+	seriesId: string,
+	until: Date | null,
+): Promise<{ id: string; coverKey: string | null }[]> {
+	const [series] = await db
+		.select({ expandedUntil: eventSeries.expandedUntil })
+		.from(eventSeries)
+		.where(eq(eventSeries.id, seriesId))
+		.limit(1);
+	if (!series) return [];
+	const gone = until
+		? await db
+				.delete(events)
+				.where(and(eq(events.seriesId, seriesId), gte(events.startsAt, until)))
+				.returning({ id: events.id, coverKey: events.coverKey })
+		: [];
+	await db
+		.update(eventSeries)
+		.set({
+			until,
+			// 消した所から先は「まだ作っていない」に戻す（あとで終わりを延ばしたとき、そこから作れるように）
+			expandedUntil:
+				until && series.expandedUntil && series.expandedUntil > until
+					? until
+					: series.expandedUntil,
+		})
+		.where(eq(eventSeries.id, seriesId));
+	await extendSeries(db, seriesId);
 	return gone;
 }
 

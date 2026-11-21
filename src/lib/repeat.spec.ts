@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { moveToDay, parseRepeat, repeatRule, ruleLabel } from "./repeat";
+import {
+	moveToDay,
+	parseRepeat,
+	parseUntil,
+	repeatRule,
+	ruleLabel,
+	untilDay,
+} from "./repeat";
 
 // 2026-12-01 は火曜。JST 19:00 = UTC 10:00
 const tue = (day: number, time = "19:00") =>
@@ -60,5 +67,33 @@ describe("moveToDay", () => {
 	});
 	it("終了が無ければ無いまま", () => {
 		expect(moveToDay(tue(15), tue(1), null).endsAt).toBeNull();
+	});
+});
+
+describe("parseUntil", () => {
+	it("空なら終わりを決めない", () => {
+		expect(parseUntil("", tue(1))).toEqual({ ok: true, until: null });
+		expect(parseUntil(null, tue(1))).toEqual({ ok: true, until: null });
+	});
+	it("その日の回までを含む（次の日の JST 0 時で切る）", () => {
+		expect(parseUntil("2026-12-15", tue(1))).toEqual({
+			ok: true,
+			until: new Date("2026-12-16T00:00:00+09:00"),
+		});
+	});
+	it("最初の回と同じ日でもよい（その 1 回で終わる）", () => {
+		expect(parseUntil("2026-12-01", tue(1)).ok).toBe(true);
+	});
+	it("最初の回より前の日と、日付でない値は断る", () => {
+		expect(parseUntil("2026-11-30", tue(1)).ok).toBe(false);
+		expect(parseUntil("来月", tue(1)).ok).toBe(false);
+		expect(parseUntil("2026-13-40", tue(1)).ok).toBe(false);
+	});
+});
+
+describe("untilDay", () => {
+	it("欄に出す日付へ戻す（切る時刻の前の日）", () => {
+		expect(untilDay(new Date("2026-12-16T00:00:00+09:00"))).toBe("2026-12-15");
+		expect(untilDay(null)).toBe("");
 	});
 });

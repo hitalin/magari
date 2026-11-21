@@ -9,7 +9,13 @@ import {
 } from "#lib/event-form.ts";
 import { flyerStyle, parseFlyerLook } from "#lib/flyer.ts";
 import { parseHandleInput } from "#lib/id.ts";
-import { ruleLabel } from "#lib/repeat.ts";
+import {
+	parseRepeat,
+	parseUntil,
+	repeatRule,
+	ruleLabel,
+	untilDay,
+} from "#lib/repeat.ts";
 import { warmCard } from "#lib/server/card.ts";
 import { eventSeries } from "#lib/server/db/schema.ts";
 import { toFormValues } from "#lib/server/event-values.ts";
@@ -32,6 +38,8 @@ import { deleteMedia, imageSize } from "#lib/server/media.ts";
 import {
 	deleteFollowing,
 	flyerInUse,
+	setSeriesUntil,
+	startSeries,
 	updateFollowing,
 } from "#lib/server/series.ts";
 import { mediaUrl } from "#lib/types.ts";
@@ -59,7 +67,7 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 	);
 	const [series] = ev.seriesId
 		? await locals.db
-				.select({ rrule: eventSeries.rrule })
+				.select({ rrule: eventSeries.rrule, until: eventSeries.until })
 				.from(eventSeries)
 				.where(eq(eventSeries.id, ev.seriesId))
 				.limit(1)
@@ -69,6 +77,8 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 		status: ev.status,
 		// 繰り返しの中の回なら、その決まりの言い方（「毎週火曜」）
 		series: series ? ruleLabel(series.rrule, ev.startsAt) : null,
+		// 繰り返しの終わりの日（YYYY-MM-DD）。決めていなければ空
+		seriesUntil: untilDay(series?.until),
 		values: toFormValues(ev),
 		hosts: await listEventHosts(locals.db, ev.id),
 		myActorId: locals.actor?.id ?? null,
@@ -154,10 +164,19 @@ export const actions: Actions = {
 		const current = await editable(locals, params.id);
 		const form = await request.formData();
 		const values = readEventForm((k) => (form.get(k) as string | null) ?? null);
+		// 単発の間を、繰り返しの最初の回にする（もう繰り返しの中の回と、中止した間には欄を出していない）
+		const repeat =
+			current.seriesId || current.status === "cancelled"
+				? null
+				: parseRepeat(form.get("repeat") as string | null);
+		const repeatUntil = String(form.get("repeatUntil") ?? "");
+		const again = { values, repeat, repeatUntil };
 		const parsed = parseEventForm(values);
-		if (!parsed.ok) return fail(400, { error: parsed.error, values });
+		if (!parsed.ok) return fail(400, { error: parsed.error, ...again });
+		const until = parseUntil(repeat ? repeatUntil : "", parsed.event.startsAt);
+		if (!until.ok) return fail(400, { error: until.error, ...again });
 		const ev = await toEventValues(locals.db, parsed.event);
-		if ("error" in ev) return fail(400, { error: ev.error, values });
+		if ("error" in ev) return fail(400, { error: ev.error, ...again });
 		const status = statusAfterEdit(current.status, parsed.event.status);
 		if (current.seriesId && form.get("following") !== null) {
 			// この先の回もまとめて直す。回の日付は決まりから来ているので、ここでは動かさない
@@ -165,7 +184,7 @@ export const actions: Actions = {
 				return fail(400, {
 					error:
 						"日付を変えるときは「この先の回もまとめて直す」の印を外して、この回だけを直してください",
-					values,
+					...again,
 				});
 			await updateFollowing(
 				locals.db,
@@ -179,6 +198,14 @@ export const actions: Actions = {
 				status,
 				seriesId: null,
 			});
+			// 先の回は、直したあとのこの間を写して作る
+			if (repeat)
+				await startSeries(
+					locals.db,
+					params.id,
+					repeatRule(repeat, ev.startsAt),
+					until.until,
+				);
 		}
 		warmCard(locals.db, params.id, url.origin);
 		redirect(303, status === "draft" ? "/me" : `/e/${params.id}`);
@@ -199,6 +226,20 @@ export const actions: Actions = {
 		await dropFlyer(locals, ev.coverKey);
 		await env.MEDIA.delete(`cards/${ev.id}.png`);
 		redirect(303, "/me");
+	},
+	// 繰り返しの終わりの日を決め直す。手前にすると、その日より後の回は消える
+	until: async ({ request, locals, params }) => {
+		const ev = await editable(locals, params.id);
+		if (!ev.seriesId) error(400, "繰り返しの間ではありません");
+		const form = await request.formData();
+		const until = parseUntil(String(form.get("until") ?? ""), ev.startsAt);
+		if (!until.ok) return fail(400, { untilError: until.error });
+		const gone = await setSeriesUntil(locals.db, ev.seriesId, until.until);
+		for (const key of new Set(gone.map((g) => g.coverKey)))
+			await dropFlyer(locals, key);
+		if (gone.length)
+			await env.MEDIA.delete(gone.map((g) => `cards/${g.id}.png`));
+		return { untilSaved: true };
 	},
 	// この回から先の回をすべて消して、繰り返しを終える。前の回は残る
 	deleteFollowing: async ({ locals, params }) => {

@@ -58,7 +58,20 @@ const flyer = $derived({
 			{#if data.status === 'cancelled'}
 				<p class="mb-6 rounded-sm bg-accent-soft px-4 py-2 text-sm text-accent-ink">中止にした間です。内容を直して保存しても、中止のままです。</p>
 			{/if}
-			<EventForm values={form?.values ?? data.values} error={form?.error} submitLabel={data.status === 'cancelled' ? '保存する' : '保存して公開'} series={data.series} />
+			<EventForm values={form?.values ?? data.values} error={form?.error} submitLabel={data.status === 'cancelled' ? '保存する' : '保存して公開'} series={data.series} repeatable={!data.series && data.status !== 'cancelled'} repeat={form && 'repeat' in form ? form.repeat : null} repeatUntil={form && 'repeatUntil' in form ? form.repeatUntil : ''} />
+
+	{#if data.series}
+		<section class="mt-12 border-t border-line pt-6">
+			<h2 class="section-title text-[1.25rem]">繰り返し</h2>
+			<p class="mt-4 mb-4 text-sm text-muted">{data.series}。終わりの日を決めると、その日の回までで終わり、それより後の回は消えます。空欄にすると、やめるまで続きます。</p>
+			{#if form && 'untilError' in form}<p class="mb-4 rounded-sm bg-accent-soft px-4 py-2 text-sm text-accent-ink" role="alert">{form.untilError}</p>{/if}
+			{#if form && 'untilSaved' in form}<p class="mb-4 rounded-sm bg-accent-soft px-4 py-2 text-sm text-accent-ink" role="status">{data.seriesUntil ? `${data.seriesUntil} の回までにしました。` : '終わりの日を無くしました。'}</p>{/if}
+			<form method="POST" action="?/until" class="flex max-w-md items-center gap-2" onsubmit={(e) => { if (new FormData(e.currentTarget).get('until') && !confirm('終わりの日より後の回は削除されます。よろしいですか？')) e.preventDefault(); }}>
+				<input type="date" name="until" value={data.seriesUntil} class="input" aria-label="繰り返しの終わりの日" />
+				<button type="submit" class="btn shrink-0">決める</button>
+			</form>
+		</section>
+	{/if}
 
 	<section class="mt-12 border-t border-line pt-6">
 		<h2 class="section-title text-[1.25rem]">主催</h2>
