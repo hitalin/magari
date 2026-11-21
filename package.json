@@ -4,6 +4,7 @@
 	"private": true,
 	"license": "AGPL-3.0-only",
 	"type": "module",
+	"packageManager": "pnpm@12.21.0",
 	"imports": {
 		"#lib": "./src/lib/index.js",
 		"#lib/*": "./src/lib/*",
@@ -23,6 +24,7 @@
 		"format": "biome check --write .",
 		"test": "vitest --run",
 		"test:watch": "vitest",
+		"smoke": "node scripts/smoke.mjs",
 		"cf-typegen": "wrangler types",
 		"db:generate": "drizzle-kit generate",
 		"db:migrate": "wrangler d1 migrations apply magari --local",

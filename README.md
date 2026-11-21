@@ -35,7 +35,7 @@ pnpm dev                         # http://localhost:5173
 curl -X POST -H "Authorization: Bearer $IMPORT_TOKEN" http://localhost:5173/api/admin/import
 ```
 
-検査: `pnpm check` / `pnpm lint` / `pnpm test`（push と pull request のたびに GitHub Actions でも走る。`.github/workflows/ci.yml`）
+検査: `pnpm check` / `pnpm lint` / `pnpm test`。`pnpm build && pnpm smoke` は、組み上げた Worker を手元で立ててひと通り叩く（公開と本人だけの応答の分け方、ログイン、間の作成と繰り返し。D1 は `.wrangler/smoke` に作り直すので、開発用のデータには触らない）。どれも push と pull request のたびに GitHub Actions で走る（`.github/workflows/ci.yml`）
 
 ## デプロイ
 
