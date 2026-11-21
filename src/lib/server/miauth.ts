@@ -9,6 +9,7 @@ import { handleOAuthUserInfo } from "better-auth/oauth2";
 import { parseMisskeyHost } from "../misskey.ts";
 import { safeNext } from "../next.ts";
 import { adoptAccount, type IsEmptyUser } from "./link-empty-user.ts";
+import { remoteJson } from "./remote-fetch.ts";
 
 // Misskey の MiAuth でログインする better-auth プラグイン。
 // 事前登録なし。任意のサーバーに「このアプリを許可しますか」を出し、戻ってきたセッション ID を
@@ -40,22 +41,15 @@ type State = { host: string; callbackURL: string; linkUserId: string | null };
 
 // MiAuth の画面へ飛ばす前に、Misskey（とその派生）のサーバーか確かめる。違えば飛んだ先で 404 になるだけなので
 async function isMisskey(host: string): Promise<boolean> {
-	try {
-		const res = await fetch(`https://${host}/api/meta`, {
-			method: "POST",
-			headers: {
-				"content-type": "application/json",
-				"user-agent": USER_AGENT,
-			},
-			body: JSON.stringify({ detail: false }),
-			signal: AbortSignal.timeout(5000),
-		});
-		if (!res.ok) return false;
-		const meta = (await res.json()) as { version?: unknown };
-		return typeof meta.version === "string";
-	} catch {
-		return false;
-	}
+	const meta = (await remoteJson(`https://${host}/api/meta`, {
+		method: "POST",
+		headers: {
+			"content-type": "application/json",
+			"user-agent": USER_AGENT,
+		},
+		body: JSON.stringify({ detail: false }),
+	})) as { version?: unknown } | null;
+	return typeof meta?.version === "string";
 }
 
 export const miauth = (opts: {
@@ -146,14 +140,11 @@ export const miauth = (opts: {
 						? `${site}/me?`
 						: `${site}/login?next=${encodeURIComponent(callbackURL)}&`;
 
-					const res = await fetch(
+					const check = (await remoteJson(
 						`https://${host}/api/miauth/${session}/check`,
 						{ method: "POST", headers: { "user-agent": USER_AGENT } },
-					).catch(() => null);
-					const check = (
-						res?.ok ? await res.json() : { ok: false }
-					) as MiAuthCheck;
-					const me = check.ok ? check.user : undefined;
+					)) as MiAuthCheck | null;
+					const me = check?.ok ? check.user : undefined;
 					if (!me) return fail("miauth_denied");
 					if (!/^\w{1,64}$/.test(me.username)) return fail("miauth_user");
 					const accountId = `${me.username.toLowerCase()}@${host}`;
