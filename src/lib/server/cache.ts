@@ -36,14 +36,20 @@ const QUIET = [
 	/^\/contact$/,
 ];
 
-// この要求のあとでキャッシュを消すか。通った書き込み（GET 以外）なら、どれでも消す。
-// 書き込みの種類ごとに呼び分けないのは、呼び忘れた所だけ古い中身が残るのを防ぐため
+// この要求のあとでキャッシュを消すか。ログイン中の人か Cron（/api/admin/…）の、通った書き込み（GET 以外）なら、どれでも消す。
+// 書き込みの種類ごとに呼び分けないのは、呼び忘れた所だけ古い中身が残るのを防ぐため。
+// ログインしていない人の POST は数えない（公開の中身を変えられないうえ、purge の回数の上限を使い切られる）
 export function shouldPurge(
 	method: string,
 	status: number,
 	pathname: string,
+	loggedIn: boolean,
 ): boolean {
 	if (method === "GET" || method === "HEAD" || method === "OPTIONS")
 		return false;
+	if (!loggedIn && !pathname.startsWith("/api/admin/")) return false;
 	return status < 400 && !QUIET.some((re) => re.test(pathname));
 }
+
+// purge が世界中に届くまでの待ち。本番で測ると、purge が返ってから 0.3 秒ほどは古い応答がまだ出た（2026-11-22）
+export const PURGE_SETTLE_MS = 500;

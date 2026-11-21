@@ -40,23 +40,34 @@ describe("cacheHeaders", () => {
 
 describe("shouldPurge", () => {
 	it("読むだけの要求では消さない", () => {
-		expect(shouldPurge("GET", 200, "/home")).toBe(false);
-		expect(shouldPurge("HEAD", 200, "/home")).toBe(false);
+		expect(shouldPurge("GET", 200, "/home", true)).toBe(false);
+		expect(shouldPurge("HEAD", 200, "/home", true)).toBe(false);
 	});
-	it("書き込みが通ったら消す（form action は 200 か 303、Cron は POST）", () => {
-		expect(shouldPurge("POST", 303, "/new")).toBe(true);
-		expect(shouldPurge("POST", 200, "/e/abc/edit")).toBe(true);
-		expect(shouldPurge("POST", 200, "/api/admin/import")).toBe(true);
+	it("ログイン中の人の書き込みが通ったら消す（form action は 200 か 303）", () => {
+		expect(shouldPurge("POST", 303, "/new", true)).toBe(true);
+		expect(shouldPurge("POST", 200, "/e/abc/edit", true)).toBe(true);
+	});
+	it("Cron の取り込みと繰り返しの延長でも消す（合言葉が違えば 401 で、消さない）", () => {
+		expect(shouldPurge("POST", 200, "/api/admin/import", false)).toBe(true);
+		expect(shouldPurge("POST", 200, "/api/admin/series", false)).toBe(true);
+		expect(shouldPurge("POST", 401, "/api/admin/import", false)).toBe(false);
+	});
+	it("ログインしていない人の POST では消さない（purge の回数を他人に使い切らせない）", () => {
+		// ログインの要る action は、未ログインだと /login へ 303 で送る。これを書き込みと数えない
+		expect(shouldPurge("POST", 303, "/spaces/new", false)).toBe(false);
+		expect(shouldPurge("POST", 200, "/contact", false)).toBe(false);
 	});
 	it("通らなかった書き込みでは消さない", () => {
-		expect(shouldPurge("POST", 400, "/new")).toBe(false);
-		expect(shouldPurge("POST", 403, "/new")).toBe(false);
-		expect(shouldPurge("POST", 500, "/new")).toBe(false);
+		expect(shouldPurge("POST", 400, "/new", true)).toBe(false);
+		expect(shouldPurge("POST", 403, "/new", true)).toBe(false);
+		expect(shouldPurge("POST", 500, "/new", true)).toBe(false);
 	});
 	it("公開の中身を変えない書き込みでは消さない", () => {
-		expect(shouldPurge("POST", 200, "/api/graffiti")).toBe(false);
-		expect(shouldPurge("POST", 200, "/api/auth/sign-in/social")).toBe(false);
-		expect(shouldPurge("POST", 303, "/logout")).toBe(false);
-		expect(shouldPurge("POST", 200, "/contact")).toBe(false);
+		expect(shouldPurge("POST", 200, "/api/graffiti", true)).toBe(false);
+		expect(shouldPurge("POST", 200, "/api/auth/sign-in/social", true)).toBe(
+			false,
+		);
+		expect(shouldPurge("POST", 303, "/logout", true)).toBe(false);
+		expect(shouldPurge("POST", 200, "/contact", true)).toBe(false);
 	});
 });

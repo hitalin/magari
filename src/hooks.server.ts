@@ -2,7 +2,12 @@ import * as workers from "cloudflare:workers";
 import { env } from "cloudflare:workers";
 import type { Handle } from "@sveltejs/kit/hooks";
 import { createAuth } from "#lib/server/auth.ts";
-import { cacheHeaders, PURGE_TAG, shouldPurge } from "#lib/server/cache.ts";
+import {
+	cacheHeaders,
+	PURGE_SETTLE_MS,
+	PURGE_TAG,
+	shouldPurge,
+} from "#lib/server/cache.ts";
 import { isCrossSite } from "#lib/server/cross-site.ts";
 import { getDb } from "#lib/server/db/index.ts";
 import { getActorForUser, syncAvatar } from "#lib/server/me.ts";
@@ -35,6 +40,8 @@ async function purgePublic() {
 		const result = await cache.purge({ tags: [PURGE_TAG] });
 		if (!result.success)
 			console.error("cache purge failed", JSON.stringify(result.errors));
+		// 届くまで待ってから返す。すぐ返すと、保存のあとの転送先で、直した本人に古いページが出る
+		await new Promise((r) => setTimeout(r, PURGE_SETTLE_MS));
 	} catch (e) {
 		console.error("cache purge failed", e);
 	}
@@ -93,6 +100,8 @@ export const handle: Handle = async ({ event, resolve }) => {
 				)
 			: actor;
 
+	// アカウントの削除は途中でセッションを消すので、先に見ておく
+	const loggedIn = !!event.locals.session;
 	const response = await resolve(event, {
 		// 公開ページの load が、元にした API の cache-control を読んで HTML にも付ける（src/lib/cache.ts）
 		filterSerializedResponseHeaders: (name) => name === "cache-control",
@@ -106,7 +115,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 	for (const [name, value] of Object.entries(cache))
 		response.headers.set(name, value);
 	// 書き込みが通ったら、公開の応答をキャッシュから消す。このあとの転送先で古い中身を見せないよう、消してから返す
-	if (shouldPurge(event.request.method, response.status, path))
+	if (shouldPurge(event.request.method, response.status, path, loggedIn))
 		await purgePublic();
 	// 表示専用の Cookie を今のログイン状態に合わせる。公開の応答には付けない（Set-Cookie の付いた応答はキャッシュに載らない）
 	if (
