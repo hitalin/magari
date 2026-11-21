@@ -49,4 +49,6 @@ pnpm deploy
 
 ## ライセンス
 
-MIT
+[AGPL-3.0-only](LICENSE) © 2026 hitalin
+
+名前とロゴ（`brand/`、`src/lib/assets/`、`static/` のアイコン）はライセンスの対象外です。改造して動かすときは別の名前と看板にしてください。
