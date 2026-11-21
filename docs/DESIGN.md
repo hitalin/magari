@@ -70,6 +70,7 @@ UI/UX の型は「意識が低すぎる、しょぼい Luma」。Luma から借�
 | `/@{handle}/feed.ics` | Actor のこれからの間の iCal。ページの「カレンダーで購読」（`webcal://`）から | — |
 | `/e/{id}/event.ics` | 会 1 件の iCal。会のページの「カレンダーに入れる」から。下書きと非表示は出さない（`src/lib/ics.ts`） | — |
 | `/e/{id}` | 会ページ（短い。X で共有しやすい） | Event オブジェクト |
+| `/sitemap.xml` | 検索に出してよいページだけ（固定ページ、管理者のいるページ、手で立てた公開の会）。写した会と非公式のページは noindex なので載せない | — |
 | `/.well-known/webfinger` | 将来 | `acct:{handle}@magari.cc` |
 
 `handle` は `[a-z0-9_]{3,20}`、全 Actor で一意。`id` は 10 文字の短い乱数 ID。

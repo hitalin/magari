@@ -411,3 +411,44 @@ export async function getActorByHandle(
 		showSamples,
 	);
 }
+
+// 検索に出してよいページ（sitemap.xml 用）。ページ側で noindex にしているものは載せない:
+// 写した会（source あり）と、管理者のいないページ
+export async function listIndexable(db: Db): Promise<{
+	events: { id: string; updatedAt: Date }[];
+	actors: { handle: string; updatedAt: Date }[];
+}> {
+	const [eventRows, actorRows] = await Promise.all([
+		db
+			.select({ id: events.id, updatedAt: events.updatedAt })
+			.from(events)
+			.leftJoin(actors, eq(events.spaceActorId, actors.id))
+			.where(
+				and(
+					eq(events.status, "published"),
+					eq(events.visibility, "public"),
+					isNull(events.source),
+					notHidden(db),
+				),
+			)
+			.orderBy(desc(events.startsAt))
+			.limit(5000),
+		db
+			.select({ handle: actors.handle, updatedAt: actors.updatedAt })
+			.from(actors)
+			.where(
+				and(
+					isNull(actors.hiddenAt),
+					or(
+						isNotNull(actors.userId),
+						inArray(
+							actors.id,
+							db.select({ id: actorMembers.actorId }).from(actorMembers),
+						),
+					),
+				),
+			)
+			.limit(5000),
+	]);
+	return { events: eventRows, actors: actorRows };
+}
