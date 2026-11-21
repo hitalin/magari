@@ -1,4 +1,5 @@
 <script lang="ts">
+import { onMount } from "svelte";
 import { areaFilter } from "#lib/area-filter.svelte.ts";
 import favicon from "#lib/assets/favicon.svg";
 import logo from "#lib/assets/logo.svg";
@@ -13,6 +14,30 @@ import "./layout.css";
 let { children }: LayoutProps = $props();
 // だれが見ているかは HTML に入っていない（公開ページは全員に同じものを配る）。開いた直後と、ページを移るたびに Cookie から読む
 afterNavigate(refreshViewer);
+// 回線が切れているあいだ出ているのは、前に見たときの中身（src/service-worker/index.ts）。そのことを言う
+let offline = $state(false);
+const checkOnline = () => {
+	offline = !navigator.onLine;
+};
+onMount(() => {
+	checkOnline();
+	// はじめて開いたページは、Service Worker が動き出す前に読み込まれている。
+	// いま開いているページと読み込んだファイルを知らせて、次はオフラインでも出せるようにする
+	if (!("serviceWorker" in navigator)) return;
+	// このページ自体が Service Worker を通って来たなら、もう取ってある。
+	// navigator.serviceWorker.controller では見分けられない（読み込みの途中で動き出すと、ここに来るまでに入っている）
+	const [entry] = performance.getEntriesByType("navigation");
+	if ((entry as PerformanceNavigationTiming | undefined)?.workerStart) return;
+	navigator.serviceWorker.ready.then((registration) =>
+		registration.active?.postMessage({
+			type: "warm",
+			urls: [
+				location.href,
+				...performance.getEntriesByType("resource").map((e) => e.name),
+			],
+		}),
+	);
+});
 // ページ遷移: 前のページを画面に残したまま次を組み、見えている画像が出せるようになってから一度に差し替える。
 // フェードはしない（前のページが透けて重なる）。対応していないブラウザでは何もしない
 onNavigate((navigation) => {
@@ -79,7 +104,7 @@ const filterItems = $derived<{ area: string | null }[] | undefined>(
 );
 </script>
 
-<svelte:window onscroll={onScroll} />
+<svelte:window onscroll={onScroll} ononline={checkOnline} onoffline={checkOnline} />
 
 <svelte:head>
 	<link rel="icon" href={favicon} type="image/svg+xml" />
@@ -134,6 +159,9 @@ const filterItems = $derived<{ area: string | null }[] | undefined>(
 <Graffiti />
 
 <main id="main" class="mx-auto max-w-content px-4 pt-6 pb-20">
+	{#if offline}
+		<p class="mt-4 rounded-sm bg-accent-soft px-4 py-2 text-sm text-accent-ink" role="status">オフラインです。出ているのは、前に見たときの内容です。行く前に、つながる所で確かめてください。</p>
+	{/if}
 	{#if filterItems}
 		<!-- 狭い画面では検索を上、エリアを下。広い画面ではエリアの右に検索 -->
 		<div class="mt-4 flex flex-col gap-3 sm:flex-row-reverse sm:items-start sm:justify-between sm:gap-6">

@@ -113,7 +113,13 @@ UI/UX の型は「意識が低すぎる、しょぼい Luma」。Luma から借�
 2. **クライアント遷移は Worker を通さない。** `+page.ts`（universal load）からキャッシュ済みの JSON エンドポイントを fetch する。`__data.json` 経由にしない。URL に「いま」を入れるときは丸める（`weekAhead`。ミリ秒まで入れると毎回別の URL になり、載らない）。
 3. **読み取りで D1 に触るのはキャッシュミス時だけ。** APAC primary でも東京から往復 70ms かかりうる。
 4. **日本語 Web フォントを使わない。** システムフォント。
-5. **Service Worker はシェル + SWR。** IndexedDB の前回データを先に描画し、裏で再検証。
+5. **Service Worker は、回線が切れたときに前に見たページを出す**（`src/service-worker/index.ts`、決め事は `src/lib/offline.ts`）。
+   - **回線があるあいだは何も変えない。** いつも回線の応答を出し、その写しを取っておくだけ（ネットワーク優先）。前の中身を先に出して裏で取り直す形（SWR）にはしない: 中止や変更を、古い中身より後に見せることになる。速さは手前のキャッシュ（上の 1）で出す。
+   - 回線が切れていれば、前に見たページ・JSON を出す。見たことのないページは `static/offline.html`。出ているのが前の中身だと分かるよう、オフラインのあいだは本文の上に一言出す。
+   - **取っておくのは、サーバーが「公開」と書いた応答だけ**（`keepable`）。本人だけのページ（`/me`、下書き）は端末に残らない。ログインと運営の口、落書き、画像（大きいのでブラウザ自身のキャッシュに任せる）には手を出さない。
+   - 取っておいたものは版をまたいで持ち、300 件を超えたら長く見ていないものから捨てる。名前にハッシュの入ったファイル（`/_app/immutable/…`）だけは、持っていれば回線に出ない。
+   - はじめて開いたページは Service Worker が動き出す前に読み込まれているので、ページの側から URL を知らせて取っておく（`+layout.svelte` の `warm`）。回線に出るのはページの HTML の 1 回ぶんだけ。
+   - 型は `src/service-worker/tsconfig.json`（Kit 3 の決まりで、ルートの tsconfig からは外す）。`pnpm check` が合わせて見る。確かめるのは `pnpm preview`（`vite dev` では動かない前提で見ない）。
 6. **管理画面は SPA 寄り。** Worker は JSON を返すだけにして 10ms に収める。
 7. Early Hints / HTTP/3 / Tiered Cache / Brotli を有効化。画像は AVIF + サイズ指定。
 8. `data-sveltekit-preload-data` と Speculation Rules で次ページを先読み。
