@@ -18,6 +18,24 @@ export default defineConfig({
 				config: "wrangler.adapter.jsonc",
 				platformProxy: { configPath: "wrangler.jsonc" },
 			}),
+			// 読み込んでよい先を縛る。スクリプトは自サイトのファイルと、SvelteKit が吐くインライン（ハッシュで許す）だけ。
+			// nonce にしないのは、公開ページを CDN に載せても同じ HTML を配れるようにするため。
+			// 外部のスクリプトや接続先を足すときは、ここを直す
+			csp: {
+				mode: "hash",
+				directives: {
+					"default-src": ["self"],
+					"script-src": ["self"],
+					// style 属性（ビラの傾きや色）を使うので inline を許す
+					"style-src": ["self", "unsafe-inline"],
+					// 顔の画像は X と、任意の Misskey サーバーから来る
+					"img-src": ["self", "data:", "blob:", "https:"],
+					"connect-src": ["self"],
+					"object-src": ["none"],
+					"base-uri": ["self"],
+					"frame-ancestors": ["none"],
+				},
+			},
 		}),
 	],
 	// rrule は CJS が main なので SSR では vite にバンドルさせて ESM 側を使う

@@ -90,6 +90,13 @@ UI/UX の型は「意識が低すぎる、しょぼい Luma」。Luma から借�
 | 検索 | D1 FTS5（要検証） |
 | 開発 | pnpm / biome / vitest / wrangler |
 
+## 安全の決め事
+
+- **別のサイトからの書き込みは断る。** GET・HEAD・OPTIONS 以外で `Origin` がこのサイトと違えば 403（`hooks.server.ts`、判定は `src/lib/server/cross-site.ts`）。SvelteKit が自前で見るのはフォームの送信だけなので、JSON や本文の種類が無い要求もここで止める。`Origin` を付けない呼び出し（curl、Cron）は通る。
+- **読み込んでよい先は CSP で縛る**（`vite.config.ts` の `csp`）。スクリプトは自サイトのファイルと、SvelteKit が吐くインライン（ハッシュ）だけ。nonce にしないのは、公開ページを CDN に載せても同じ HTML を配れるようにするため。外部のスクリプトや接続先を足すときは、ここを直す。`{@html}` とインラインの `<script>` は使わない。
+- **どの応答にも付けるヘッダー**は `hooks.server.ts` の `SECURITY_HEADERS`（nosniff、Referrer-Policy、X-Frame-Options、HSTS、Permissions-Policy）。Worker を通らない静的ファイル（`/_app/…`、`static/`）には付かない。
+- 利用者が入れたホストへの通信は `remoteJson` を通す（下の「ログイン方法と ID の対応」）。
+
 ## 速さの規約
 
 1〜3 は目標で、まだ出来ていない（Worker の応答は CDN に載せておらず、purge も無い）。いまの公開 JSON は `max-age=0` で毎回取り直させ、`stale-while-revalidate` は付けない（中止や変更を直した直後に、古い内容が先に出てしまうため。`src/lib/server/cache.ts`）。
