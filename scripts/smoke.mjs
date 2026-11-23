@@ -4,12 +4,20 @@
 import assert from "node:assert/strict";
 import { execFileSync, spawn } from "node:child_process";
 import { createHmac } from "node:crypto";
-import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import {
+	existsSync,
+	readdirSync,
+	readFileSync,
+	rmSync,
+	writeFileSync,
+} from "node:fs";
+import { DatabaseSync } from "node:sqlite";
 
 const PORT = 8798;
 const BASE = `http://localhost:${PORT}`;
 const STATE = ".wrangler/smoke";
 const TOKEN = "smoke-session-token";
+const GUEST_TOKEN = "smoke-guest-token";
 
 if (!existsSync(".svelte-kit/cloudflare"))
 	throw new Error("先に pnpm build を走らせてください");
@@ -36,7 +44,10 @@ writeFileSync(
 	`${STATE}/seed.sql`,
 	`INSERT INTO user (id,name,email,email_verified,created_at,updated_at) VALUES ('u1','煙','smoke@example.invalid',0,${now}000,${now}000);
 INSERT INTO session (id,token,user_id,expires_at,created_at,updated_at) VALUES ('s1','${TOKEN}','u1',${now + 3600}000,${now}000,${now}000);
-INSERT INTO actors (id,handle,kind,user_id,name,facilities,links,created_at,updated_at) VALUES ('a1','smoke_test','person','u1','煙','[]','[]',${now},${now});`,
+INSERT INTO actors (id,handle,kind,user_id,name,facilities,links,created_at,updated_at) VALUES ('a1','smoke_test','person','u1','煙','[]','[]',${now},${now});
+INSERT INTO user (id,name,email,email_verified,created_at,updated_at) VALUES ('u2','客','guest@example.invalid',0,${now}000,${now}000);
+INSERT INTO session (id,token,user_id,expires_at,created_at,updated_at) VALUES ('s2','${GUEST_TOKEN}','u2',${now + 3600}000,${now}000,${now}000);
+INSERT INTO actors (id,handle,kind,user_id,name,facilities,links,created_at,updated_at) VALUES ('a2','smoke_guest','person','u2','客','[]','[]',${now},${now});`,
 );
 wrangler(
 	"d1",
@@ -54,8 +65,13 @@ const secret = /^BETTER_AUTH_SECRET="?([^"\n]+)/m.exec(
 	readFileSync(".dev.vars", "utf8"),
 )?.[1];
 assert(secret, ".dev.vars に BETTER_AUTH_SECRET が要ります");
-const signature = createHmac("sha256", secret).update(TOKEN).digest("base64");
-const SESSION = `better-auth.session_token=${encodeURIComponent(`${TOKEN}.${signature}`)}`;
+const sessionCookie = (token) =>
+	`better-auth.session_token=${encodeURIComponent(
+		`${token}.${createHmac("sha256", secret).update(token).digest("base64")}`,
+	)}`;
+const SESSION = sessionCookie(TOKEN);
+// 会を主催したことのない、ログインしただけの人
+const GUEST = sessionCookie(GUEST_TOKEN);
 
 const server = spawn(
 	"pnpm",
@@ -312,6 +328,70 @@ check(
 		assert.equal(moved.status, 400);
 	},
 );
+
+const ng = { kind: "ng", a: "@smoke_house", b: "@smoke_test" };
+check("主催どうしの関係のメモは、ページの管理者にだけ見える", async () => {
+	const added = await post("/@smoke_house/moderation?/add", ng);
+	assert.equal(added.status, 200);
+	const page = await get("/@smoke_house/moderation", { cookie: SESSION });
+	assert.equal(page.status, 200);
+	assert.equal(cacheControl(page), "private, no-store");
+	assert.match(await page.text(), /@smoke_test/);
+	// 管理者でない人には、無いページ。未ログインは /login へ
+	assert.equal(
+		(await get("/@smoke_house/moderation", { cookie: GUEST })).status,
+		404,
+	);
+	assert.equal((await get("/@smoke_house/moderation")).status, 303);
+	assert.equal(
+		(await post("/@smoke_house/moderation?/add", ng, { cookie: GUEST })).status,
+		404,
+	);
+	// 公開の出口と書き出しには出ない
+	for (const path of ["/@smoke_house", "/api/actors/smoke_house"])
+		assert.doesNotMatch(await (await get(path)).text(), /共演|sealed/, path);
+	const exported = await get("/me/export.json", { cookie: SESSION });
+	assert.doesNotMatch(await exported.text(), /共演|sealed/);
+});
+
+check("メモに書けるのは、主催として載っているページだけ", async () => {
+	// ログインしただけの人（客かもしれない）は書けない
+	const guest = await post("/@smoke_house/moderation?/add", {
+		kind: "authority",
+		a: "@smoke_guest",
+	});
+	assert.equal(guest.status, 400);
+	// @ID でない名前の自由記述も書けない
+	const free = await post("/@smoke_house/moderation?/add", {
+		kind: "authority",
+		a: "山田さん",
+	});
+	assert.equal(free.status, 400);
+});
+
+check("メモは D1 に封じて置かれ、消せる", async () => {
+	const dir = `${STATE}/v3/d1/miniflare-D1DatabaseObject`;
+	const rows = readdirSync(dir)
+		.filter((f) => f.endsWith(".sqlite"))
+		.flatMap((f) => {
+			const db = new DatabaseSync(`${dir}/${f}`, { readOnly: true });
+			try {
+				return db.prepare("SELECT id, sealed FROM host_moderations").all();
+			} catch {
+				return [];
+			} finally {
+				db.close();
+			}
+		});
+	assert.equal(rows.length, 1);
+	assert.doesNotMatch(rows[0].sealed, /ng|a1|smoke/);
+	const removed = await post("/@smoke_house/moderation?/remove", {
+		id: rows[0].id,
+	});
+	assert.equal(removed.status, 200);
+	const page = await get("/@smoke_house/moderation", { cookie: SESSION });
+	assert.doesNotMatch(await page.text(), /@smoke_test/);
+});
 
 check("自分のデータを JSON で書き出せる", async () => {
 	const res = await get("/me/export.json", { cookie: SESSION });

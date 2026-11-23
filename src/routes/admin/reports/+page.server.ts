@@ -2,6 +2,7 @@ import { env } from "cloudflare:workers";
 import { error, fail } from "@sveltejs/kit";
 import { parseHandleInput } from "#lib/id.ts";
 import { parseModerationTarget } from "#lib/report-form.ts";
+import { purgeHostModerations } from "#lib/server/host-moderations.ts";
 import {
 	blockHandle,
 	blockTitle,
@@ -90,6 +91,18 @@ export const actions: Actions = {
 		return {
 			handoverDone: `${result.person} を ${result.page} の管理者に加えました。`,
 		};
+	},
+	// 主催どうしの関係のメモを消してほしいと言われたとき。運営は中身を読めず、そのページのぶんをまとめて消すだけ
+	purgeModerations: async ({ request, locals }) => {
+		requireAdmin(locals);
+		const form = await request.formData();
+		const handle = parseHandleInput(String(form.get("handle") ?? ""));
+		const removed = handle
+			? await purgeHostModerations(locals.db, handle)
+			: null;
+		if (removed === null)
+			return fail(400, { moderationsError: "そのページはありません" });
+		return { moderationsDone: `@${handle} のメモを ${removed} 件消しました。` };
 	},
 	block: async ({ request, locals }) => {
 		requireAdmin(locals);

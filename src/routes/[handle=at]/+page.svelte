@@ -90,7 +90,12 @@ const description = $derived(actor.catch ?? actor.summary ?? undefined);
 		{:else}
 			<span class="grid h-20 w-20 shrink-0 place-items-center rounded-full border border-line bg-accent-soft font-serif text-3xl text-accent-ink sm:h-24 sm:w-24" aria-hidden="true">{[...actor.name][0]}</span>
 		{/if}
-		{#if canEdit}<a href="/@{actor.handle}/edit" class="btn px-4 py-2 text-sm">ページを編集</a>{/if}
+		{#if canEdit}
+			<div class="flex flex-wrap justify-end gap-2">
+				<a href="/@{actor.handle}/edit" class="btn px-4 py-2 text-sm">ページを編集</a>
+				<a href="/@{actor.handle}/moderation" class="btn px-4 py-2 text-sm">モデレーション</a>
+			</div>
+		{/if}
 	</div>
 	<h1 class="mt-3 text-[clamp(1.5rem,3vw,2rem)] leading-tight">{actor.name}</h1>
 	<p class="mt-1 text-sm text-muted">

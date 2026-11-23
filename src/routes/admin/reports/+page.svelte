@@ -107,6 +107,17 @@ const fmt = new Intl.DateTimeFormat("ja-JP", {
 </section>
 
 <section class="mt-12">
+	<div class="section-head"><h2 class="section-title">関係のメモの消去</h2></div>
+	<p class="mb-6 text-sm text-muted">ハコ・団体・主催の管理者が書いた、主催どうしの関係のメモ。運営は中身を読めません。消してほしいと言われたら、書いた側のページのぶんをまとめて消します。</p>
+	<form method="POST" action="?/purgeModerations" class="panel grid gap-4 p-5 sm:grid-cols-[1fr_auto] sm:items-end" onsubmit={(e) => { if (!confirm('このページのメモをすべて消しますか？戻せません。')) e.preventDefault(); }}>
+		{#if form?.moderationsError}<p class="text-sm text-accent-ink sm:col-span-2" role="alert">{form.moderationsError}</p>{/if}
+		{#if form?.moderationsDone}<p class="text-sm text-accent-ink sm:col-span-2" role="status">{form.moderationsDone}</p>{/if}
+		<Field label="メモを書いたページ"><input name="handle" required class="input" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="@ID" /></Field>
+		<button type="submit" class="btn">すべて消す</button>
+	</form>
+</section>
+
+<section class="mt-12">
 	<div class="section-head"><h2 class="section-title">掲載拒否リスト</h2></div>
 	<p class="mb-6 text-sm text-muted">入れた ID のページは、だれも作れません（取り込みも飛ばします）。すでにあるページは消えません。</p>
 	<form method="POST" action="?/block" class="panel grid gap-4 p-5 sm:grid-cols-[1fr_2fr_auto] sm:items-end">

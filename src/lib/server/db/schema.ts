@@ -181,6 +181,24 @@ export const eventHosts = sqliteTable(
 	],
 );
 
+// 主催どうしの関係のメモ（共演 NG・師弟・権威）。書いたページの管理者だけが見る（src/lib/server/host-moderations.ts）。
+// 種別と相手は sealed に封じて持つ（src/lib/server/seal.ts）。客・参加者・スタッフのことは持たない
+export const hostModerations = sqliteTable(
+	"host_moderations",
+	{
+		id: text("id").primaryKey().$defaultFn(shortId),
+		ownerActorId: text("owner_actor_id")
+			.notNull()
+			.references(() => actors.id, { onDelete: "cascade" }),
+		sealed: text("sealed").notNull(),
+		authorUserId: text("author_user_id").references(() => user.id, {
+			onDelete: "set null",
+		}),
+		createdAt: timestamp("created_at").notNull().$defaultFn(now),
+	},
+	(t) => [index("host_moderations_owner_idx").on(t.ownerActorId, t.createdAt)],
+);
+
 // 運営への連絡（掲載の取り下げ、ページの引き取りなど）。ログイン不要で送れる。
 export const reports = sqliteTable(
 	"reports",
