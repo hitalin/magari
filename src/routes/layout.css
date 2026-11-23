@@ -548,6 +548,14 @@ h4 {
 	.cardboard :focus-visible {
 		outline-color: #2a1e13;
 	}
+	/* 段ボールの上のボタン。字は段ボール用の濃い茶になるので、濃い地（--color-surface）のままだと潰れる。地を抜いて枠で見せる */
+	.cardboard .btn:not(.btn-primary) {
+		background-color: rgb(42 30 19 / 0.08);
+	}
+	.cardboard .btn:not(.btn-primary):hover,
+	.cardboard .btn:not(.btn-primary):active {
+		background-color: rgb(42 30 19 / 0.16);
+	}
 	.cardboard ::selection,
 	.tape::selection {
 		background: #2a1e13;
