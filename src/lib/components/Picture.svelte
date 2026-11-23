@@ -26,8 +26,9 @@ const size = $derived(sizeOf(src));
 {/snippet}
 
 {#if srcset}
-	<!-- picture は箱を作らせず、中の img だけを今までどおりに並べる -->
-	<picture class="contents"><source type="image/avif" {srcset} {sizes} />{@render img()}</picture>
+	<!-- picture は箱を作らせず、中の img だけを今までどおりに並べる。
+	     source も消しておく（flex や grid の中では幅 0 の 1 個として並び、img の位置をずらす）。消しても画像の選び方は変わらない -->
+	<picture class="contents"><source type="image/avif" {srcset} {sizes} class="hidden" />{@render img()}</picture>
 {:else}
 	{@render img()}
 {/if}
