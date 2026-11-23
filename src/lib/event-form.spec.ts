@@ -4,6 +4,7 @@ import {
 	isSameSubmission,
 	parseEventForm,
 	parseWelcomeForm,
+	pickRoom,
 	readEventForm,
 	statusAfterEdit,
 } from "./event-form";
@@ -46,6 +47,44 @@ describe("parseEventForm", () => {
 		expect(parseEventForm({ ...base, title: "" }).ok).toBe(false);
 		expect(parseEventForm({ ...base, date: "2026-13-01" }).ok).toBe(false);
 		expect(parseEventForm({ ...base, url: "example.com" }).ok).toBe(false);
+	});
+});
+
+describe("区画", () => {
+	it("区画は前後の空白を落として持ち、空なら null", () => {
+		const r = parseEventForm({ ...base, space: "hako", room: "2階" });
+		expect(r.ok && r.event.room).toBe("2階");
+		const none = parseEventForm(base);
+		expect(none.ok && none.event.room).toBeNull();
+	});
+	it("ハコを書かずに区画だけ書くとエラー", () => {
+		expect(parseEventForm({ ...base, room: "2階" }).ok).toBe(false);
+	});
+	it("ハコの間取りにある区画はそのまま通す。区画を書かなければ null", () => {
+		const space = { handle: "hako", rooms: ["カウンター", "2階"] };
+		expect(pickRoom(space, "2階")).toEqual({ room: "2階" });
+		expect(pickRoom(space, null)).toEqual({ room: null });
+	});
+	it("間取りに無い区画は、選べる区画を添えて断る", () => {
+		expect(
+			pickRoom({ handle: "hako", rooms: ["カウンター", "2階"] }, "屋上"),
+		).toEqual({
+			error: "@hako の区画は「カウンター」「2階」です",
+		});
+	});
+	it("ハコが間取りを直したあとも、この間が前から持っている区画はそのまま通す", () => {
+		const space = { handle: "hako", rooms: ["カウンター", "二階"] };
+		expect(pickRoom(space, "2階", "2階")).toEqual({ room: "2階" });
+		expect(pickRoom({ handle: "hako", rooms: [] }, "2階", "2階")).toEqual({
+			room: "2階",
+		});
+		// 持っていたのと違う区画に書き換えるなら、いまの間取りと照らす
+		expect("error" in pickRoom(space, "屋上", "2階")).toBe(true);
+	});
+	it("間取りを分けていないハコに区画を書くと断る", () => {
+		expect(pickRoom({ handle: "hako", rooms: [] }, "屋上")).toEqual({
+			error: "@hako は間取りを分けていません。区画は空欄にしてください",
+		});
 	});
 });
 

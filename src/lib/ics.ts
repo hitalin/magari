@@ -14,6 +14,7 @@ export type IcsSource = Pick<
 	| "onlineUrl"
 	| "space"
 > &
+	Partial<Pick<EventSummary, "room">> &
 	Partial<
 		Pick<
 			EventDetail,
@@ -64,7 +65,9 @@ function place(e: IcsSource): string | null {
 	// 「主催に聞いてください」の会は住所を出さない
 	const address =
 		e.locationVisibility === "attendees" ? null : e.locationAddress;
-	return [name, address].filter(Boolean).join(" ") || e.onlineUrl;
+	return (
+		[name, e.space && e.room, address].filter(Boolean).join(" ") || e.onlineUrl
+	);
 }
 
 function vevent(e: IcsSource, origin: string, stamp: string): string[] {

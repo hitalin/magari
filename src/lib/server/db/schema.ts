@@ -44,6 +44,8 @@ export const actors = sqliteTable(
 			.$type<string[]>()
 			.notNull()
 			.default([]),
+		// 間取り（見取り図）。升目に区画の名前を並べた記法のまま持つ（src/lib/floor-plan.ts）。会はこの中の区画を名前で指せる（events.room）
+		floorPlan: text("floor_plan"),
 		hours: text("hours"),
 		closedDays: text("closed_days"),
 		access: text("access"),
@@ -116,6 +118,8 @@ export const events = sqliteTable(
 		spaceActorId: text("space_actor_id").references(() => actors.id, {
 			onDelete: "set null",
 		}),
+		// ハコの中の区画（actors.floor_plan に書かれた区画の名前）。名前で持つので、ハコが間取りを直しても開けてある会はそのまま
+		room: text("room"),
 		locationName: text("location_name"),
 		locationAddress: text("location_address"),
 		// 絞り込み用のエリア。都道府県名（接尾辞なし）か「オンライン」

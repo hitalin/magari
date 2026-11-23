@@ -35,6 +35,7 @@ const full: ParsedEvent = {
 	endsAt: new Date("2026-11-08T22:15:00+09:00"),
 	allDay: false,
 	spaceHandle: "hako_1",
+	room: "カウンター",
 	locationName: "二階の奥",
 	locationAddress: "東京都どこか 1-2-3",
 	locationVisibility: "attendees",

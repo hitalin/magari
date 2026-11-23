@@ -3,6 +3,7 @@ import { fullAddress } from "#lib/area.ts";
 import Blocks from "#lib/components/Blocks.svelte";
 import DayList from "#lib/components/DayList.svelte";
 import Empty from "#lib/components/Empty.svelte";
+import FloorPlan from "#lib/components/FloorPlan.svelte";
 import MonthGrid from "#lib/components/MonthGrid.svelte";
 import Picture from "#lib/components/Picture.svelte";
 import { dayKey } from "#lib/date.ts";
@@ -55,6 +56,7 @@ const reviewsUrl = $derived(
 );
 const sections = $derived(
 	[
+		actor.rooms.length > 0 && { id: "plan", label: "間取り" },
 		actor.body && { id: "about", label: "紹介" },
 		{ id: "events", label: "これからの間" },
 		data.past.length > 0 && { id: "past", label: "これまでの間" },
@@ -102,7 +104,7 @@ const description = $derived(actor.catch ?? actor.summary ?? undefined);
 		</p>
 	{/if}
 	<div class="pills mt-5">
-		{#if address}<span class="chip chip-plain">{address}</span>{/if}
+		{#if address ?? actor.region}<span class="chip chip-plain">{address ?? actor.region}</span>{/if}
 		{#if actor.url}<a href={actor.url} class="chip" rel="noopener">{actor.url.replace(/^https?:\/\//, '')}</a>{/if}
 		{#each social.sns as s (s.url)}
 			<a href={s.url} class="chip gap-1.5" rel="noopener" aria-label="{SNS_NAME[s.kind]} {s.label}" title={SNS_NAME[s.kind]}>
@@ -134,6 +136,17 @@ const description = $derived(actor.catch ?? actor.summary ?? undefined);
 		</nav>
 	{/if}
 </header>
+
+{#if actor.rooms.length}
+	<!-- 間取り: ハコの中の区画。間はこのどれかで開かれる -->
+	<section id="plan" class="mb-12 scroll-mt-20">
+		<div class="section-head"><h2 class="section-title">間取り</h2></div>
+		<FloorPlan rooms={actor.rooms} />
+	</section>
+{:else if canEdit && actor.kind === 'space'}
+	<!-- 見取り図は任意だが、管理者には載せるよう促す -->
+	<p class="mb-12 rounded-sm bg-accent-soft px-4 py-3 text-sm text-accent-ink">間取りがまだありません。どこを借りられるかが伝わるよう、<a href="/@{actor.handle}/edit" class="underline underline-offset-2">見取り図を描きましょう ›</a></p>
+{/if}
 
 {#if actor.body}
 	<section id="about" class="mb-12 max-w-[40em] scroll-mt-20">

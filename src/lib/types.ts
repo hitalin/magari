@@ -1,4 +1,6 @@
 // API（/api/*）が返す DTO。サーバーとクライアントで共有する。
+
+import type { Room } from "./floor-plan";
 import type { FlyerLook } from "./flyer";
 
 export type ActorRef = {
@@ -19,6 +21,8 @@ export type EventSummary = {
 	locationName: string | null;
 	onlineUrl: string | null;
 	space: ActorRef | null;
+	// ハコの中の区画（カウンター、2階など）
+	room: string | null;
 	hosts: ActorRef[];
 	// 主催が上げたフライヤー。無ければ自動のビラを描く
 	flyerUrl: string | null;
@@ -47,6 +51,8 @@ export type EventDetail = EventSummary & {
 	// 運営が非表示にしている（主催にだけ見える）
 	hidden: boolean;
 	mentions: ShareMention[];
+	// 区画を指している会なら、ハコの見取り図（図の上でその区画を塗って見せる）
+	plan: Room[];
 	// 繰り返しの中の回なら、その決まりと前後の回
 	series: EventSeriesInfo | null;
 };
@@ -85,6 +91,8 @@ export type ActorProfile = ActorRef & {
 	catch: string | null;
 	body: string | null;
 	facilities: string[];
+	// 間取り（見取り図）。ハコの中の区画
+	rooms: Room[];
 	hours: string | null;
 	closedDays: string | null;
 	access: string | null;

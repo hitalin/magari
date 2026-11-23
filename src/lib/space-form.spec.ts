@@ -37,6 +37,14 @@ describe("parseSpaceForm", () => {
 		expect(r.ok && r.values.xHandle).toBe("curry_shop");
 		expect(r.ok && r.values.misskey).toBe("Curry@misskey.io");
 	});
+	it("間取りは書いた記法のまま持ち、四角になっていない見取り図は断る", () => {
+		const r = parseSpaceForm({ ...base, floorPlan: "A A B\nC C B" });
+		expect(r.ok && r.values.floorPlan).toBe("A A B\nC C B");
+		const none = parseSpaceForm(base);
+		expect(none.ok && none.values.floorPlan).toBeNull();
+		const bad = parseSpaceForm({ ...base, floorPlan: "A A\nA B" });
+		expect(bad.ok).toBe(false);
+	});
 	it("Misskey は @name@host でも URL でもよく、サーバーが無ければエラー", () => {
 		const r = parseSpaceForm({ ...base, misskey: "https://yami.ski/@taka" });
 		expect(r.ok && r.values.misskey).toBe("taka@yami.ski");

@@ -2,6 +2,7 @@
 import { and, asc, count, eq, gte, inArray, isNull, min } from "drizzle-orm";
 import { nameOnlyIfUnmanaged } from "#lib/actor.ts";
 import { compareArea, detectArea } from "#lib/area.ts";
+import { planRooms, type Room } from "#lib/floor-plan.ts";
 import type { ParsedSpace } from "#lib/space-form.ts";
 import { mediaUrl, type SpaceSummary } from "#lib/types.ts";
 import type { Db } from "./db/index.ts";
@@ -221,16 +222,24 @@ export async function setHeaderKey(
 export async function resolveSpace(
 	db: Db,
 	handle: string | null,
-): Promise<{ id: string | null; region: string | null } | { error: string }> {
-	if (!handle) return { id: null, region: null };
+): Promise<
+	| { id: string | null; region: string | null; rooms: Room[] }
+	| { error: string }
+> {
+	if (!handle) return { id: null, region: null, rooms: [] };
 	const [row] = await db
-		.select({ id: actors.id, kind: actors.kind, region: actors.region })
+		.select({
+			id: actors.id,
+			kind: actors.kind,
+			region: actors.region,
+			floorPlan: actors.floorPlan,
+		})
 		.from(actors)
 		.where(eq(actors.handle, handle))
 		.limit(1);
 	if (row?.kind !== "space")
 		return { error: `@${handle} というハコは見つかりません` };
-	return { id: row.id, region: row.region };
+	return { id: row.id, region: row.region, rooms: planRooms(row.floorPlan) };
 }
 
 // ハコ・団体の管理者。全員が同じ権限（ページの編集）を持つ

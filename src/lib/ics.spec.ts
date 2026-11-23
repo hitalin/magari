@@ -85,6 +85,12 @@ describe("toIcs", () => {
 				locationName: "二階",
 			}),
 		).toBe("ハコ");
+		expect(
+			place({
+				space: { handle: "hako", name: "ハコ", kind: "space" },
+				room: "2階",
+			}),
+		).toBe("ハコ 2階");
 		expect(place({ locationName: "公園", locationAddress: "東京都 1-2" })).toBe(
 			"公園 東京都 1-2",
 		);

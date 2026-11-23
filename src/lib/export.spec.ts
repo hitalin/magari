@@ -29,6 +29,7 @@ describe("toExport", () => {
 				endsAt: null,
 				coverKey: "flyers/abc123/x.png",
 				spaceHandle: "curry_shop",
+				room: "カウンター",
 				repeat: "FREQ=WEEKLY",
 				hosts: ["taro"],
 				createdAt: at,
@@ -52,6 +53,7 @@ describe("toExport", () => {
 		expect(doc.events[0].endsAt).toBeNull();
 		expect(doc.events[0].flyer).toBe("https://magari.cc/i/flyers/abc123/x.png");
 		expect(doc.events[0].space).toBe("curry_shop");
+		expect(doc.events[0].room).toBe("カウンター");
 		expect(doc.events[0].repeat).toBe("FREQ=WEEKLY");
 		expect(doc.events[0].hosts).toEqual(["taro"]);
 	});

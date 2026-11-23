@@ -16,6 +16,7 @@ export function toFormValues(e: {
 	endsAt: Date | null;
 	allDay: boolean;
 	spaceHandle?: string | null;
+	room: string | null;
 	locationName: string | null;
 	locationAddress: string | null;
 	locationVisibility: "public" | "attendees";
@@ -34,6 +35,7 @@ export function toFormValues(e: {
 		startTime: e.allDay ? "19:00" : s.time,
 		endTime: e.allDay || !e.endsAt ? "" : jstParts(e.endsAt).time,
 		space: e.spaceHandle ?? "",
+		room: e.room ?? "",
 		locationName: e.locationName ?? "",
 		locationAddress: e.locationAddress ?? "",
 		locationVisibility: e.locationVisibility,

@@ -1,7 +1,7 @@
 import { redirect } from "@sveltejs/kit";
 import { and, asc, desc, eq, inArray, isNull, or } from "drizzle-orm";
 import { eventArea } from "#lib/area.ts";
-import type { ParsedEvent } from "#lib/event-form.ts";
+import { type ParsedEvent, pickRoom } from "#lib/event-form.ts";
 import { withNext } from "#lib/next.ts";
 import type { Db } from "./db/index.ts";
 import { actorMembers, actors, eventHosts, events } from "./db/schema.ts";
@@ -263,10 +263,18 @@ export async function getEditableEvent(
 export async function toEventValues(
 	db: Db,
 	input: ParsedEvent,
+	// 直す前の間（編集のとき）。ハコを変えていなければ、前からの区画はそのまま通す
+	current?: { spaceActorId: string | null; room: string | null },
 ): Promise<EventValues | { error: string }> {
 	const { spaceHandle, ...rest } = input;
 	const space = await resolveSpace(db, spaceHandle);
 	if ("error" in space) return space;
+	const picked = pickRoom(
+		{ handle: spaceHandle ?? "", rooms: space.rooms.map((r) => r.name) },
+		input.room,
+		current?.spaceActorId === space.id ? current.room : null,
+	);
+	if ("error" in picked) return picked;
 	return {
 		...rest,
 		spaceActorId: space.id,

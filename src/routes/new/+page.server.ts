@@ -23,6 +23,7 @@ import {
 } from "#lib/server/me.ts";
 import { imageSize } from "#lib/server/media.ts";
 import { startSeries } from "#lib/server/series.ts";
+import { resolveSpace } from "#lib/server/spaces.ts";
 import type { Actions, PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ locals, url }) => {
@@ -52,7 +53,19 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 		}
 	}
 	// ビラの傾きと、型と差し色の最初の組は ID から決まるので、先に ID を決めて画面のビラと保存後のビラを同じにする
-	return { values, look, id: shortId(), host: actor.name };
+	// 入っているハコの間取り（区画の候補）
+	const space = await resolveSpace(locals.db, values.space || null);
+	const rooms = "error" in space ? [] : space.rooms;
+	// 複製元の区画が、いまの間取りにもう無ければ空にする（新しい間は、いまの間取りから選ぶ）
+	if (!rooms.some((r) => r.name === values.room))
+		values = { ...values, room: "" };
+	return {
+		values,
+		look,
+		id: shortId(),
+		host: actor.name,
+		rooms,
+	};
 };
 
 export const actions: Actions = {

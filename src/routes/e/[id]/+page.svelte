@@ -1,4 +1,5 @@
 <script lang="ts">
+import FloorPlan from "#lib/components/FloorPlan.svelte";
 import Flyer from "#lib/components/Flyer.svelte";
 import Picture from "#lib/components/Picture.svelte";
 import { formatDay, formatWhen } from "#lib/date.ts";
@@ -134,7 +135,7 @@ const cardDescription = $derived(
 				{/if}
 				{#if event.space}
 					<dt>ハコ</dt>
-					<dd><a href="/@{event.space.handle}" class="font-serif font-bold hover:text-accent-ink">{event.space.name}</a></dd>
+					<dd><a href="/@{event.space.handle}" class="font-serif font-bold hover:text-accent-ink">{event.space.name}</a>{#if event.room}<span class="ml-2 text-sm text-muted">{event.room}</span>{/if}{#if event.plan.length}<div class="mt-3"><FloorPlan rooms={event.plan} highlight={event.room} /></div>{/if}</dd>
 				{/if}
 				{#if event.locationVisibility === 'attendees'}
 					<dt>場所</dt>

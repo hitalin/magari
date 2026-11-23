@@ -15,7 +15,10 @@ const place = $derived.by(() => {
 		event.space?.name ??
 		event.locationName ??
 		(event.onlineUrl ? "オンライン" : null);
-	return name && (hostNames.includes(name) || name === who) ? null : name;
+	// 主催と場が同じでも、区画があればそれだけは出す
+	const shown =
+		name && (hostNames.includes(name) || name === who) ? null : name;
+	return [shown, event.space && event.room].filter(Boolean).join(" · ") || null;
 });
 </script>
 

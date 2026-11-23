@@ -72,7 +72,7 @@ const flyer = $derived({
 			{#if data.status === 'cancelled'}
 				<p class="mb-6 rounded-sm bg-accent-soft px-4 py-2 text-sm text-accent-ink">中止にした間です。内容を直して保存しても、中止のままです。</p>
 			{/if}
-			<EventForm values={form?.values ?? data.values} error={form?.error} submitLabel={data.status === 'cancelled' ? '保存する' : '保存して公開'} series={data.series} repeatable={!data.series && data.status !== 'cancelled'} repeat={form && 'repeat' in form ? form.repeat : null} repeatUntil={form && 'repeatUntil' in form ? form.repeatUntil : ''} />
+			<EventForm values={form?.values ?? data.values} error={form?.error} submitLabel={data.status === 'cancelled' ? '保存する' : '保存して公開'} series={data.series} repeatable={!data.series && data.status !== 'cancelled'} repeat={form && 'repeat' in form ? form.repeat : null} repeatUntil={form && 'repeatUntil' in form ? form.repeatUntil : ''} rooms={data.rooms} />
 
 	{#if data.series}
 		<section class="mt-12 border-t border-line pt-6">

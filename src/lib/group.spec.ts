@@ -16,6 +16,7 @@ const ev = (
 	locationName: null,
 	onlineUrl: null,
 	space: space ? { handle: space, name: space, kind: "space" } : null,
+	room: null,
 	hosts: host ? [{ handle: host, name: host, kind: "group" }] : [],
 	flyerUrl: null,
 	flyerLook: null,

@@ -14,6 +14,7 @@ import {
 	or,
 } from "drizzle-orm";
 import { type LinkedSns, nameOnlyIfUnmanaged, shownSns } from "#lib/actor.ts";
+import { planRooms, type Room } from "#lib/floor-plan.ts";
 import { parseFlyerLook } from "#lib/flyer.ts";
 import { ruleLabel } from "#lib/repeat.ts";
 import { mentionHandles } from "#lib/share.ts";
@@ -52,6 +53,7 @@ function selectEvents(db: Db) {
 			source: events.source,
 			status: events.status,
 			visibility: events.visibility,
+			room: events.room,
 			locationName: events.locationName,
 			locationAddress: events.locationAddress,
 			locationVisibility: events.locationVisibility,
@@ -170,6 +172,7 @@ function toDetail(
 	hosts: ActorRef[],
 	mentions: ShareMention[] = [],
 	series: EventSeriesInfo | null = null,
+	plan: Room[] = [],
 ): EventDetail {
 	return {
 		series,
@@ -185,6 +188,7 @@ function toDetail(
 		status: row.status,
 		visibility: row.visibility,
 		hidden: row.hiddenAt !== null,
+		room: row.room,
 		locationName: row.locationName,
 		// 「主催に聞いてもらう」会の住所は API に出さない
 		locationAddress:
@@ -205,6 +209,7 @@ function toDetail(
 				: null,
 		hosts,
 		mentions,
+		plan,
 	};
 }
 
@@ -241,6 +246,17 @@ export async function linkedSns(
 		out.set(r.userId, l);
 	}
 	return out;
+}
+
+// 区画を指している会なら、そのハコの見取り図（会のページで、区画を塗って見せる）
+async function planOf(db: Db, row: Row): Promise<Room[]> {
+	if (!row.room || !row.spaceHandle) return [];
+	const [space] = await db
+		.select({ floorPlan: actors.floorPlan })
+		.from(actors)
+		.where(eq(actors.handle, row.spaceHandle))
+		.limit(1);
+	return planRooms(space?.floorPlan ?? null);
 }
 
 // 共有文（題・場所）に書かれた @name のうち、まがりにいる人の、ページに出している X と Fediverse
@@ -288,6 +304,7 @@ function toSummary(detail: EventDetail): EventSummary {
 		locationName,
 		onlineUrl,
 		space,
+		room,
 		hosts,
 		flyerUrl,
 		flyerLook,
@@ -302,6 +319,7 @@ function toSummary(detail: EventDetail): EventSummary {
 		locationName,
 		onlineUrl,
 		space,
+		room,
 		hosts,
 		flyerUrl,
 		flyerLook,
@@ -393,6 +411,7 @@ export async function getEvent(
 		hosts.get(row.id) ?? [],
 		await mentionsOf(db, row),
 		await seriesOf(db, row),
+		await planOf(db, row),
 	);
 }
 
@@ -419,6 +438,7 @@ export async function getEventForUser(
 		hosts.get(row.id) ?? [],
 		await mentionsOf(db, row),
 		await seriesOf(db, row),
+		await planOf(db, row),
 	);
 }
 
@@ -447,6 +467,7 @@ export async function getActorByHandle(
 			catch: actors.catch,
 			body: actors.body,
 			facilities: actors.facilities,
+			floorPlan: actors.floorPlan,
 			hours: actors.hours,
 			closedDays: actors.closedDays,
 			access: actors.access,
@@ -463,7 +484,7 @@ export async function getActorByHandle(
 		.from(actorMembers)
 		.where(eq(actorMembers.actorId, row.id))
 		.limit(1);
-	const { headerKey, userId, ...rest } = row;
+	const { headerKey, userId, floorPlan, ...rest } = row;
 	const linked =
 		row.kind === "person" && userId
 			? (await linkedSns(db, [userId])).get(userId)
@@ -471,6 +492,7 @@ export async function getActorByHandle(
 	return nameOnlyIfUnmanaged(
 		{
 			...rest,
+			rooms: planRooms(floorPlan),
 			...shownSns(row, linked),
 			hasManager: userId !== null || member !== undefined,
 			headerUrl: mediaUrl(headerKey),

@@ -44,6 +44,7 @@ import {
 	startSeries,
 	updateFollowing,
 } from "#lib/server/series.ts";
+import { resolveSpace } from "#lib/server/spaces.ts";
 import { mediaUrl } from "#lib/types.ts";
 import type { Actions, PageServerLoad } from "./$types";
 
@@ -86,8 +87,11 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 				.where(eq(eventSeries.id, ev.seriesId))
 				.limit(1)
 		: [];
+	const space = await resolveSpace(locals.db, ev.spaceHandle);
 	return {
 		id: ev.id,
+		// ハコの間取り（区画の候補）
+		rooms: "error" in space ? [] : space.rooms,
 		status: ev.status,
 		// 繰り返しの中の回なら、その決まりの言い方（「毎週火曜」）
 		series: series ? ruleLabel(series.rrule, ev.startsAt) : null,
@@ -204,7 +208,7 @@ export const actions: Actions = {
 		if (!parsed.ok) return fail(400, { error: parsed.error, ...again });
 		const until = parseUntil(repeat ? repeatUntil : "", parsed.event.startsAt);
 		if (!until.ok) return fail(400, { error: until.error, ...again });
-		const ev = await toEventValues(locals.db, parsed.event);
+		const ev = await toEventValues(locals.db, parsed.event, current);
 		if ("error" in ev) return fail(400, { error: ev.error, ...again });
 		const status = statusAfterEdit(current.status, parsed.event.status);
 		if (current.seriesId && form.get("following") !== null) {

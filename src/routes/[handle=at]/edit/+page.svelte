@@ -1,5 +1,6 @@
 <script lang="ts">
 import Field from "#lib/components/Field.svelte";
+import PlanField from "#lib/components/PlanField.svelte";
 import { SNS_ICON, SNS_NAME } from "#lib/sns.ts";
 import type { PageProps } from "./$types";
 
@@ -77,6 +78,9 @@ const KIND_WORD: Record<string, string> = {
 		<Field label="設備" hint="カンマ区切り。例: 厨房, 客席 8 席, Wi-Fi, 電源, 食器・調理器具, お酒あり">
 			<input name="facilities" value={v.facilities} class="input" />
 		</Field>
+		{#if data.kind === 'space'}
+			<PlanField value={v.floorPlan} />
+		{/if}
 
 		<h3 class="label pt-4">アクセス</h3>
 		<div class="grid gap-4 sm:grid-cols-[1fr_8rem]">

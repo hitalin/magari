@@ -1,4 +1,5 @@
 // 場（ハコ）のページ・出店プラン・お知らせのフォーム検証（純粋関数）。
+import { parsePlan } from "./floor-plan";
 import { isValidHandle } from "./id";
 import { parseMisskeyHost } from "./misskey";
 
@@ -13,6 +14,7 @@ export type SpaceFormValues = {
 	summary: string;
 	body: string;
 	facilities: string; // カンマ・読点区切り
+	floorPlan: string; // 間取り（見取り図）の記法
 	address: string;
 	region: string;
 	access: string;
@@ -31,6 +33,7 @@ export const EMPTY_SPACE_FORM: SpaceFormValues = {
 	summary: "",
 	body: "",
 	facilities: "",
+	floorPlan: "",
 	address: "",
 	region: "",
 	access: "",
@@ -49,6 +52,7 @@ export type ParsedSpace = {
 	summary: string | null;
 	body: string | null;
 	facilities: string[];
+	floorPlan: string | null;
 	address: string | null;
 	region: string | null;
 	access: string | null;
@@ -152,6 +156,8 @@ export function parseSpaceForm(
 				.filter(Boolean),
 		),
 	].slice(0, 20);
+	const plan = parsePlan(v.floorPlan);
+	if (!plan.ok) return { ok: false, error: `間取り: ${plan.error}` };
 	return {
 		ok: true,
 		values: {
@@ -160,6 +166,7 @@ export function parseSpaceForm(
 			summary: nullable(v.summary),
 			body: nullable(v.body),
 			facilities,
+			floorPlan: nullable(v.floorPlan),
 			address: nullable(v.address),
 			region: nullable(v.region),
 			access: nullable(v.access),

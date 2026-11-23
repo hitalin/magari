@@ -225,13 +225,103 @@ check("この回だけ直すと、繰り返しから外れる", async () => {
 	assert.equal((await json(`/api/events/${first}`)).series.next.length, 1);
 });
 
+check("ハコは見取り図（間取り）を持てる", async () => {
+	assert.equal(
+		(
+			await post("/spaces/new", {
+				handle: "smoke_house",
+				name: "煙の家",
+				kind: "space",
+			})
+		).status,
+		303,
+	);
+	const saved = await post("/@smoke_house/edit?/profile", {
+		name: "煙の家",
+		floorPlan: "リビング リビング 屋上\nリビング リビング 屋上",
+		region: "東京都",
+	});
+	assert.equal(saved.status, 303);
+	const { actor } = await json("/api/actors/smoke_house");
+	assert.deepEqual(actor.rooms, [
+		{ name: "リビング", x: 0, y: 0, w: 2, h: 2 },
+		{ name: "屋上", x: 2, y: 0, w: 1, h: 2 },
+	]);
+	// 四角になっていない見取り図は断る
+	const bad = await post("/@smoke_house/edit?/profile", {
+		name: "煙の家",
+		floorPlan: "リビング リビング\nリビング 屋上",
+	});
+	assert.equal(bad.status, 400);
+});
+
+check("間取りは、人のページには付かない", async () => {
+	const res = await post("/@smoke_test/edit?/profile", {
+		name: "煙",
+		floorPlan: "A B",
+	});
+	assert.equal(res.status, 303);
+	const { actor } = await json("/api/actors/smoke_test");
+	assert.deepEqual(actor.rooms, []);
+});
+
+const roof = {
+	title: "屋上の会",
+	date: day(2),
+	startTime: "19:00",
+	status: "published",
+	space: "smoke_house",
+};
+let roofId;
+check("間は、ハコの間取りにある区画でだけ開けられる", async () => {
+	const wrong = await post("/new?/save", { ...roof, room: "地下" });
+	assert.equal(wrong.status, 400);
+	assert.match(await wrong.text(), /リビング/);
+	const res = await post("/new?/save", { ...roof, room: "屋上" });
+	assert.equal(res.status, 303);
+	roofId = /^\/e\/([a-z0-9]+)/.exec(res.headers.get("location"))?.[1];
+	const event = await json(`/api/events/${roofId}`);
+	assert.equal(event.room, "屋上");
+	// 会のページは、ハコの見取り図の上でその区画を塗る
+	assert.deepEqual(
+		event.plan.map((r) => r.name),
+		["リビング", "屋上"],
+	);
+});
+
+check(
+	"ハコが間取りを直しても、開けてある間は前の区画のまま直せる",
+	async () => {
+		const saved = await post("/@smoke_house/edit?/profile", {
+			name: "煙の家",
+			floorPlan: "リビング",
+		});
+		assert.equal(saved.status, 303);
+		const kept = await post(`/e/${roofId}/edit?/save`, {
+			...roof,
+			title: "屋上の会（改）",
+			room: "屋上",
+		});
+		assert.equal(kept.status, 303);
+		assert.equal((await json(`/api/events/${roofId}`)).room, "屋上");
+		// 別の区画に書き換えるなら、いまの間取りと照らす
+		const moved = await post(`/e/${roofId}/edit?/save`, {
+			...roof,
+			room: "地下",
+		});
+		assert.equal(moved.status, 400);
+	},
+);
+
 check("自分のデータを JSON で書き出せる", async () => {
 	const res = await get("/me/export.json", { cookie: SESSION });
 	assert.equal(res.status, 200);
 	assert.equal(cacheControl(res), "private, no-store");
 	const doc = await res.json();
 	assert.equal(doc.pages[0].handle, "smoke_test");
-	assert.equal(doc.events.length, 4);
+	// 煙の会の 4 回と、屋上の会
+	assert.equal(doc.events.length, 5);
+	assert(doc.events.some((e) => e.room === "屋上"));
 	assert.equal(doc.events.filter((e) => e.repeat === "FREQ=WEEKLY").length, 2);
 });
 

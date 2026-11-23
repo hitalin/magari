@@ -41,6 +41,7 @@ function formValues(actor: ManagedActor, linked?: LinkedSns): SpaceFormValues {
 		summary: actor.summary ?? "",
 		body: actor.body ?? "",
 		facilities: actor.facilities.join(", "),
+		floorPlan: actor.floorPlan ?? "",
 		address: actor.address ?? "",
 		region: actor.region ?? "",
 		access: actor.access ?? "",
@@ -140,7 +141,12 @@ export const actions: Actions = {
 		// 人のページの編集画面は、ハコ向けの欄（設備・アクセスなど）を出さない。来なかった欄は今の値を保つ
 		const current = formValues(actor, await linkedOf(locals.db, actor));
 		const values = readSpaceForm((k) =>
-			form.has(k) ? String(form.get(k)) : current[k as keyof SpaceFormValues],
+			// 間取りはハコだけのもの。人・団体のページには、送られてきても付けない
+			actor.kind !== "space" && k === "floorPlan"
+				? ""
+				: form.has(k)
+					? String(form.get(k))
+					: current[k as keyof SpaceFormValues],
 		);
 		const parsed = parseSpaceForm(values);
 		if (!parsed.ok)

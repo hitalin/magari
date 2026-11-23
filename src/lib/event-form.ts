@@ -8,6 +8,7 @@ export type EventFormValues = {
 	startTime: string; // HH:MM
 	endTime: string; // HH:MM or ''
 	space: string; // ハコの handle（@ は省略可）
+	room: string; // ハコの中の区画
 	locationName: string;
 	locationAddress: string;
 	locationVisibility: "public" | "attendees";
@@ -26,6 +27,7 @@ export const EMPTY_EVENT_FORM: EventFormValues = {
 	startTime: "19:00",
 	endTime: "",
 	space: "",
+	room: "",
 	locationName: "",
 	locationAddress: "",
 	locationVisibility: "public",
@@ -44,6 +46,8 @@ export type ParsedEvent = {
 	allDay: boolean;
 	// ハコの handle。保存時に actors.id に解決する
 	spaceHandle: string | null;
+	// ハコの中の区画。保存時にハコの間取りと照らす（pickRoom）
+	room: string | null;
 	locationName: string | null;
 	locationAddress: string | null;
 	locationVisibility: "public" | "attendees";
@@ -79,6 +83,7 @@ export function readEventForm(
 		startTime: s("startTime"),
 		endTime: s("endTime"),
 		space: s("space"),
+		room: s("room"),
 		locationName: s("locationName"),
 		locationAddress: s("locationAddress"),
 		locationVisibility: pick(
@@ -136,6 +141,8 @@ export function parseEventForm(
 	const spaceHandle = v.space.replace(/^@/, "").toLowerCase() || null;
 	if (spaceHandle && !HANDLE_PATTERN.test(spaceHandle))
 		return { ok: false, error: "ハコの ID は @ に続く小文字の英数字と _" };
+	if (v.room && !spaceHandle)
+		return { ok: false, error: "区画は、ハコを書いたときだけ選べます" };
 	if (v.description.length > 10000)
 		return { ok: false, error: "説明が長すぎます" };
 
@@ -147,6 +154,7 @@ export function parseEventForm(
 			endsAt,
 			allDay: v.allDay,
 			spaceHandle,
+			room: nullable(v.room),
 			locationName: nullable(v.locationName),
 			locationAddress: nullable(v.locationAddress),
 			locationVisibility: v.locationVisibility,
@@ -157,6 +165,23 @@ export function parseEventForm(
 			visibility: v.visibility,
 			status: v.status,
 		},
+	};
+}
+
+// 会の区画を、ハコの間取りと照らす。間取りに無い区画は、選べる区画を添えて断る
+export function pickRoom(
+	space: { handle: string; rooms: string[] },
+	room: string | null,
+	// この間が、同じハコで前から持っている区画。ハコが間取りを直しても、開けてある間は前の名前のまま保存できる
+	kept: string | null = null,
+): { room: string | null } | { error: string } {
+	if (!room || room === kept || space.rooms.includes(room)) return { room };
+	if (!space.rooms.length)
+		return {
+			error: `@${space.handle} は間取りを分けていません。区画は空欄にしてください`,
+		};
+	return {
+		error: `@${space.handle} の区画は${space.rooms.map((r) => `「${r}」`).join("")}です`,
 	};
 }
 

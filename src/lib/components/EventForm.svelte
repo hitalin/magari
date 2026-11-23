@@ -1,9 +1,11 @@
 <script lang="ts">
 import Field from "#lib/components/Field.svelte";
+import FloorPlan from "#lib/components/FloorPlan.svelte";
 import Flyer from "#lib/components/Flyer.svelte";
 import FlyerPicker from "#lib/components/FlyerPicker.svelte";
 import { dayKey } from "#lib/date.ts";
 import type { EventFormValues } from "#lib/event-form.ts";
+import type { Room } from "#lib/floor-plan.ts";
 import { type FlyerLook, flyerStyle } from "#lib/flyer.ts";
 import { REPEATS, type Repeat, repeatRule, ruleLabel } from "#lib/repeat.ts";
 
@@ -18,6 +20,7 @@ let {
 	repeatUntil = "",
 	repeatable = true,
 	series = null,
+	rooms = [],
 }: {
 	values: EventFormValues;
 	error?: string;
@@ -34,6 +37,8 @@ let {
 	repeatable?: boolean;
 	// 繰り返しの中の回を直すとき、その決まりの言い方（「毎週火曜」）。この先の回もまとめて直すかを聞く
 	series?: string | null;
+	// はじめに入っているハコの間取り（区画の候補）。ハコを書き換えたあとは、保存時に照らす
+	rooms?: Room[];
 } = $props();
 function pickLook(id: string): FlyerLook {
 	const { variant, color } = flyerStyle(id);
@@ -83,6 +88,14 @@ const repeats = $derived.by(() => {
 		label: ruleLabel(repeatRule(kind, day), day),
 	}));
 });
+// svelte-ignore state_referenced_locally -- 同上
+let room = $state(values.room);
+// 見取り図は、開いたときに入っていたハコのもの。ハコを書き換えたら図は出さず、名前を打ってもらう（保存時に照らす）
+const planShown = $derived(rooms.length > 0 && v.space === values.space);
+const stale = $derived(
+	!!values.room && !rooms.some((r) => r.name === values.room),
+);
+const roomUp = $derived(rooms.length > 0 || !!values.room);
 const place = $derived(v.locationName || (v.space ? `@${v.space}` : null));
 
 // 自分のフライヤーを選んだら、自動のビラの代わりにその画像を見せる
@@ -98,6 +111,26 @@ function clearFile() {
 	pickFile();
 }
 </script>
+
+{#snippet roomField()}
+	{#if planShown}
+		<!-- 見取り図の上で、どこで開けるかを選ぶ。いまの間取りに無い区画（ハコが直す前のもの）は、そのまま持っておける -->
+		<div>
+			<p class="label">区画</p>
+			<div class="mt-1"><FloorPlan {rooms} highlight={room} onpick={(name) => (room = name ?? '')} /></div>
+			<select name="room" bind:value={room} class="input mt-2" aria-label="区画">
+				<option value="">決めない</option>
+				{#each rooms as r (r.name)}<option value={r.name}>{r.name}</option>{/each}
+				{#if stale}<option value={values.room}>{values.room}（前の間取り）</option>{/if}
+			</select>
+			<p class="mt-1 text-xs text-dim">{stale && room === values.room ? 'ハコのいまの間取りに無い名前です。このままでも保存できます' : '見取り図を押すか、ここから選ぶ。ハコのどこで開けるか'}</p>
+		</div>
+	{:else}
+		<Field label="区画" hint="ハコが間取りを分けているとき、その中のどこで開けるか。カウンター、2階など">
+			<input name="room" bind:value={room} maxlength="30" class="input" />
+		</Field>
+	{/if}
+{/snippet}
 
 {#snippet fields()}
 	{#if error}<p class="rounded-sm bg-accent-soft px-4 py-2 text-sm text-accent-ink" role="alert">{error}</p>{/if}
@@ -133,10 +166,13 @@ function clearFile() {
 			<div class="flex items-center gap-1"><span class="text-muted">@</span><input name="space" bind:value={v.space} class="input" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="curry_shop" /></div>
 		</Field>
 	</div>
+	<!-- 区画は、ハコが間取りを分けているときだけ要る。候補が分かっていれば上に、無ければ「もっと書く」の中に置く -->
+	{#if roomUp}{@render roomField()}{/if}
 
 	<details open={more} class="border-t border-line pt-4">
 		<summary class="cursor-pointer text-sm text-muted hover:text-accent-ink">もっと書く（住所・説明・料金・公開範囲など）</summary>
 		<div class="mt-6 space-y-6">
+			{#if !roomUp}{@render roomField()}{/if}
 			<Field label="住所"><input name="locationAddress" value={values.locationAddress} class="input" /></Field>
 			<Field label="場所の見せ方">
 				<select name="locationVisibility" class="input">
