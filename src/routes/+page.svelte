@@ -1,11 +1,40 @@
 <script lang="ts">
+import { areaFilter } from "#lib/area-filter.svelte.ts";
 import logo from "#lib/assets/logo.svg";
 import DayList from "#lib/components/DayList.svelte";
+import { sortSpaces } from "#lib/space-sort.ts";
 import type { PageProps } from "./$types";
 
 let { data }: PageProps = $props();
 // 説明より先に実物を見せる。近い順に 5 つ
 const soon = $derived(data.events.slice(0, 5));
+// 間の多いハコを 5 つ
+const topSpaces = $derived(sortSpaces(data.spaces, "many").slice(0, 5));
+// この 7 日に間のあるエリアを、多い順に
+const areas = $derived.by(() => {
+	const counts = new Map<string, number>();
+	for (const e of data.events)
+		if (e.area) counts.set(e.area, (counts.get(e.area) ?? 0) + 1);
+	return [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 12);
+});
+// いまの規模。数表にして見せる
+const stats = $derived([
+	{ label: "この7日の間", value: data.events.length },
+	{ label: "ハコ", value: data.spaces.length },
+	{
+		label: "エリア",
+		value: new Set(data.spaces.map((s) => s.area).filter(Boolean)).size,
+	},
+]);
+// エリアを選んだ状態で一覧へ。選択は一覧の絞り込み（AreaFilter）と同じ場所に残す
+function pickArea(area: string) {
+	areaFilter.value = [area];
+	try {
+		localStorage.setItem("magari-area", JSON.stringify([area]));
+	} catch {
+		// 保存できなくても、このまま一覧へ移れば絞られている
+	}
+}
 // 上を流れる帯。どんな間が開いているか
 const WORDS = [
 	"間借り店舗",
@@ -20,31 +49,6 @@ const WORDS = [
 	"シェアハウス",
 	"レンタルスペース",
 ];
-// 誰にとって何がうれしいか。行く人・開ける人・貸す人の順
-const WHY = [
-	{
-		who: "行く人",
-		title: "今日どこが開いているか、ひと目で",
-		body: "散らばった告知を、これから 7 日ぶん並べています。ログインも、行くと知らせる必要もありません。",
-		href: "/home",
-		cta: "開いている所を見る",
-	},
-	{
-		who: "開ける人",
-		title: "ひとことで、ビラが 1 枚",
-		body: "要るのは、ひとこと・日時・場所だけ。X に貼れば告知は終わりです。",
-		href: "/new",
-		cta: "とりあえず開ける",
-	},
-	{
-		who: "ハコを貸す人",
-		title: "ホームページの代わりに",
-		body: "ハコのページに、そこで開かれる間のカレンダーが勝手に付きます。",
-		href: "/spaces/new",
-		cta: "ハコを載せる",
-	},
-];
-const REPO = "https://github.com/hitalin/magari";
 </script>
 
 <svelte:head>
@@ -52,7 +56,7 @@ const REPO = "https://github.com/hitalin/magari";
 	<meta name="description" content="今日も、誰かが開けている。行ってもいい。ひとこと書けば、開けられる。間借り店舗・日替わり店長・ライブ・自助会・オフ会を一箇所で。" />
 </svelte:head>
 
-<!-- 最初の画面は、左に一文とボタン、右にロゴだけ。うれしさの説明はその下に続ける -->
+<!-- 最初の画面は、左に一文・ボタン・いまの規模、右にロゴ。その下に実物（間・ハコ・エリア）を続ける -->
 <div class="ticker mt-2" aria-hidden="true">
 	<span class="chip chip-tape ticker-label">こんな間</span>
 	<span class="ticker-items">
@@ -75,6 +79,11 @@ const REPO = "https://github.com/hitalin/magari";
 			<a href="/new" class="btn btn-primary">とりあえず開ける</a>
 			<a href="/home" class="more">開いている所を見る ›</a>
 		</div>
+		<dl class="stats">
+			{#each stats as st (st.label)}
+				<div><dt>{st.label}</dt><dd>{st.value}</dd></div>
+			{/each}
+		</dl>
 	</div>
 	<img src={logo} alt="" class="hero-logo" width="512" height="512" />
 </section>
@@ -89,108 +98,139 @@ const REPO = "https://github.com/hitalin/magari";
 	</section>
 {/if}
 
-<!-- 説明は一覧と同じ行の組みで読ませる。題は左、中身は右。カードや 3 列の枠にはしない -->
-<section class="sect aside">
-	<h2 class="section-title">なにがうれしい</h2>
-	<div class="rule-list prose-rows">
-		{#each WHY as w (w.who)}
-			<a href={w.href} class="row group">
-				<span class="label">{w.who}</span>
-				<span class="block min-w-0">
-					<span class="block font-serif text-[1.15rem] font-bold leading-snug group-hover:text-accent-ink">{w.title}</span>
-					<span class="mt-2 block text-sm leading-loose text-muted">{w.body}</span>
-					<span class="more mt-2 block text-sm">{w.cta} ›</span>
-				</span>
-			</a>
-		{/each}
-	</div>
-</section>
+<div class="sect two-col">
+	<section>
+		<div class="section-head">
+			<h2 class="section-title">ハコ</h2>
+			<a href="/spaces" class="more">一覧 ›</a>
+		</div>
+		<div class="rule-list">
+			{#each topSpaces as sp (sp.handle)}
+				<a href="/@{sp.handle}" class="space-row group">
+					<span class="min-w-0 truncate font-serif text-[1.05rem] font-bold group-hover:text-accent-ink">{sp.name}</span>
+					{#if sp.area}<span class="text-sm text-muted">{sp.area}</span>{/if}
+					<span class="ml-auto text-sm whitespace-nowrap text-muted tabular-nums">{sp.upcoming} 件</span>
+				</a>
+			{/each}
+		</div>
+	</section>
+	<section>
+		<div class="section-head">
+			<h2 class="section-title">エリア</h2>
+			<a href="/home" class="more">この7日の間 ›</a>
+		</div>
+		<p class="flex flex-wrap gap-2">
+			{#each areas as [area, n] (area)}
+				<a href="/home" class="chip chip-plain px-3 py-1 text-sm" onclick={() => pickArea(area)}>{area} <span class="ml-1.5 opacity-70">{n}</span></a>
+			{/each}
+		</p>
+	</section>
+</div>
 
-<section class="sect aside">
-	<h2 class="section-title">しないこと</h2>
-	<dl class="rule-list prose-rows nots">
-		<div class="row">
-			<dt>お金をとらない</dt>
-			<dd>個人が無償で動かしています。広告もありません。</dd>
-		</div>
-		<div class="row">
-			<dt>預からない</dt>
-			<dd>メールアドレスも、誰がどこへ行くかも持ちません。</dd>
-		</div>
-		<div class="row">
-			<dt>取り持たない</dt>
-			<dd>予約も決済もありません。行く前の確認は、開けた人の告知で。</dd>
-		</div>
-		<div class="row">
-			<dt>隠さない</dt>
-			<dd>ソースは<a href={REPO} class="more" rel="noopener">公開</a>していて、だれでも読めて、直せます。</dd>
-		</div>
-	</dl>
-</section>
+<!-- 見る側の次は、載せる側。開ける人と、ハコを貸す人 -->
+<div class="sect two-col">
+	<section class="invite">
+		<h2>ひとことで、ビラが 1 枚</h2>
+		<p>要るのは、ひとこと・日時・場所だけ。X に貼れば告知は終わりです。</p>
+		<a href="/new" class="btn">とりあえず開ける</a>
+	</section>
+	<section class="invite">
+		<h2>ホームページの代わりに</h2>
+		<p>ハコのページに、そこで開かれる間のカレンダーが勝手に付きます。</p>
+		<a href="/spaces/new" class="btn">ハコを載せる</a>
+	</section>
+</div>
 
 <style>
 	.landing {
 		display: grid;
-		gap: 3.5rem;
+		gap: 2rem;
 		align-items: center;
-		padding-block: 2.5rem 4.5rem;
+		padding-block: 2.5rem 3rem;
+	}
+	.hero-logo {
+		order: -1;
+		width: 6.5rem;
+		height: auto;
 	}
 	@media (min-width: 48rem) {
 		.landing {
-			grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+			grid-template-columns: minmax(0, 1fr) auto;
 			gap: 3rem;
-			/* 縦に長い画面で間延びしないよう、上限を置く */
-			min-height: min(calc(100svh - var(--spacing-header) - 12rem), 40rem);
+			padding-block: 4rem 3.5rem;
+		}
+		.hero-logo {
+			order: 0;
+			width: 15rem;
 		}
 	}
-	.hero-logo {
-		width: min(70%, 19rem);
-		height: auto;
-		margin-inline: auto;
+	/* いまの規模。罫線で区切った数表 */
+	.stats {
+		display: flex;
+		flex-wrap: wrap;
+		margin-top: 2.5rem;
+		border-top: 1px solid var(--color-line);
 	}
-	.sect {
-		padding-block: 3.5rem;
+	.stats > div {
+		display: flex;
+		flex-direction: column-reverse;
+		padding: 0.75rem 1.5rem 0 0;
+		margin-right: 1.5rem;
+		border-right: 1px solid var(--color-line);
 	}
-	.aside > h2 {
-		margin-bottom: 1.75rem;
+	.stats > div:last-child {
+		border-right: none;
+		margin-right: 0;
+		padding-right: 0;
 	}
-	.prose-rows > :global(.row) {
-		padding-block: 1.25rem;
+	.stats dt {
+		font-size: 0.78rem;
+		color: var(--color-muted);
 	}
-	/* 狭い画面では、行の左の列を上に載せる */
-	@media (max-width: 40rem) {
-		.prose-rows > :global(.row) {
-			grid-template-columns: minmax(0, 1fr);
-			gap: 0.35rem;
-		}
-	}
-	/* 押せない行は、hover で色を敷かない */
-	.nots > .row:hover {
-		background: none;
-	}
-	.nots dt {
+	.stats dd {
 		font-family: var(--font-serif);
-		font-size: 1.1rem;
+		font-size: 1.6rem;
 		font-weight: 700;
+		line-height: 1.3;
+		font-variant-numeric: tabular-nums;
 	}
-	.nots dd {
-		font-size: 0.875rem;
+	.two-col {
+		display: grid;
+		gap: 3.5rem;
+	}
+	@media (min-width: 48rem) {
+		.two-col {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			gap: 3rem;
+		}
+	}
+	.space-row {
+		display: flex;
+		align-items: baseline;
+		gap: 0.75rem;
+		padding: 0.75rem 0.6rem;
+		border-bottom: 1px solid var(--color-line);
+	}
+	.invite {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		padding-top: 1.25rem;
+		border-top: 1px solid var(--color-text);
+	}
+	.invite h2 {
+		font-size: 1.35rem;
+	}
+	.invite p {
+		margin-block: 0.5rem 1.25rem;
+		font-size: 0.95rem;
 		line-height: 1.8;
 		color: var(--color-muted);
 	}
-	@media (min-width: 48rem) {
-		.aside {
-			display: grid;
-			grid-template-columns: 13rem minmax(0, 1fr);
-			column-gap: 2.5rem;
-			align-items: start;
-		}
-		.aside > h2 {
-			justify-self: start;
-			margin-bottom: 0;
-		}
-		.prose-rows {
-			--row-lead: 8.5rem;
-		}
+	.invite .btn {
+		margin-top: auto;
+	}
+	.sect {
+		padding-block: 3.5rem;
 	}
 </style>
