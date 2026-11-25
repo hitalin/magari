@@ -1,6 +1,7 @@
 <script lang="ts">
 import { onMount, untrack } from "svelte";
 import {
+	COLOR_NAMES,
 	COLORS,
 	encodeStrokes,
 	MAX_POINTS,
@@ -623,7 +624,7 @@ function toggle() {
 				<span class="now" style="background: {COLORS[color]}" aria-hidden="true"></span>
 				<div class="colors" role="group" aria-label="色">
 					{#each COLORS as c, i (c)}
-						<button type="button" class:on={color === i} style="background: {c}" aria-pressed={color === i} aria-label="色 {i + 1}" onclick={() => (color = i)}></button>
+						<button type="button" class:on={color === i} style="background: {c}" aria-pressed={color === i} aria-label={COLOR_NAMES[i]} title={COLOR_NAMES[i]} onclick={() => (color = i)}></button>
 					{/each}
 				</div>
 			</div>
@@ -757,6 +758,8 @@ function toggle() {
 	.colors button {
 		height: 1.2rem;
 		border-radius: 2px;
+		/* 黒の缶も、道具箱の地から見分けられるように */
+		box-shadow: inset 0 0 0 1px var(--color-line);
 	}
 	.colors button.on {
 		outline: 2px solid var(--color-text);

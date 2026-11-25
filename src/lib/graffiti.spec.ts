@@ -98,6 +98,35 @@ describe("encodeStrokes / parseStrokes", () => {
 		expect(parseStrokes("s20 1,2;m42 3,4")).toEqual(strokes);
 	});
 
+	it("10 番目から先の色は、英字 1 文字で書く（前からある落書きの数字はそのまま読める）", () => {
+		const strokes = [
+			{ tool: "paint" as const, color: 10, size: 1, points: [[1, 2]] },
+			{ tool: "spray" as const, color: 15, size: 2, points: [[3, 4]] },
+		] as {
+			tool: "paint" | "spray";
+			color: number;
+			size: number;
+			points: [number, number][];
+		}[];
+		expect(encodeStrokes(strokes)).toBe("pa 1,2;sf2 3,4");
+		expect(parseStrokes("pa 1,2;sf2 3,4")).toEqual(strokes);
+		expect(parseStrokes("c7 1,2")?.[0].color).toBe(7);
+	});
+
+	it("色は 16 色で、前からある 8 色の番号は変えない", () => {
+		expect(COLORS).toHaveLength(16);
+		expect(COLORS.slice(0, 8)).toEqual([
+			"#edeae3",
+			"#ffd23f",
+			"#ff8a1f",
+			"#f0433a",
+			"#ff5fa2",
+			"#a86bff",
+			"#2f9bff",
+			"#3ecf6b",
+		]);
+	});
+
 	it("同じ点の繰り返し（スプレーを止めていた所）はそのまま往復する", () => {
 		expect(parseStrokes("s0 5,5 5,5 5,5 9,9")?.[0].points).toHaveLength(4);
 	});
@@ -117,7 +146,8 @@ describe("parseStrokes が受け付けないもの", () => {
 		["色が無い", "c 1,2"],
 		["無い太さ", "c03 1,2"],
 		["太さの後ろに余計な字", "c011 1,2"],
-		["パレットに無い色", `c${COLORS.length} 1,2`],
+		["パレットに無い色", `c${COLORS.length.toString(36)} 1,2`],
+		["色が大文字", "cA 1,2"],
 		["点が無い", "c0"],
 		["数でない", "c0 1,a"],
 		["小数", "c0 1.5,2"],

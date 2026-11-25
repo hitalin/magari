@@ -1,7 +1,7 @@
 // 地面（アスファルト）の落書き。どのページでも同じ 1 枚の地面に描く。
 // 持ち主が壁を開けたページ（ハコ・団体・人）と会だけは、そこだけの壁を持つ。
 // 線は地面の座標（px の整数）で持つ。横は画面の中央が ORIGIN_X、縦はページの上端が 0。
-// 保存する形は「道具 1 文字 + 色の番号 + 太さ（中なら書かない） + 点の列」を ; でつないだ文字列
+// 保存する形は「道具 1 文字 + 色の番号（1 文字。10 番目から先は a, b, …） + 太さ（中なら書かない） + 点の列」を ; でつないだ文字列
 // （例: "c0 10,20 15,40;s32 100,200"）。
 
 export const WALL_W = 2000;
@@ -17,7 +17,9 @@ export const MAX_POINTS = 2000;
 // スプレー（縁が霧になり、速く動かすと細く、止めると垂れる。止めていた所は同じ点の繰り返しで持つ）、
 // 消しゴム（それより前に描かれた線を、なぞった所だけ消す。これも 1 本の線として残す）
 export type Tool = "chalk" | "marker" | "paint" | "spray" | "eraser";
-// 色は番号（COLORS の何番目か）で持つ。保存した落書きの色が変わるので、並びは変えずに後ろへ足す
+// 色は番号（COLORS の何番目か）で持つ。保存した落書きの色が変わるので、並びは変えずに後ろへ足す（1 文字で書くので 36 色まで）。
+// 好きな色は作らせず、スプレー缶の棚にある定番の色から選ぶ（混ぜられない既製の色のべた塗りが、路上の絵の見た目）。
+// 後ろの 8 色は、縁取りの黒、スローアップの塗りの銀、塗り分けに使う中間の色
 export const COLORS = [
 	"#edeae3",
 	"#ffd23f",
@@ -27,6 +29,32 @@ export const COLORS = [
 	"#a86bff",
 	"#2f9bff",
 	"#3ecf6b",
+	"#0a0a0b",
+	"#b9bec4",
+	"#1fc8c0",
+	"#8fd3ff",
+	"#b8f02a",
+	"#8e1f2f",
+	"#8a5a2b",
+	"#ffc2d9",
+] as const;
+export const COLOR_NAMES = [
+	"白",
+	"黄",
+	"オレンジ",
+	"赤",
+	"ピンク",
+	"紫",
+	"青",
+	"緑",
+	"黒",
+	"銀",
+	"ターコイズ",
+	"水色",
+	"ライム",
+	"えんじ",
+	"茶",
+	"薄ピンク",
 ] as const;
 // 太さは番号（SIZES の何番目か。細い・中・太い）で持ち、道具ごとの太さに掛ける
 export const SIZES = [0.6, 1, 2] as const;
@@ -81,7 +109,7 @@ export function encodeStrokes(strokes: Stroke[]): string {
 		.filter((s) => s.points.length > 0)
 		.map(
 			(s) =>
-				`${LETTER[s.tool]}${s.color}${s.size === 1 ? "" : s.size} ${s.points
+				`${LETTER[s.tool]}${s.color.toString(36)}${s.size === 1 ? "" : s.size} ${s.points
 					.map(([x, y]) => `${clamp(x, WALL_W)},${clamp(y, WALL_H)}`)
 					.join(" ")}`,
 		)
@@ -98,8 +126,8 @@ export function parseStrokes(d: string): Stroke[] | null {
 	for (const part of parts) {
 		const [head, ...rest] = part.split(" ");
 		const tool = TOOL[head[0]];
-		if (!tool || !/^.\d\d?$/.test(head) || rest.length === 0) return null;
-		const color = Number(head[1]);
+		if (!tool || !/^.[0-9a-z]\d?$/.test(head) || rest.length === 0) return null;
+		const color = Number.parseInt(head[1], 36);
 		const size = head[2] === undefined ? 1 : Number(head[2]);
 		if (color >= COLORS.length || size >= SIZES.length) return null;
 		const points: [number, number][] = [];
