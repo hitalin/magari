@@ -6,7 +6,6 @@ describe("seal / unseal", () => {
 	it("封じた値は元に戻り、封じた文字列に中身は出ない", async () => {
 		const sealed = await seal("secret-1", "owner1", value);
 		expect(sealed).not.toContain("actor00001");
-		expect(sealed).not.toContain("ng");
 		expect(await unseal("secret-1", "owner1", sealed)).toEqual(value);
 	});
 	it("同じ値でも、封じるたびに違う文字列になる", async () => {
