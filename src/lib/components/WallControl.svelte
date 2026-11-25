@@ -8,7 +8,7 @@ let {
 </script>
 
 {#if open}
-	<p class="mb-4 text-sm text-muted">壁を開けています。{what}では、共有の地面の代わりに、ここだけの壁に描かれます。誰でも描けて、誰が描いたかは残りません。落書きは 30 日で消えます。困った落書きは、壁をまるごと上塗りできます。</p>
+	<p class="mb-4 text-sm text-muted">壁を開けています。{what}に、誰でも落書きできます。誰が描いたかは残りません。落書きは 30 日で消えます。困った落書きは、壁をまるごと上塗りできます。</p>
 	{#if painted}<p class="mb-4 rounded-sm bg-accent-soft px-4 py-2 text-sm text-accent-ink" role="status">上塗りしました。</p>{/if}
 	<div class="flex flex-wrap gap-3">
 		<form method="POST" action="?/paint" onsubmit={(e) => { if (!confirm('壁をまるごと上塗りしますか？今ある落書きはすべて消え、戻せません。')) e.preventDefault(); }}>
@@ -19,7 +19,7 @@ let {
 		</form>
 	</div>
 {:else}
-	<p class="mb-4 text-sm text-muted">{what}だけの落書きの壁を開けられます。開けると、{what}では共有の地面の代わりに、ここだけの壁に描かれます。誰でも描けて、誰が描いたかは残りません。困った落書きは、ここから壁をまるごと上塗りできます。</p>
+	<p class="mb-4 text-sm text-muted">{what}だけの落書きの壁を開けられます。閉じている間は、{what}には落書きできません。開けると誰でも描けて、誰が描いたかは残りません。困った落書きは、ここから壁をまるごと上塗りできます。</p>
 	<form method="POST" action="?/wall">
 		<input type="hidden" name="open" value="1" />
 		<button type="submit" class="btn">壁を開ける</button>

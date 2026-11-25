@@ -24,7 +24,8 @@ import {
 import { page } from "$app/state";
 
 // 地面（アスファルト）の落書き。どのページでも同じ 1 枚の地面で、ページの中身はその上に載っている。
-// 持ち主が壁を開けたページと会だけは、そこだけの壁になる（ページの load が返す wall が、その壁の鍵）。
+// ページ（ハコ・団体・人）と会は、持ち主が壁を開けていればそこだけの壁になり（ページの load が返す wall が、その壁の鍵）、
+// 開けていなければ描けない無地のアスファルト（wall が null。チョークも出さない）。ほかのページは共有の地面（wall が無い）。
 // 右下のチョークを持つと、画面のどこでも描ける。描いた線は少し置いてから勝手に残る（残すボタンは無い）。
 // 線は中身の後ろ（z-index: -1 の canvas）に描く。canvas は画面とその上下ぶんの大きさでページの中に置き、
 // スクロールで端が近づいたら置き直す（スクロールのたびに描き直すと、ブラウザの流れに 1 コマ遅れて絵が揺れる）。
@@ -65,8 +66,12 @@ let size = $state(1);
 let dpr = 1;
 // いま canvas を置いている所（ページの上端から）
 let base = 0;
-// いま出している壁の鍵（空なら共有の地面）
-let wall: string = page.data.wall ?? "";
+// いま出している壁の鍵（空なら共有の地面、null なら壁が無い）
+const shown = (): string | null =>
+	page.data.wall === undefined ? "" : page.data.wall;
+let wall = shown();
+// 壁の無いページ（落書きできない）
+const closed = $derived(page.data.wall === null);
 let scribbles = $state.raw<Scribble[]>([]);
 // まだ残していない線
 let pending = $state.raw<Stroke[]>([]);
@@ -339,8 +344,9 @@ function drew(): number {
 	}
 }
 function load() {
-	const at = drew();
 	const of = wall;
+	if (of === null) return;
+	const at = drew();
 	const query = new URLSearchParams();
 	if (of) query.set("wall", of);
 	if (Date.now() - at < STALE_MS) query.set("after", String(at));
@@ -356,7 +362,7 @@ function load() {
 // ほかの人が描いている線を受ける。つながらない環境（vite dev には部屋が無い）では、何もしない
 function connect() {
 	clearTimeout(retryTimer);
-	if (live || document.visibilityState === "hidden") return;
+	if (live || wall === null || document.visibilityState === "hidden") return;
 	const ws = new WebSocket(
 		`${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/api/graffiti/live${wall ? `?wall=${wall}` : ""}`,
 	);
@@ -404,11 +410,12 @@ function send() {
 
 // ページを移って壁が変わったら、残していない線を前の壁に送ってから、新しい壁を取り直す
 $effect(() => {
-	const next: string = page.data.wall ?? "";
+	const next = shown();
 	if (next === wall) return;
 	untrack(() => {
 		save(true);
 		wall = next;
+		if (next === null) holding = false;
 		pending = [];
 		scribbles = [];
 		remote.clear();
@@ -609,6 +616,7 @@ function toggle() {
 	{/if}
 {/if}
 
+{#if !closed}
 <div class="hand">
 	{#if holding}
 		<!-- 道具箱。上から道具・色・太さ、いちばん下に一言（お絵描きアプリの並び） -->
@@ -642,6 +650,7 @@ function toggle() {
 		<span style={holding ? `background: ${COLORS[color]}` : undefined}></span>
 	</button>
 </div>
+{/if}
 
 <style>
 	/* body を重なりの基準にして、z-index: -1 の地面が「body の地の上・中身の下」に入るようにする。
