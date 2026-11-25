@@ -34,7 +34,12 @@ export const GET: RequestHandler = async ({ locals, request }) => {
 	const [logins, pages, rows, hosts] = await Promise.all([
 		locals.auth.api.listUserAccounts({ headers: request.headers }),
 		actorIds.length
-			? db.select().from(actors).where(inArray(actors.id, actorIds))
+			? db
+					.select()
+					.from(actors)
+					.where(inArray(actors.id, actorIds))
+					// 作った順（自分のページが先頭）。並びを決めないと、ID の乱数しだいで書き出すたびに順が変わる
+					.orderBy(asc(actors.createdAt))
 			: [],
 		db
 			.select({
