@@ -8,7 +8,7 @@ let { data, form }: PageProps = $props();
 
 <svelte:head><title>掲載の取り下げ・連絡 | ◱</title></svelte:head>
 
-<section class="mx-auto mt-6 max-w-xl">
+<section class="mt-6 max-w-xl">
 	<p class="label">運営への連絡</p>
 	<h1 class="mt-2 text-2xl">掲載の取り下げ・ページの引き取り</h1>
 	<p class="mt-3 text-sm text-muted">
@@ -20,7 +20,7 @@ let { data, form }: PageProps = $props();
 	{#if form?.sent}
 		<p class="panel mt-8 p-6">送信しました。内容を確認して、いただいた返信先にお返事します。</p>
 	{:else}
-		<form method="POST" class="panel mt-8 space-y-5 p-6">
+		<form method="POST" class="mt-8 space-y-5 border-t border-line pt-6">
 			{#if form?.error}<p class="rounded-sm bg-accent-soft px-4 py-2 text-sm text-accent-ink" role="alert">{form.error}</p>{/if}
 			<Field label="種別">
 				<select name="kind" class="input">

@@ -3,7 +3,7 @@
 	<meta name="description" content="まがり（magari.cc）の利用規約。" />
 </svelte:head>
 
-<article class="doc mx-auto mt-6 max-w-[40em]">
+<article class="doc mt-6 max-w-[40em]">
 	<p class="label">◱</p>
 	<h1>利用規約</h1>
 	<p class="doc-lead">まがり（magari.cc）を使う約束です。ページを作るか、間（会）を載せた時点で、同意したものとします。</p>

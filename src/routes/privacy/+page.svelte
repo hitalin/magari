@@ -3,7 +3,7 @@
 	<meta name="description" content="まがり（magari.cc）が預かる情報と、その扱い。" />
 </svelte:head>
 
-<article class="doc mx-auto mt-6 max-w-[40em]">
+<article class="doc mt-6 max-w-[40em]">
 	<p class="label">◱</p>
 	<h1>プライバシーポリシー</h1>
 	<p class="doc-lead">まがりが預かる情報と、その使いみちです。預かるのは、動かすのに要るものだけです。</p>

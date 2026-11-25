@@ -10,9 +10,38 @@ const views = [
 ];
 </script>
 
-<nav class="pills mt-4 mb-6" aria-label="見せ方">
+<!-- 絞り込み（エリアのチップ）とは別の物なので、形を変える。ナビと同じく、いまいる所の下にテープを一本 -->
+<nav class="views mt-5 mb-6" aria-label="見せ方">
 	{#each views as v (v.href)}
 		{@const active = page.url.pathname.startsWith(v.href)}
-		<a href={v.href} class="chip {active ? 'chip-tape' : 'chip-plain'}" aria-current={active ? 'page' : undefined}>{v.label}</a>
+		<a href={v.href} aria-current={active ? 'page' : undefined}>{v.label}</a>
 	{/each}
 </nav>
+
+<style>
+	.views {
+		display: flex;
+		gap: 1.5rem;
+		border-bottom: 1px solid var(--color-line);
+		font-size: 0.875rem;
+		font-weight: 600;
+	}
+	.views > a {
+		position: relative;
+		padding-block: 0.6rem;
+		color: var(--color-muted);
+		transition: color 0.15s;
+	}
+	.views > a:hover,
+	.views > a[aria-current] {
+		color: var(--color-text);
+	}
+	.views > a[aria-current]::after {
+		content: "";
+		position: absolute;
+		inset: auto 0 -2px;
+		height: 3px;
+		background: var(--color-accent);
+		transform: rotate(-1deg);
+	}
+</style>

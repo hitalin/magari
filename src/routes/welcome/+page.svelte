@@ -16,12 +16,12 @@ async function addPasskey() {
 
 <svelte:head><title>はじめまして | ◱</title></svelte:head>
 
-<section class="mx-auto mt-6 max-w-md">
+<section class="mt-6 max-w-md">
 	<p class="label">はじめまして</p>
 	<h1 class="mt-2 text-2xl">あなたのページを作る</h1>
 	<p class="mt-3 text-sm text-muted">ID と表示名を決めると <code>/@ID</code> があなたのページになり、まがりできます。</p>
 
-	<form method="POST" class="panel mt-8 space-y-5 p-6">
+	<form method="POST" class="mt-8 space-y-5 border-t border-line pt-6">
 		{#if form?.error}<p class="rounded-sm bg-accent-soft px-4 py-2 text-sm text-accent-ink" role="alert">{form.error}</p>{/if}
 		{#if data.image}
 			<div class="flex items-center gap-3">
@@ -40,13 +40,13 @@ async function addPasskey() {
 		<p class="text-xs text-dim">始めると、<a href="/terms" class="underline underline-offset-2 hover:text-accent-ink">利用規約</a>と<a href="/privacy" class="underline underline-offset-2 hover:text-accent-ink">プライバシーポリシー</a>に同意したことになります。</p>
 	</form>
 
-	<div class="panel mt-6 p-6">
+	<div class="mt-8 border-t border-line pt-6">
 		<p class="label">前にも来たことがある人</p>
 		<p class="mt-2 text-sm text-muted">いつもと違うアカウントで入ると、ここに出ます。ここでは始めずにログアウトして、いつものアカウントで入り直してください。「自分」のページの「ログイン方法」で、このアカウントも同じ ID につなげます。</p>
 		<form method="POST" action="/logout" class="mt-3"><button type="submit" class="btn">ログアウトして入り直す</button></form>
 	</div>
 
-	<div class="panel mt-6 p-6">
+	<div class="mt-8 border-t border-line pt-6">
 		<p class="label">ついでに</p>
 		<p class="mt-2 text-sm text-muted">パスキーを作っておくと、次回から X や Misskey を経由せず、指紋や顔でログインできます。</p>
 		<button type="button" class="btn mt-3" onclick={addPasskey}>パスキーを作る</button>

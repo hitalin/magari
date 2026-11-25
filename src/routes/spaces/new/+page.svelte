@@ -7,7 +7,7 @@ let { form }: PageProps = $props();
 
 <svelte:head><title>ハコを登録する | ◱</title></svelte:head>
 
-<section class="mx-auto mt-6 max-w-md">
+<section class="mt-6 max-w-md">
 	<p class="label">ハコを登録する</p>
 	<h1 class="mt-2 text-2xl">場所を貸す側のページを作る</h1>
 	<p class="mt-3 text-sm text-muted">
@@ -15,7 +15,7 @@ let { form }: PageProps = $props();
 		そのハコで開かれる間は自動でカレンダーに並びます。
 	</p>
 
-	<form method="POST" class="panel mt-8 space-y-5 p-6">
+	<form method="POST" class="mt-8 space-y-5 border-t border-line pt-6">
 		{#if form?.error}<p class="rounded-sm bg-accent-soft px-4 py-2 text-sm text-accent-ink" role="alert">{form.error}</p>{/if}
 		<Field label="種類">
 			<select name="kind" class="input">

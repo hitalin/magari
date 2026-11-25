@@ -3,7 +3,7 @@
 	<meta name="description" content="まがり（magari.cc）に載せてよいものと、取り下げの申し出への対応。" />
 </svelte:head>
 
-<article class="doc mx-auto mt-6 max-w-[40em]">
+<article class="doc mt-6 max-w-[40em]">
 	<p class="label">◱</p>
 	<h1>掲載と削除の方針</h1>
 	<p class="doc-lead">まがりに何が載るかと、問題があったときの対応です。</p>

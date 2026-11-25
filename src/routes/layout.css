@@ -470,29 +470,6 @@ h4 {
 		transform: rotate(1deg);
 	}
 
-	/* ヒーローのドット（上下フェード） */
-	.dots {
-		position: relative;
-	}
-	.dots::before {
-		content: "";
-		position: absolute;
-		inset: 0;
-		z-index: -1;
-		background-image: radial-gradient(
-			rgb(241 239 233 / 0.16) 1px,
-			transparent 1px
-		);
-		background-size: 18px 18px;
-		mask-image: linear-gradient(
-			to bottom,
-			transparent,
-			#000 15%,
-			#000 85%,
-			transparent
-		);
-	}
-
 	.gradient-text {
 		background: linear-gradient(
 			135deg,
@@ -756,21 +733,12 @@ h4 {
 		}
 	}
 
-	/* 空状態: 薄いロゴ + 明朝の一言 + 補足（misstore） */
+	/* 空のとき。枠や図像は置かず、一覧と同じ罫線のあいだに一言だけ */
 	.empty {
 		display: grid;
-		justify-items: center;
-		gap: 0.5rem;
-		padding: 2.5rem 1rem;
-		text-align: center;
-		border: 1px dashed var(--color-line);
-		border-radius: var(--radius-md);
-	}
-	.empty > img {
-		width: 3.5rem;
-		height: 3.5rem;
-		opacity: 0.25;
-		margin-bottom: 0.5rem;
+		gap: 0.35rem;
+		padding: 1.75rem 0.6rem;
+		border-block: 1px solid var(--color-line);
 	}
 	.empty-title {
 		font-family: var(--font-serif);

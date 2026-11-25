@@ -3,7 +3,7 @@
 	<meta name="description" content="まがり（magari.cc）に自分の会が載っている方へ。なぜ載っているか、何を載せているか、外し方。" />
 </svelte:head>
 
-<article class="doc mx-auto mt-6 max-w-[40em]">
+<article class="doc mt-6 max-w-[40em]">
 	<p class="label">◱</p>
 	<h1>会を開く方へ</h1>
 	<p class="doc-lead">まがりは、あちこちの店で開かれる会を一か所で見られるようにするサイトです。個人が無償で動かしていて、広告はありません。あなたの会が、お声がけする前から載っていることがあります。</p>
