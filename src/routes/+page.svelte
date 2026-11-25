@@ -1,19 +1,9 @@
 <script lang="ts">
+import logo from "#lib/assets/logo.svg";
 import DayList from "#lib/components/DayList.svelte";
-import Flyer from "#lib/components/Flyer.svelte";
-import Picture from "#lib/components/Picture.svelte";
-import { dayKey, formatWhen } from "#lib/date.ts";
 import type { PageProps } from "./$types";
 
 let { data }: PageProps = $props();
-// ヒーローの右に貼るビラ。近い順に 3 枚。まだ誰も開けていなければ見本を貼る
-const SAMPLES = [
-	"18時から店にいます",
-	"公園でなんもしない",
-	"日替わり店長やります",
-];
-const sampleAt = `${dayKey(new Date())}T18:00:00+09:00`;
-const fan = $derived(data.events.slice(0, 3));
 // 説明より先に実物を見せる。近い順に 5 つ
 const soon = $derived(data.events.slice(0, 5));
 // 上を流れる帯。どんな間が開いているか
@@ -62,7 +52,7 @@ const REPO = "https://github.com/hitalin/magari";
 	<meta name="description" content="今日も、誰かが開けている。行ってもいい。ひとこと書けば、開けられる。間借り店舗・日替わり店長・ライブ・自助会・オフ会を一箇所で。" />
 </svelte:head>
 
-<!-- 最初の画面は、左に一文とボタン、右にビラだけ。うれしさの説明はその下に続ける -->
+<!-- 最初の画面は、左に一文とボタン、右にロゴだけ。うれしさの説明はその下に続ける -->
 <div class="ticker mt-2" aria-hidden="true">
 	<span class="chip chip-tape ticker-label">こんな間</span>
 	<span class="ticker-items">
@@ -86,21 +76,7 @@ const REPO = "https://github.com/hitalin/magari";
 			<a href="/home" class="more">開いている所を見る ›</a>
 		</div>
 	</div>
-	<div class="fan" aria-hidden={fan.length === 0}>
-		{#each fan as e (e.id)}
-			<a href="/e/{e.id}" class="flyer-pin" aria-label="{e.title}（{formatWhen(e)}）">
-				{#if e.flyerUrl}
-					<Picture src={e.flyerUrl} alt="" sizes="240px" />
-				{:else}
-					<Flyer id={e.id} title={e.title} startsAt={e.startsAt} endsAt={e.endsAt} allDay={e.allDay} place={e.space?.name ?? e.locationName} host={e.hosts[0]?.name ?? null} look={e.flyerLook} />
-				{/if}
-			</a>
-		{:else}
-			{#each SAMPLES as title (title)}
-				<div class="flyer-pin"><Flyer id={title} {title} startsAt={sampleAt} endsAt={null} allDay={false} /></div>
-			{/each}
-		{/each}
-	</div>
+	<img src={logo} alt="" class="hero-logo" width="512" height="512" />
 </section>
 
 {#if soon.length}
@@ -167,39 +143,10 @@ const REPO = "https://github.com/hitalin/magari";
 			min-height: min(calc(100svh - var(--spacing-header) - 12rem), 40rem);
 		}
 	}
-	/* ビラ 3 枚を少しずらして重ねる。近い会が手前 */
-	.fan {
-		position: relative;
-		width: min(86%, 23rem);
-		aspect-ratio: 1 / 1.1;
+	.hero-logo {
+		width: min(70%, 19rem);
+		height: auto;
 		margin-inline: auto;
-	}
-	.fan > :global(*) {
-		position: absolute;
-		width: 56%;
-	}
-	.fan > :global(* img) {
-		aspect-ratio: 1 / 1.414;
-		object-fit: cover;
-	}
-	.fan > :global(:nth-child(1)) {
-		left: 22%;
-		top: 14%;
-		z-index: 2;
-		--tilt: -1.5deg;
-	}
-	.fan > :global(:nth-child(2)) {
-		left: 0;
-		top: 4%;
-		--tilt: -8deg;
-	}
-	.fan > :global(:nth-child(3)) {
-		right: 0;
-		top: 0;
-		--tilt: 7deg;
-	}
-	.fan > :global(a:hover) {
-		z-index: 3;
 	}
 	.sect {
 		padding-block: 3.5rem;
