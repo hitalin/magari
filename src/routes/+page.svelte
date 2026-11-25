@@ -74,14 +74,14 @@ const REPO = "https://github.com/hitalin/magari";
 <p class="sr-only">{WORDS.join('、')}。</p>
 
 <section class="landing">
-	<div class="text-center md:text-left">
+	<div>
 		<h1 class="text-[clamp(1.9rem,4.2vw,2.75rem)] leading-[1.35] whitespace-nowrap">
 			今日も、<br /><span class="tape mr-1 px-3 leading-[1.15]">誰か</span>が開けている。
 		</h1>
 		<p class="mt-6 text-[1.05rem] leading-loose text-muted">
 			行ってもいい。ひとこと書けば、開けられる。
 		</p>
-		<div class="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 md:justify-start">
+		<div class="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
 			<a href="/new" class="btn btn-primary">とりあえず開ける</a>
 			<a href="/home" class="more">開いている所を見る ›</a>
 		</div>
@@ -104,7 +104,7 @@ const REPO = "https://github.com/hitalin/magari";
 </section>
 
 {#if soon.length}
-	<section class="block">
+	<section class="sect">
 		<div class="section-head">
 			<h2 class="section-title">これから開く間</h2>
 			<a href="/home" class="more">ぜんぶ見る ›</a>
@@ -113,36 +113,39 @@ const REPO = "https://github.com/hitalin/magari";
 	</section>
 {/if}
 
-<section class="block">
+<!-- 説明は一覧と同じ行の組みで読ませる。題は左、中身は右。カードや 3 列の枠にはしない -->
+<section class="sect aside">
 	<h2 class="section-title">なにがうれしい</h2>
-	<ul class="why">
+	<div class="rule-list prose-rows">
 		{#each WHY as w (w.who)}
-			<li>
-				<p class="label">{w.who}</p>
-				<h3 class="mt-2 text-xl leading-snug">{w.title}</h3>
-				<p class="mt-3 text-sm leading-loose text-muted">{w.body}</p>
-				<a href={w.href} class="more mt-4 inline-block text-sm">{w.cta} ›</a>
-			</li>
+			<a href={w.href} class="row group">
+				<span class="label">{w.who}</span>
+				<span class="block min-w-0">
+					<span class="block font-serif text-[1.15rem] font-bold leading-snug group-hover:text-accent-ink">{w.title}</span>
+					<span class="mt-2 block text-sm leading-loose text-muted">{w.body}</span>
+					<span class="more mt-2 block text-sm">{w.cta} ›</span>
+				</span>
+			</a>
 		{/each}
-	</ul>
+	</div>
 </section>
 
-<section class="block">
+<section class="sect aside">
 	<h2 class="section-title">しないこと</h2>
-	<dl class="nots">
-		<div>
+	<dl class="rule-list prose-rows nots">
+		<div class="row">
 			<dt>お金をとらない</dt>
 			<dd>個人が無償で動かしています。広告もありません。</dd>
 		</div>
-		<div>
+		<div class="row">
 			<dt>預からない</dt>
 			<dd>メールアドレスも、誰がどこへ行くかも持ちません。</dd>
 		</div>
-		<div>
+		<div class="row">
 			<dt>取り持たない</dt>
 			<dd>予約も決済もありません。行く前の確認は、開けた人の告知で。</dd>
 		</div>
-		<div>
+		<div class="row">
 			<dt>隠さない</dt>
 			<dd>ソースは<a href={REPO} class="more" rel="noopener">公開</a>していて、だれでも読めて、直せます。</dd>
 		</div>
@@ -198,38 +201,49 @@ const REPO = "https://github.com/hitalin/magari";
 	.fan > :global(a:hover) {
 		z-index: 3;
 	}
-	.why,
-	.nots {
-		display: grid;
-		margin-top: 2.5rem;
-	}
-	/* カードにはせず、一覧と同じ 1px の線で区切る */
-	.why > li,
-	.nots > div {
-		padding-block: 1.5rem;
-		border-top: 1px solid var(--color-line);
-	}
-	.block {
+	.sect {
 		padding-block: 3.5rem;
+	}
+	.aside > h2 {
+		margin-bottom: 1.75rem;
+	}
+	.prose-rows > :global(.row) {
+		padding-block: 1.25rem;
+	}
+	/* 狭い画面では、行の左の列を上に載せる */
+	@media (max-width: 40rem) {
+		.prose-rows > :global(.row) {
+			grid-template-columns: minmax(0, 1fr);
+			gap: 0.35rem;
+		}
+	}
+	/* 押せない行は、hover で色を敷かない */
+	.nots > .row:hover {
+		background: none;
 	}
 	.nots dt {
 		font-family: var(--font-serif);
 		font-size: 1.1rem;
+		font-weight: 700;
 	}
 	.nots dd {
-		margin-top: 0.35rem;
 		font-size: 0.875rem;
 		line-height: 1.8;
 		color: var(--color-muted);
 	}
 	@media (min-width: 48rem) {
-		.nots {
-			grid-template-columns: repeat(2, minmax(0, 1fr));
+		.aside {
+			display: grid;
+			grid-template-columns: 13rem minmax(0, 1fr);
 			column-gap: 2.5rem;
+			align-items: start;
 		}
-		.why {
-			grid-template-columns: repeat(3, minmax(0, 1fr));
-			column-gap: 2.5rem;
+		.aside > h2 {
+			justify-self: start;
+			margin-bottom: 0;
+		}
+		.prose-rows {
+			--row-lead: 8.5rem;
 		}
 	}
 </style>
