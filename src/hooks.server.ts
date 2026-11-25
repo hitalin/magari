@@ -111,7 +111,7 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 	// キャッシュに載せるのは、公開と書いた応答だけ（src/lib/server/cache.ts）
 	const path = event.url.pathname;
-	const cache = cacheHeaders(response.headers.get("cache-control"), path);
+	const cache = cacheHeaders(response.headers.get("cache-control"));
 	for (const [name, value] of Object.entries(cache))
 		response.headers.set(name, value);
 	// 書き込みが通ったら、公開の応答をキャッシュから消す。このあとの転送先で古い中身を見せないよう、消してから返す

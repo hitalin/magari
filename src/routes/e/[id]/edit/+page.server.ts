@@ -8,6 +8,7 @@ import {
 	statusAfterEdit,
 } from "#lib/event-form.ts";
 import { flyerStyle, parseFlyerLook } from "#lib/flyer.ts";
+import { wallKey } from "#lib/graffiti.ts";
 import { parseHandleInput } from "#lib/id.ts";
 import {
 	parseRepeat,
@@ -20,6 +21,7 @@ import { warmCard } from "#lib/server/card.ts";
 import { eventSeries } from "#lib/server/db/schema.ts";
 import { toFormValues } from "#lib/server/event-values.ts";
 import { checkFlyer, putFlyer } from "#lib/server/flyer-upload.ts";
+import { overpaint, setWallOpen } from "#lib/server/graffiti.ts";
 import {
 	addEventHost,
 	deleteEvent,
@@ -93,6 +95,7 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 		// ハコの間取り（区画の候補）
 		rooms: "error" in space ? [] : space.rooms,
 		status: ev.status,
+		wallOpen: ev.wallOpen,
 		// 繰り返しの中の回なら、その決まりの言い方（「毎週火曜」）
 		series: series ? ruleLabel(series.rrule, ev.startsAt) : null,
 		// 繰り返しの終わりの日（YYYY-MM-DD）。決めていなければ空
@@ -242,6 +245,23 @@ export const actions: Actions = {
 		}
 		warmCard(locals.db, params.id, url.origin);
 		redirect(303, status === "draft" ? "/me" : `/e/${params.id}`);
+	},
+	// この会だけの落書きの壁を開ける・閉じる（繰り返しの中の回でも、この回だけ）
+	wall: async ({ request, locals, params }) => {
+		const ev = await editable(locals, params.id);
+		const form = await request.formData();
+		await setWallOpen(
+			locals.db,
+			{ type: "event", id: ev.id },
+			form.get("open") !== null,
+		);
+		return { wallSaved: true };
+	},
+	// 壁をまるごと上塗りする
+	paint: async ({ locals, params }) => {
+		const ev = await editable(locals, params.id);
+		await overpaint(locals.db, wallKey("event", ev.id));
+		return { wallSaved: true, painted: true };
 	},
 	cancel: async ({ locals, params }) => {
 		await editable(locals, params.id);

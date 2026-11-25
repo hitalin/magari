@@ -1,8 +1,10 @@
 import { env } from "cloudflare:workers";
 import { error, fail, redirect } from "@sveltejs/kit";
 import { type LinkedSns, shownSns } from "#lib/actor.ts";
+import { wallKey } from "#lib/graffiti.ts";
 import { parseHandleInput, shortId } from "#lib/id.ts";
 import { linkedSns } from "#lib/server/events.ts";
+import { overpaint, setWallOpen } from "#lib/server/graffiti.ts";
 import { requireActor } from "#lib/server/me.ts";
 import { deleteMedia } from "#lib/server/media.ts";
 import {
@@ -92,6 +94,7 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 		headerUrl: mediaUrl(actor.headerKey),
 		// 運営が非表示にしている（公開のページは出ていない）
 		hidden: actor.hiddenAt !== null,
+		wallOpen: actor.wallOpen,
 		values,
 		members,
 		myUserId: locals.session?.user.id ?? null,
@@ -172,6 +175,23 @@ export const actions: Actions = {
 		await setHeaderKey(locals.db, actor.id, key);
 		if (actor.headerKey) await deleteMedia(env.MEDIA, actor.headerKey);
 		return { section: "header", ok: true };
+	},
+	// このページだけの落書きの壁を開ける・閉じる
+	wall: async ({ request, locals, params }) => {
+		const actor = await managed(locals, params.handle);
+		const form = await request.formData();
+		await setWallOpen(
+			locals.db,
+			{ type: "actor", id: actor.id },
+			form.get("open") !== null,
+		);
+		return { section: "wall", ok: true };
+	},
+	// 壁をまるごと上塗りする
+	paint: async ({ locals, params }) => {
+		const actor = await managed(locals, params.handle);
+		await overpaint(locals.db, wallKey("actor", actor.id));
+		return { section: "wall", ok: true, painted: true };
 	},
 	removeHeader: async ({ locals, params }) => {
 		const actor = await managed(locals, params.handle);

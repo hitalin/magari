@@ -1,4 +1,5 @@
 // 地面（アスファルト）の落書き。どのページでも同じ 1 枚の地面に描く。
+// 持ち主が壁を開けたページ（ハコ・団体・人）と会だけは、そこだけの壁を持つ。
 // 線は地面の座標（px の整数）で持つ。横は画面の中央が ORIGIN_X、縦はページの上端が 0。
 // 保存する形は「道具 1 文字 + 色の番号 + 太さ（中なら書かない） + 点の列」を ; でつないだ文字列
 // （例: "c0 10,20 15,40;s32 100,200"）。
@@ -37,6 +38,25 @@ export type Stroke = {
 };
 // 1 回ぶんの落書き（保存した 1 行）
 export type Scribble = { id: string; d: string };
+
+// 上塗りの印。壁をまるごと塗りつぶした、という 1 行（d がこれだけの行）。これより前の線は配らない。
+// 線の形ではないので、描く人からは送れない（parseStrokes が通さない）
+export const OVERPAINT = "x";
+// 分けた壁の落書きは、この日数で消える（人の少ない壁に、いつまでも残さない）
+export const WALL_DAYS = 30;
+
+// 壁の持ち主。ページ（ハコ・団体・人）か会
+export type WallOwner = { type: "actor" | "event"; id: string };
+
+// 壁の鍵。共有の地面は鍵を持たない（空）
+export function wallKey(type: WallOwner["type"], id: string): string {
+	return `${type === "actor" ? "a" : "e"}-${id}`;
+}
+
+export function parseWallKey(key: string): WallOwner | null {
+	const m = /^([ae])-([0-9a-zA-Z_]{1,64})$/.exec(key);
+	return m ? { type: m[1] === "a" ? "actor" : "event", id: m[2] } : null;
+}
 
 const LETTER: Record<Tool, string> = {
 	chalk: "c",

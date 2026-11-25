@@ -16,6 +16,7 @@ import {
 import { type LinkedSns, nameOnlyIfUnmanaged, shownSns } from "#lib/actor.ts";
 import { planRooms, type Room } from "#lib/floor-plan.ts";
 import { parseFlyerLook } from "#lib/flyer.ts";
+import { wallKey } from "#lib/graffiti.ts";
 import { ruleLabel } from "#lib/repeat.ts";
 import { mentionHandles } from "#lib/share.ts";
 import { actorSns } from "#lib/sns.ts";
@@ -64,6 +65,7 @@ function selectEvents(db: Db) {
 			flyerVariant: events.flyerVariant,
 			flyerColor: events.flyerColor,
 			hiddenAt: events.hiddenAt,
+			wallOpen: events.wallOpen,
 			seriesId: events.seriesId,
 			spaceHandle: actors.handle,
 			spaceName: actors.name,
@@ -188,6 +190,7 @@ function toDetail(
 		status: row.status,
 		visibility: row.visibility,
 		hidden: row.hiddenAt !== null,
+		wall: row.wallOpen ? wallKey("event", row.id) : null,
 		room: row.room,
 		locationName: row.locationName,
 		// 「主催に聞いてもらう」会の住所は API に出さない
@@ -473,6 +476,7 @@ export async function getActorByHandle(
 			access: actors.access,
 			operator: actors.operator,
 			links: actors.links,
+			wallOpen: actors.wallOpen,
 		})
 		.from(actors)
 		// 運営が非表示にしたページは、無いものとして扱う
@@ -484,7 +488,7 @@ export async function getActorByHandle(
 		.from(actorMembers)
 		.where(eq(actorMembers.actorId, row.id))
 		.limit(1);
-	const { headerKey, userId, floorPlan, ...rest } = row;
+	const { headerKey, userId, floorPlan, wallOpen, ...rest } = row;
 	const linked =
 		row.kind === "person" && userId
 			? (await linkedSns(db, [userId])).get(userId)
@@ -496,6 +500,7 @@ export async function getActorByHandle(
 			...shownSns(row, linked),
 			hasManager: userId !== null || member !== undefined,
 			headerUrl: mediaUrl(headerKey),
+			wall: wallOpen ? wallKey("actor", row.id) : null,
 		},
 		showSamples,
 	);

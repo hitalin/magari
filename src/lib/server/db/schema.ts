@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm";
 import {
 	index,
 	integer,
@@ -53,6 +54,10 @@ export const actors = sqliteTable(
 		instagram: text("instagram"),
 		// 運営が非表示にした時刻。入っている間は、ページも、そこで開かれる会も公開しない
 		hiddenAt: timestamp("hidden_at"),
+		// このページだけの落書きの壁を開けているか（管理者が開ける。閉じていれば共有の地面）
+		wallOpen: integer("wall_open", { mode: "boolean" })
+			.notNull()
+			.default(false),
 		links: text("links", { mode: "json" })
 			.$type<{ label: string; url: string }[]>()
 			.notNull()
@@ -149,6 +154,10 @@ export const events = sqliteTable(
 		sourceUid: text("source_uid"),
 		// 運営が非表示にした時刻。入っている間は公開しない（主催には見える）
 		hiddenAt: timestamp("hidden_at"),
+		// この会だけの落書きの壁を開けているか（主催が開ける。閉じていれば共有の地面）
+		wallOpen: integer("wall_open", { mode: "boolean" })
+			.notNull()
+			.default(false),
 		createdAt: timestamp("created_at").notNull().$defaultFn(now),
 		updatedAt: timestamp("updated_at").notNull().$defaultFn(now),
 	},
@@ -233,13 +242,19 @@ export const blockedTitles = sqliteTable("blocked_titles", {
 	createdAt: timestamp("created_at").notNull().$defaultFn(now),
 });
 
-// 地面の落書き。1 行 = 1 回ぶんの線（src/lib/graffiti.ts の形）。誰が描いたかは持たない。
+// 落書き。1 行 = 1 回ぶんの線（src/lib/graffiti.ts の形）か、上塗りの印。誰が描いたかは持たない。
 export const graffiti = sqliteTable(
 	"graffiti",
 	{
 		id: text("id").primaryKey().$defaultFn(shortId),
+		// どの壁か（wallKey）。空は共有の地面
+		wall: text("wall").notNull().default(""),
 		d: text("d").notNull(),
 		createdAt: timestamp("created_at").notNull().$defaultFn(now),
 	},
-	(t) => [index("graffiti_created_idx").on(t.createdAt)],
+	(t) => [
+		index("graffiti_wall_idx").on(t.wall, t.createdAt),
+		// 壁ごとの最後の上塗りを、線を読まずに引く
+		index("graffiti_paint_idx").on(t.wall).where(sql`d = 'x'`),
+	],
 );

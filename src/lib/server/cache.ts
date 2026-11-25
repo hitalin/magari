@@ -7,7 +7,8 @@
 // stale-while-revalidate は付けない: 直した直後に、古い内容が先に出てしまう。
 export const CACHE_PUBLIC = "public, max-age=0, s-maxage=300";
 
-// 落書き。描くたびに purge すると回数の上限に当たるので、時間で切れるだけにする。
+// 落書き。描くたびに purge すると回数の上限に当たるので、描いただけでは消さない（下の QUIET）。
+// 上塗りや、ほかの書き込みでは消える。
 // 描いた本人は、切れるまで別の URL で取り直す（Graffiti.svelte）。ほかの人には WebSocket で届いている
 export const CACHE_GRAFFITI = "public, max-age=0, s-maxage=60";
 
@@ -18,12 +19,11 @@ export const PURGE_TAG = "data";
 // （Workers Cache は cache-control の無い 200 を既定で 2 時間持つ）
 export function cacheHeaders(
 	cacheControl: string | null,
-	pathname: string,
 ): Record<string, string> {
 	if (!cacheControl?.includes("public"))
 		return { "cache-control": "private, no-store" };
-	// 中身の変わらない画像（/i/…、版つきのカード画像）と落書きは、書き込みでは消さない
-	if (cacheControl.includes("immutable") || pathname === "/api/graffiti")
+	// 中身の変わらない画像（/i/…、版つきのカード画像）は、書き込みでは消さない
+	if (cacheControl.includes("immutable"))
 		return { "cache-control": cacheControl };
 	return { "cache-control": cacheControl, "cache-tag": PURGE_TAG };
 }

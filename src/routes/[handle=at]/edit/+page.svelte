@@ -1,6 +1,7 @@
 <script lang="ts">
 import Field from "#lib/components/Field.svelte";
 import PlanField from "#lib/components/PlanField.svelte";
+import WallControl from "#lib/components/WallControl.svelte";
 import { SNS_ICON, SNS_NAME } from "#lib/sns.ts";
 import type { PageProps } from "./$types";
 
@@ -121,6 +122,11 @@ const KIND_WORD: Record<string, string> = {
 
 		<button type="submit" class="btn btn-primary">保存する</button>
 	</form>
+</section>
+
+<section class="mb-12">
+	<div class="section-head"><h2 class="section-title text-[1.25rem]">壁</h2></div>
+	<WallControl open={data.wallOpen} painted={form?.section === 'wall' && 'painted' in form} what="このページ" />
 </section>
 
 {#if data.kind !== 'person'}

@@ -118,6 +118,21 @@ const fmt = new Intl.DateTimeFormat("ja-JP", {
 </section>
 
 <section class="mt-12">
+	<div class="section-head"><h2 class="section-title">落書きの上塗り</h2></div>
+	<p class="mb-6 text-sm text-muted">壁をまるごと上塗りします。今ある落書きはすべて配られなくなり、戻せません。ページや会の壁は、持ち主も自分で上塗りできます。</p>
+	<form method="POST" action="?/paint" class="panel grid gap-4 p-5 sm:grid-cols-[1fr_auto] sm:items-end" onsubmit={(e) => { if (!confirm('この壁をまるごと上塗りしますか？戻せません。')) e.preventDefault(); }}>
+		{#if form?.paintError}<p class="text-sm text-accent-ink sm:col-span-2" role="alert">{form.paintError}</p>{/if}
+		{#if form?.paintDone}<p class="text-sm text-accent-ink sm:col-span-2" role="status">{form.paintDone}</p>{/if}
+		<Field label="壁のあるページか会"><input name="target" required class="input" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="@ID か会の URL" /></Field>
+		<button type="submit" class="btn">上塗りする</button>
+	</form>
+	<form method="POST" action="?/paint" class="mt-4" onsubmit={(e) => { if (!confirm('共有の地面をまるごと上塗りしますか？全ページの落書きが消え、戻せません。')) e.preventDefault(); }}>
+		<input type="hidden" name="ground" value="1" />
+		<button type="submit" class="btn text-accent-ink">共有の地面を上塗りする</button>
+	</form>
+</section>
+
+<section class="mt-12">
 	<div class="section-head"><h2 class="section-title">掲載拒否リスト</h2></div>
 	<p class="mb-6 text-sm text-muted">入れた ID のページは、だれも作れません（取り込みも飛ばします）。すでにあるページは消えません。</p>
 	<form method="POST" action="?/block" class="panel grid gap-4 p-5 sm:grid-cols-[1fr_2fr_auto] sm:items-end">

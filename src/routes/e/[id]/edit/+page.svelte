@@ -2,6 +2,7 @@
 import EventForm from "#lib/components/EventForm.svelte";
 import Flyer from "#lib/components/Flyer.svelte";
 import FlyerPicker from "#lib/components/FlyerPicker.svelte";
+import WallControl from "#lib/components/WallControl.svelte";
 import { flyerStyle } from "#lib/flyer.ts";
 import type { PageProps } from "./$types";
 
@@ -113,6 +114,11 @@ const flyer = $derived({
 			<input name="handle" required class="input" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="加える相手の @ID" aria-label="主催に加える相手の @ID" />
 			<button type="submit" class="btn shrink-0">加える</button>
 		</form>
+	</section>
+
+	<section class="mt-12 border-t border-line pt-6">
+		<h2 class="section-title mb-4 text-[1.25rem]">壁</h2>
+		<WallControl open={data.wallOpen} painted={form !== null && 'painted' in form} what="この間のページ" />
 	</section>
 
 	<div class="mt-12 flex flex-wrap gap-3 border-t border-line pt-6">

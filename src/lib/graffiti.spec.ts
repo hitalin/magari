@@ -5,12 +5,15 @@ import {
 	MAX_POINTS,
 	MAX_STROKES,
 	markerHalf,
+	OVERPAINT,
 	outline,
 	parseStrokes,
+	parseWallKey,
 	sprayDrips,
 	sprayHalf,
 	WALL_H,
 	WALL_W,
+	wallKey,
 } from "./graffiti.ts";
 
 describe("encodeStrokes / parseStrokes", () => {
@@ -110,6 +113,7 @@ describe("parseStrokes が受け付けないもの", () => {
 	it.each([
 		["空", ""],
 		["知らない道具", "x0 1,2"],
+		["上塗りの印（描く人からは送れない）", OVERPAINT],
 		["色が無い", "c 1,2"],
 		["無い太さ", "c03 1,2"],
 		["太さの後ろに余計な字", "c011 1,2"],
@@ -259,5 +263,28 @@ describe("sprayDrips", () => {
 		expect(short[0].y).toBe(0);
 		expect(short[0].length).toBeGreaterThan(0);
 		expect(long[0].length).toBeGreaterThan(short[0].length);
+	});
+});
+
+describe("壁の鍵", () => {
+	it("ページや会の壁の鍵は、往復で同じ持ち主に戻る", () => {
+		expect(wallKey("actor", "abc23def45")).toBe("a-abc23def45");
+		expect(parseWallKey("a-abc23def45")).toEqual({
+			type: "actor",
+			id: "abc23def45",
+		});
+		expect(parseWallKey(wallKey("event", "xyz98wvu76"))).toEqual({
+			type: "event",
+			id: "xyz98wvu76",
+		});
+	});
+	it.each([
+		["空（共有の地面は鍵を持たない）", ""],
+		["知らない種類", "s-abc23def45"],
+		["ID が無い", "a-"],
+		["ID に記号", "a-abc/../def"],
+		["長すぎる ID", `e-${"a".repeat(65)}`],
+	])("%s は壁の鍵にしない", (_name, key) => {
+		expect(parseWallKey(key)).toBeNull();
 	});
 });

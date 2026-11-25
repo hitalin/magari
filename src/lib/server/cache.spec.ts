@@ -9,31 +9,32 @@ import {
 describe("cacheHeaders", () => {
 	it("公開と書いていない応答は、キャッシュに載せない", () => {
 		// Workers Cache は cache-control の無い 200 を既定で 2 時間持ち、Cookie を見ずに配る
-		expect(cacheHeaders(null, "/me")).toEqual({
+		expect(cacheHeaders(null)).toEqual({
 			"cache-control": "private, no-store",
 		});
-		expect(cacheHeaders("no-store", "/e/abc/og.png")).toEqual({
+		expect(cacheHeaders("no-store")).toEqual({
 			"cache-control": "private, no-store",
 		});
-		expect(cacheHeaders("private, no-store", "/api/events/abc")).toEqual({
+		expect(cacheHeaders("private, no-store")).toEqual({
 			"cache-control": "private, no-store",
 		});
 	});
 	it("公開の応答はそのまま通し、書き込みで消せるよう札を付ける", () => {
-		expect(cacheHeaders(CACHE_PUBLIC, "/home")).toEqual({
+		expect(cacheHeaders(CACHE_PUBLIC)).toEqual({
 			"cache-control": CACHE_PUBLIC,
 			"cache-tag": "data",
 		});
 	});
 	it("中身の変わらない画像には札を付けない（書き込みのたびに消さない）", () => {
 		const cc = "public, max-age=31536000, immutable";
-		expect(cacheHeaders(cc, "/i/flyers/a/b.png")).toEqual({
+		expect(cacheHeaders(cc)).toEqual({
 			"cache-control": cc,
 		});
 	});
-	it("落書きは時間で切れるだけ（描くたびに purge しない）", () => {
-		expect(cacheHeaders(CACHE_GRAFFITI, "/api/graffiti")).toEqual({
+	it("落書きにも札を付ける（上塗りしたら、塗る前の線をすぐ配らなくする）", () => {
+		expect(cacheHeaders(CACHE_GRAFFITI)).toEqual({
 			"cache-control": CACHE_GRAFFITI,
+			"cache-tag": "data",
 		});
 	});
 });

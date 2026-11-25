@@ -14,5 +14,7 @@ export const load: PageLoad = async ({ fetch, params, setHeaders }) => {
 		...page,
 		calendar: { ...ym, grid: monthGrid(ym.year, ym.month) },
 		ogImage: page.actor.headerUrl,
+		// このページの落書きの壁（Graffiti が読む。無ければ共有の地面）
+		wall: page.actor.wall,
 	};
 };

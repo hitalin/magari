@@ -2,6 +2,7 @@ import { env } from "cloudflare:workers";
 import { error, fail } from "@sveltejs/kit";
 import { parseHandleInput } from "#lib/id.ts";
 import { parseModerationTarget } from "#lib/report-form.ts";
+import { overpaint, overpaintTarget } from "#lib/server/graffiti.ts";
 import { purgeHostModerations } from "#lib/server/host-moderations.ts";
 import {
 	blockHandle,
@@ -103,6 +104,21 @@ export const actions: Actions = {
 		if (removed === null)
 			return fail(400, { moderationsError: "そのページはありません" });
 		return { moderationsDone: `@${handle} のメモを ${removed} 件消しました。` };
+	},
+	// 落書きの壁をまるごと上塗りする。対象は @handle か会の URL / ID。ground の印があれば共有の地面
+	paint: async ({ request, locals }) => {
+		requireAdmin(locals);
+		const form = await request.formData();
+		if (form.get("ground") !== null) {
+			await overpaint(locals.db, "");
+			return { paintDone: "共有の地面を上塗りしました。" };
+		}
+		const target = parseModerationTarget(String(form.get("target") ?? ""));
+		if (!target)
+			return fail(400, { paintError: "@ID か会の URL を入れてください" });
+		if (!(await overpaintTarget(locals.db, target)))
+			return fail(400, { paintError: "その対象は見つかりません" });
+		return { paintDone: "その壁を上塗りしました。" };
 	},
 	block: async ({ request, locals }) => {
 		requireAdmin(locals);

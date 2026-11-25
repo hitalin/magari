@@ -393,6 +393,88 @@ check("メモは D1 に封じて置かれ、消せる", async () => {
 	assert.doesNotMatch(await page.text(), /@smoke_test/);
 });
 
+// 落書きを残す（ログイン不要）
+const draw = (body) =>
+	get("/api/graffiti", {
+		method: "POST",
+		headers: { origin: BASE, "content-type": "application/json" },
+		body: JSON.stringify(body),
+	});
+
+check("落書きは共有の地面に残り、上塗りで消せる札が付く", async () => {
+	assert.equal((await draw({ d: "c0 10,20 30,40" })).status, 201);
+	const res = await get("/api/graffiti");
+	assert.equal(res.headers.get("cache-tag"), "data");
+	assert.deepEqual(
+		(await res.json()).map((s) => s.d),
+		["c0 10,20 30,40"],
+	);
+	// 上塗りの印は、描く人からは送れない
+	assert.equal((await draw({ d: "x" })).status, 400);
+	assert.equal((await get("/api/graffiti?wall=../x")).status, 400);
+});
+
+check(
+	"壁は管理者が開けたページにだけでき、上塗りと閉じるができる",
+	async () => {
+		const page = async () => (await json("/api/actors/smoke_house")).actor;
+		const { id } = await page();
+		const wall = `a-${id}`;
+		const lines = async () =>
+			(await json(`/api/graffiti?wall=${wall}`)).map((s) => s.d);
+		// 開けていない壁には描けない。管理者でない人は開けられない
+		assert.equal((await page()).wall, null);
+		assert.equal((await draw({ d: "m1 1,1", wall })).status, 404);
+		assert.equal(
+			(await post("/@smoke_house/edit?/wall", { open: "1" }, { cookie: GUEST }))
+				.status,
+			404,
+		);
+		assert.equal(
+			(await post("/@smoke_house/edit?/wall", { open: "1" })).status,
+			200,
+		);
+		assert.equal((await page()).wall, wall);
+		assert.equal((await draw({ d: "m1 1,1", wall })).status, 201);
+		assert.deepEqual(await lines(), ["m1 1,1"]);
+		// 共有の地面とは混ざらない
+		assert(!(await json("/api/graffiti")).some((s) => s.d === "m1 1,1"));
+		// 上塗りすると、前の線は配られず、塗った印だけが残る。その上にはまた描ける
+		assert.equal((await post("/@smoke_house/edit?/paint", {})).status, 200);
+		assert.deepEqual(await lines(), ["x"]);
+		assert.equal((await draw({ d: "p2 5,5", wall })).status, 201);
+		assert.deepEqual(await lines(), ["x", "p2 5,5"]);
+		// 閉じると描けなくなり、開け直しても前の線は出ない
+		assert.equal((await post("/@smoke_house/edit?/wall", {})).status, 200);
+		assert.equal((await page()).wall, null);
+		assert.equal((await draw({ d: "m1 1,1", wall })).status, 404);
+		assert.deepEqual(await lines(), ["x"]);
+	},
+);
+
+check(
+	"会の壁は主催が開け、取り込んだ会や他人の会では開けられない",
+	async () => {
+		assert.equal(
+			(await post(`/e/${first}/edit?/wall`, { open: "1" }, { cookie: GUEST }))
+				.status,
+			404,
+		);
+		assert.equal(
+			(await post(`/e/${first}/edit?/wall`, { open: "1" })).status,
+			200,
+		);
+		const wall = `e-${first}`;
+		assert.equal((await json(`/api/events/${first}`)).wall, wall);
+		assert.equal((await draw({ d: "s3 9,9", wall })).status, 201);
+		assert.equal((await post(`/e/${first}/edit?/paint`, {})).status, 200);
+		assert.deepEqual(
+			(await json(`/api/graffiti?wall=${wall}`)).map((s) => s.d),
+			["x"],
+		);
+	},
+);
+
 check("自分のデータを JSON で書き出せる", async () => {
 	const res = await get("/me/export.json", { cookie: SESSION });
 	assert.equal(res.status, 200);

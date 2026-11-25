@@ -1,5 +1,5 @@
 <script lang="ts">
-import { onMount } from "svelte";
+import { onMount, untrack } from "svelte";
 import {
 	COLORS,
 	encodeStrokes,
@@ -7,6 +7,7 @@ import {
 	MAX_STROKES,
 	markerHalf,
 	ORIGIN_X,
+	OVERPAINT,
 	outline,
 	parseStrokes,
 	type Scribble,
@@ -19,8 +20,10 @@ import {
 	WALL_H,
 	WALL_W,
 } from "#lib/graffiti.ts";
+import { page } from "$app/state";
 
 // 地面（アスファルト）の落書き。どのページでも同じ 1 枚の地面で、ページの中身はその上に載っている。
+// 持ち主が壁を開けたページと会だけは、そこだけの壁になる（ページの load が返す wall が、その壁の鍵）。
 // 右下のチョークを持つと、画面のどこでも描ける。描いた線は少し置いてから勝手に残る（残すボタンは無い）。
 // 線は中身の後ろ（z-index: -1 の canvas）に描く。canvas は画面とその上下ぶんの大きさでページの中に置き、
 // スクロールで端が近づいたら置き直す（スクロールのたびに描き直すと、ブラウザの流れに 1 コマ遅れて絵が揺れる）。
@@ -49,6 +52,8 @@ const SAVE_AFTER_MS = 2500;
 // スプレーを止めたままにすると、この間隔で垂れが伸びる（MAX_DWELL 回まで）
 const DWELL_MS = 280;
 const MAX_DWELL = 6;
+// 上塗りの跡の、帯の幅（px）
+const ROLLER = 130;
 
 let canvas: HTMLCanvasElement;
 let ctx: CanvasRenderingContext2D | null = null;
@@ -59,6 +64,8 @@ let size = $state(1);
 let dpr = 1;
 // いま canvas を置いている所（ページの上端から）
 let base = 0;
+// いま出している壁の鍵（空なら共有の地面）
+let wall: string = page.data.wall ?? "";
 let scribbles = $state.raw<Scribble[]>([]);
 // まだ残していない線
 let pending = $state.raw<Stroke[]>([]);
@@ -274,6 +281,15 @@ function paint() {
 	ctx.setTransform(dpr, 0, 0, dpr, dpr * (w / 2 - ORIGIN_X), -dpr * base);
 	ctx.lineCap = "round";
 	ctx.lineJoin = "round";
+	// 上塗りの跡。ローラーの幅の帯を、帯ごとに少し濃さを変えて並べる（塗った壁は、塗る前と同じ色には戻らない）
+	if (painted) {
+		ctx.globalCompositeOperation = "source-over";
+		ctx.fillStyle = COLORS[0];
+		for (let i = 0; i * ROLLER < WALL_W; i++) {
+			ctx.globalAlpha = 0.04 + 0.02 * ((i * 7) % 4);
+			ctx.fillRect(i * ROLLER, base, ROLLER, h);
+		}
+	}
 	for (const [i, s] of visible.entries()) {
 		if (s.bottom < base - 20 || s.top > base + h + 20) continue;
 		// 新しい落書きが重なるほど、古いものは擦れて薄くなる
@@ -296,6 +312,9 @@ function scrolled() {
 	)
 		schedule();
 }
+
+// 上塗りされた壁か（塗った跡を描く）
+const painted = $derived(scribbles.some((s) => s.d === OVERPAINT));
 
 function schedule() {
 	if (!frame) frame = requestAnimationFrame(paint);
@@ -320,12 +339,15 @@ function drew(): number {
 }
 function load() {
 	const at = drew();
-	fetch(
-		Date.now() - at < STALE_MS ? `/api/graffiti?after=${at}` : "/api/graffiti",
-	)
+	const of = wall;
+	const query = new URLSearchParams();
+	if (of) query.set("wall", of);
+	if (Date.now() - at < STALE_MS) query.set("after", String(at));
+	fetch(query.size ? `/api/graffiti?${query}` : "/api/graffiti")
 		.then((res) => (res.ok ? res.json() : scribbles))
 		.then((rows) => {
-			scribbles = rows as Scribble[];
+			// 待っている間に別の壁のページへ移っていたら、捨てる
+			if (of === wall) scribbles = rows as Scribble[];
 		})
 		.catch(() => {});
 }
@@ -335,7 +357,7 @@ function connect() {
 	clearTimeout(retryTimer);
 	if (live || document.visibilityState === "hidden") return;
 	const ws = new WebSocket(
-		`${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/api/graffiti/live`,
+		`${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/api/graffiti/live${wall ? `?wall=${wall}` : ""}`,
 	);
 	live = ws;
 	let opened = false;
@@ -378,6 +400,23 @@ function send() {
 	sent = current.points.length;
 	live.send(`${strokeNo} ${d}`);
 }
+
+// ページを移って壁が変わったら、残していない線を前の壁に送ってから、新しい壁を取り直す
+$effect(() => {
+	const next: string = page.data.wall ?? "";
+	if (next === wall) return;
+	untrack(() => {
+		save(true);
+		wall = next;
+		pending = [];
+		scribbles = [];
+		remote.clear();
+		live?.close();
+		live = undefined;
+		load();
+		connect();
+	});
+});
 
 onMount(() => {
 	// ページの表示は待たせない。落書きは後から浮かぶ
@@ -507,15 +546,18 @@ async function save(leaving = false) {
 		points += s.points.length;
 	}
 	const d = encodeStrokes(pending.slice(0, count));
+	const to = wall;
 	saving = true;
 	const res = await fetch("/api/graffiti", {
 		method: "POST",
 		headers: { "content-type": "application/json" },
-		body: JSON.stringify({ d }),
+		body: JSON.stringify(to ? { d, wall: to } : { d }),
 		// ページを離れても送り切る
 		keepalive: leaving,
 	}).catch(() => null);
 	saving = false;
+	// 送っている間に別の壁のページへ移っていたら、いまの壁の線には触らない
+	if (to !== wall) return;
 	if (res?.ok) {
 		const { id } = (await res.json()) as { id: string };
 		scribbles = [...scribbles, { id, d }];
@@ -526,8 +568,8 @@ async function save(leaving = false) {
 		if (pending.length > 0 && !current) save();
 		return;
 	}
-	// 形が不正と言われた線は、送り直しても通らないので捨てる。ほかは少し待ってもう一度
-	if (res?.status === 400) {
+	// 形が不正と言われた線と、閉じた壁への線は、送り直しても通らないので捨てる。ほかは少し待ってもう一度
+	if (res?.status === 400 || res?.status === 404) {
 		pending = pending.slice(count);
 		return;
 	}

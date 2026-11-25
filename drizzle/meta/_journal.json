@@ -141,6 +141,13 @@
       "when": 1795477302134,
       "tag": "0019_host_moderations",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "6",
+      "when": 1795615088246,
+      "tag": "0020_walls",
+      "breakpoints": true
     }
   ]
 }

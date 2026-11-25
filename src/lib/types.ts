@@ -50,6 +50,8 @@ export type EventDetail = EventSummary & {
 	visibility: "public" | "unlisted";
 	// 運営が非表示にしている（主催にだけ見える）
 	hidden: boolean;
+	// 主催がこの会の落書きの壁を開けていれば、その鍵（無ければ共有の地面）
+	wall: string | null;
 	mentions: ShareMention[];
 	// 区画を指している会なら、ハコの見取り図（図の上でその区画を塗って見せる）
 	plan: Room[];
@@ -98,6 +100,8 @@ export type ActorProfile = ActorRef & {
 	access: string | null;
 	operator: string | null;
 	links: { label: string; url: string }[];
+	// 管理者がこのページの落書きの壁を開けていれば、その鍵（無ければ共有の地面）
+	wall: string | null;
 };
 
 export type ActorPage = {
