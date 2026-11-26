@@ -30,3 +30,7 @@ const weekEvents = $derived(inQuery(inArea(data.events), eventText));
 	<Empty title={emptyTitle(area.length ? `${area.join('・')}では、この7日はまだ誰もくねくねしていません。` : 'まだ誰もくねくねしていません。')} hint="エリアを変えるか、カレンダーで先を見てみてください。" />
 {/if}
 <DayList events={weekEvents} />
+<!-- 7 日ぶんで行き止まりにしない。その先はカレンダーで -->
+{#if weekEvents.length}
+	<p class="mt-2 text-sm text-muted">ここまでが 7 日ぶん。<a href="/calendar" class="more">この先はカレンダーで ›</a></p>
+{/if}

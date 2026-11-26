@@ -66,6 +66,16 @@ function imagesReady() {
 		new Promise((r) => setTimeout(r, 300)),
 	]);
 }
+// フォームはページごと送り直す（次のページが出るまで少し間が空く）。そのあいだ送るボタンを押せなくして、二度送りを防ぐ。
+// 確認で取りやめた送信（preventDefault）には付けない。戻るで前の画面が出直したときは外す
+const markBusy = (e: SubmitEvent) => {
+	if (!e.defaultPrevented)
+		(e.target as HTMLFormElement).setAttribute("data-busy", "");
+};
+const clearBusy = () => {
+	for (const f of document.querySelectorAll("form[data-busy]"))
+		f.removeAttribute("data-busy");
+};
 const nav = [
 	// icon は 24×24 の線画（svg の path）。イベントは切符、ハコは店先
 	{
@@ -104,7 +114,7 @@ const filterItems = $derived<{ area: string | null }[] | undefined>(
 );
 </script>
 
-<svelte:window onscroll={onScroll} ononline={checkOnline} onoffline={checkOnline} />
+<svelte:window onscroll={onScroll} ononline={checkOnline} onoffline={checkOnline} onsubmit={markBusy} onpageshow={clearBusy} />
 
 <svelte:head>
 	<link rel="icon" href={favicon} type="image/svg+xml" />
