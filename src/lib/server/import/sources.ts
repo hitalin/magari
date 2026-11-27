@@ -17,6 +17,22 @@ export type SourceActor = {
 	icon?: string;
 };
 
+// 公開の予定表が無い店の会を、店に頼まれて運営が手で書いたもの。写した会と同じ扱いで載る
+export type SourceEvent = {
+	// 取り込み元の中で変えない名前。会の ID はここと日付から決まる
+	uid: string;
+	title: string;
+	// JST の日付（YYYY-MM-DD）。from から to（その日を含む）まで、1 日ずつの終日の会にする
+	from: string;
+	to: string;
+	locationName?: string;
+	locationAddress?: string;
+	// 告知のページ。無ければ取り込み元の公式ページ
+	url?: string;
+	// フライヤー。static/ に置いた画像を、取り込みのときに R2 へ写す
+	flyer?: string;
+};
+
 export type Source = {
 	id: string;
 	actor: SourceActor;
@@ -27,6 +43,7 @@ export type Source = {
 	calendars: { id: string; url: string; region?: string }[];
 	// 店の営業時間（公式の店舗ページから）。時刻の無い 1 日の会をこの時間に置く
 	storeHours?: StoreHours;
+	events?: SourceEvent[];
 };
 
 const gcal = (cid: string) =>
@@ -234,5 +251,37 @@ export const SOURCES: Source[] = [
 		],
 		// 公式の表記は「19:00頃〜終電頃」
 		storeHours: { hours: ["19:00", "24:00"] },
+	},
+	// Oktoberklub。店主から「載せてください」と頼まれて先に立てたページ。公開の予定表は無いので
+	// 会は手で書き（events）、店の X で引き取ってもらう（claim.ts）。
+	{
+		id: "oktoberklub",
+		area: "大阪",
+		actor: {
+			handle: "oktoberklub",
+			kind: "space",
+			name: "Oktoberklub",
+			summary:
+				"本、酒、レコード、電子音楽。1930年代の工場と前衛文化をモチーフにした大阪・弁天町のBar",
+			url: "https://www.instagram.com/oktoberklub_bar/",
+			// 店の X のヘッダー画像とアイコン
+			photo: "/sources/oktoberklub.jpg",
+			xHandle: "oktoberklub_bar",
+			icon: "/sources/oktoberklub-icon.jpg",
+		},
+		role: "space",
+		calendars: [],
+		events: [
+			{
+				uid: "saikou-sonzai-2026",
+				title: "最高存在の祭典",
+				from: "2026-11-22",
+				to: "2026-11-24",
+				locationName: "Bar OktoberKlub",
+				locationAddress: "大阪市港区波除3-1-16 スイングプラザ弁天4階",
+				url: "https://x.com/Bardamu_1124/status/2121958687132774788",
+				flyer: "/sources/oktoberklub-saikou-sonzai.jpg",
+			},
+		],
 	},
 ];

@@ -189,7 +189,7 @@ UI/UX の型は「意識が低すぎる、しょぼい Luma」。Luma から借�
 - **引き取りは店の X でログインするだけ（`/claim/{handle}`）。** `sources.ts` に控えた店の X の ID（`claimX`）と、ログイン中の人がつないでいる X のいまの ID が同じなら、その場で管理者（owner）にする。ID は引き取りのたびに X へ問い合わせる（better-auth の `accountInfo`）。`user.xUsername` は本人が書き換えられるので使わない。ページの X の欄（`actors.xHandle`）も自己申告なので使わない。控えの無いページと、店の X を使えない人は、今までどおり運営への連絡から。
 - **取り込んだ会は、まがりの中で広げない。** 編集はできない（元のカレンダーが正）。この先、会への反応（参加表明など）や ActivityPub の配送を足すときも、取り込んだ会（`events.source` あり）は対象にしない。
 - **取り込みはオプトイン。** `IMPORT_ENABLED=1` の環境でだけ `POST /api/admin/import` と `scheduled` が動く（無ければ 404 / 何もしない）。開発は `.dev.vars`、本番は `wrangler.jsonc` の vars に置き、本番は Cron（`triggers.crons`）で毎時走る。掲載の合意はまだ取れていないので、申し出があればすぐ外す（掲載拒否リスト）。止めるときは vars の `IMPORT_ENABLED` を消す（Cron は繰り返しの間にも使うので残す）。
-- 取り込み元は `src/lib/server/import/sources.ts`。1 取り込み元 = 1 Actor（場または団体）+ 複数カレンダー。
+- 取り込み元は `src/lib/server/import/sources.ts`。1 取り込み元 = 1 Actor（場または団体）+ 複数カレンダー。頼まれて先にページだけ立てる店は、カレンダーを空にして載せ、店の X で引き取ってもらう。そういう店の会は `sources.ts` の `events` に手で書ける（日付の範囲とフライヤー。範囲の毎日に、終日の会を 1 つずつ作る。`run.ts` の `importManual`）。`source` が `{id}/manual` の写した会として入り、済んだ会も `sources.ts` にあるあいだは残る。会のページの注記は「告知をもとに、まがりが載せた情報」。
 - パーサは `ics.ts`（終日 / UTC / TZID=Asia/Tokyo、折り返し、エスケープ、RRULE、EXDATE、RECURRENCE-ID）。繰り返しの展開は `rrule`（JST の壁時計を UTC に見立てて展開し、最後に戻す）。
 - `normalize.ts`: 終日予定の題に「13-17」「17:30~」「11-16時」と時刻を書くカレンダーがあるので、それを読んで時刻付きにする。説明文が `<a href>` だけのカレンダーは、そこから告知ページを取り出す。
 - `run.ts`: 今日の 1 日前から 120 日先までを対象に、ID を「取り込み元 + UID + 回」のハッシュで固定して upsert し、元から消えた会は消す。D1 の bind 変数上限（100）のため 1 行ずつの文を batch で送る。

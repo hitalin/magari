@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { IcsEvent } from "./ics";
 import {
+	allDays,
 	excerpt,
 	expandOccurrences,
 	parseEdenTitle,
@@ -214,5 +215,19 @@ describe("titleBlocked", () => {
 	});
 	it("空の語は何にも当てない", () => {
 		expect(titleBlocked("たなかバー", ["", "  "])).toBe(false);
+	});
+});
+
+describe("allDays", () => {
+	it("JST の日付の初日から最終日までを、1 日ずつの終日の会にする", () => {
+		const r = allDays("2026-11-22", "2026-11-24");
+		expect(r.map((d) => d.date)).toEqual([
+			"2026-11-22",
+			"2026-11-23",
+			"2026-11-24",
+		]);
+		expect(r[0].start.toISOString()).toBe("2026-11-21T15:00:00.000Z");
+		expect(r[0].end.toISOString()).toBe("2026-11-22T15:00:00.000Z");
+		expect(r[2].end.toISOString()).toBe("2026-11-24T15:00:00.000Z");
 	});
 });

@@ -154,3 +154,24 @@ export function titleBlocked(title: string, phrases: string[]): boolean {
 		return f !== "" && t.includes(f);
 	});
 }
+
+// 手で書いた会（sources.ts の events）。JST の日付の from から to（その日を含む）まで、1 日ずつの終日の会にする
+export function allDays(
+	from: string,
+	to: string,
+): { date: string; start: Date; end: Date }[] {
+	const days = [];
+	for (
+		let t = Date.parse(`${from}T00:00:00Z`);
+		t <= Date.parse(`${to}T00:00:00Z`);
+		t += DAY_MS
+	) {
+		const start = new Date(t - JST_OFFSET_MS);
+		days.push({
+			date: new Date(t).toISOString().slice(0, 10),
+			start,
+			end: new Date(start.getTime() + DAY_MS),
+		});
+	}
+	return days;
+}

@@ -9,6 +9,7 @@ import { setHeaderKey } from "../spaces.ts";
 import { fetchFreecalend, freecalendMemNo } from "./freecalend";
 import { type IcsCalendar, parseIcs } from "./ics";
 import {
+	allDays,
 	excerpt,
 	expandOccurrences,
 	parseEdenTitle,
@@ -304,6 +305,76 @@ async function importCalendar(
 	};
 }
 
+// 手で書いた会（sources.ts の events）。予定表から写した会と同じ形で入れ、sources.ts から消したら消す。
+// 予定表と違って範囲で切らない（済んだ会も、sources.ts にあるあいだは残す）
+async function importManual(
+	db: Db,
+	src: Source,
+	actorId: string,
+): Promise<ImportResult> {
+	const sourceKey = `${src.id}/manual`;
+	const now = new Date();
+	const keep: string[] = [];
+	for (const ev of src.events ?? []) {
+		for (const { date, start, end } of allDays(ev.from, ev.to)) {
+			const id = await stableId(`${sourceKey}:${ev.uid}:${date}`);
+			keep.push(id);
+			const row = {
+				title: ev.title,
+				startsAt: start,
+				endsAt: end,
+				allDay: true,
+				spaceActorId: src.role === "space" ? actorId : null,
+				area: src.area ?? null,
+				locationName: ev.locationName ?? null,
+				locationAddress: ev.locationAddress ?? null,
+				url: ev.url ?? src.actor.url ?? null,
+				updatedAt: now,
+			};
+			const [saved] = await db
+				.insert(events)
+				.values({
+					id,
+					...row,
+					status: "published",
+					visibility: "public",
+					source: sourceKey,
+					sourceUid: ev.uid,
+				})
+				.onConflictDoUpdate({ target: events.id, set: row })
+				.returning({ coverKey: events.coverKey });
+			if (src.role === "host")
+				await db
+					.insert(eventHosts)
+					.values({ eventId: id, actorId, role: "host" })
+					.onConflictDoNothing();
+			if (ev.flyer) {
+				const key = await imageKey("flyers", id, ev.flyer);
+				if (saved.coverKey !== key) {
+					await copyImage(key, ev.flyer);
+					await db
+						.update(events)
+						.set({ coverKey: key })
+						.where(eq(events.id, id));
+				}
+			}
+		}
+	}
+	const existing = await db
+		.select({ id: events.id })
+		.from(events)
+		.where(eq(events.source, sourceKey));
+	const stale = existing.map((e) => e.id).filter((id) => !keep.includes(id));
+	if (stale.length) await db.delete(events).where(inArray(events.id, stale));
+	return {
+		source: src.id,
+		calendar: "manual",
+		fetched: keep.length,
+		upserted: keep.length,
+		deleted: stale.length,
+	};
+}
+
 export async function runImports(
 	db: Db,
 	opts: { pastDays?: number; futureDays?: number } = {},
@@ -334,6 +405,20 @@ export async function runImports(
 				results.push({
 					source: src.id,
 					calendar: cal.id,
+					fetched: 0,
+					upserted: 0,
+					deleted: 0,
+					error: String(e),
+				});
+			}
+		}
+		if (src.events) {
+			try {
+				results.push(await importManual(db, src, actorId));
+			} catch (e) {
+				results.push({
+					source: src.id,
+					calendar: "manual",
 					fetched: 0,
 					upserted: 0,
 					deleted: 0,
