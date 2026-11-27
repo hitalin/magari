@@ -21,6 +21,7 @@ let {
 	repeatable = true,
 	series = null,
 	rooms = [],
+	spaces = null,
 }: {
 	values: EventFormValues;
 	error?: string;
@@ -39,6 +40,9 @@ let {
 	series?: string | null;
 	// はじめに入っているハコの間取り（区画の候補）。ハコを書き換えたあとは、保存時に照らす
 	rooms?: Room[];
+	// 作るときだけ渡す、管理しているハコの handle。ここを「ハコ」に書くと、ほかの人の会として載せられる。
+	// 直すときは null（ほかの人の会かどうかは、作ったときのまま）
+	spaces?: string[] | null;
 } = $props();
 function pickLook(id: string): FlyerLook {
 	const { variant, color } = flyerStyle(id);
@@ -56,7 +60,24 @@ let v = $state({
 	allDay: values.allDay,
 	locationName: values.locationName,
 	space: values.space,
+	url: values.url,
 });
+// svelte-ignore state_referenced_locally -- 同上
+let others = $state(values.postedBySpace);
+// svelte-ignore state_referenced_locally -- 同上
+let visibility = $state(values.visibility);
+// ほかの人の会として載せるか。作るときは、管理しているハコを書いて印を付けたとき
+const canChoose = $derived(
+	!!spaces?.includes(v.space.replace(/^@/, "").toLowerCase()),
+);
+const posting = $derived(
+	spaces === null ? values.postedBySpace : canChoose && others,
+);
+// ほかの人の会は、最初はハコのページにだけ出す（当事者会などを、本人の知らない所へ広げない）
+function pickOthers(on: boolean) {
+	others = on;
+	visibility = on ? "space" : "public";
+}
 // 要るのは「ひとこと・日時・場所」だけ。残りは畳んでおき、何か書いてあるとき（編集・複製）だけ開く
 const more = $derived(
 	!!(
@@ -96,7 +117,9 @@ const stale = $derived(
 	!!values.room && !rooms.some((r) => r.name === values.room),
 );
 const roomUp = $derived(rooms.length > 0 || !!values.room);
-const place = $derived(v.locationName || (v.space ? `@${v.space}` : null));
+const place = $derived(
+	(!posting && v.locationName) || (v.space ? `@${v.space}` : null),
+);
 
 // 自分のフライヤーを選んだら、自動のビラの代わりにその画像を見せる
 let fileInput = $state<HTMLInputElement>();
@@ -132,6 +155,28 @@ function clearFile() {
 	{/if}
 {/snippet}
 
+{#snippet urlField()}
+	{#if posting}
+		<Field label="元の告知の URL" hint="主催の X のポストやサイトなど。載せられるのは、もう告知が出ている会だけです">
+			<input name="url" bind:value={v.url} required class="input" inputmode="url" autocapitalize="off" spellcheck="false" placeholder="https://" />
+		</Field>
+	{:else}
+		<Field label="告知ページの URL" hint="X のポスト、こくちーず、自分のサイトなど"><input name="url" bind:value={v.url} class="input" inputmode="url" autocapitalize="off" spellcheck="false" placeholder="https://" /></Field>
+	{/if}
+{/snippet}
+
+{#snippet visibilityField()}
+	<div class="grid gap-4 sm:grid-cols-2">
+		<Field label="誰に見せるか" hint={visibility === 'space' ? '一覧・カレンダー・壁には出さず、ハコのページと iCal にだけ載せる' : undefined}>
+			<select name="visibility" bind:value={visibility} class="input">
+				<option value="public">公開（一覧に出る）</option>
+				<option value="space">ハコのページだけ</option>
+				<option value="unlisted">URL を知っている人だけ</option>
+			</select>
+		</Field>
+	</div>
+{/snippet}
+
 {#snippet fields()}
 	{#if error}<p class="rounded-sm bg-accent-soft px-4 py-2 text-sm text-accent-ink" role="alert">{error}</p>{/if}
 
@@ -161,14 +206,27 @@ function clearFile() {
 	{/if}
 
 	<div class="grid gap-4 sm:grid-cols-2">
-		<Field label="場所" hint="店名、公園、誰かの家など。決まっていなければ空欄で"><input name="locationName" bind:value={v.locationName} class="input" /></Field>
+		{#if !posting}<Field label="場所" hint="店名、公園、誰かの家など。決まっていなければ空欄で"><input name="locationName" bind:value={v.locationName} class="input" /></Field>{/if}
 		<Field label="ハコ" hint="まがりに登録された場なら @ID。その場のページにも載る">
-			<div class="flex items-center gap-1"><span class="text-muted">@</span><input name="space" bind:value={v.space} class="input" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="curry_shop" /></div>
+			<!-- ほかの人の会は、載せたハコから移さない -->
+			<div class="flex items-center gap-1"><span class="text-muted">@</span><input name="space" bind:value={v.space} readonly={posting && spaces === null} class="input" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="curry_shop" /></div>
 		</Field>
 	</div>
+	{#if canChoose}
+		<div>
+			<label class="flex items-start gap-2 text-sm"><input type="checkbox" name="postedBySpace" checked={others} onchange={(e) => pickOthers(e.currentTarget.checked)} class="mt-1 accent-accent" /><span>ほかの人の会として載せる（主催は自分ではない）</span></label>
+			{#if others}<p class="mt-2 text-xs leading-relaxed text-dim">主催を空けて、@{v.space.replace(/^@/, '')} が載せた会として出します。載せるのは題・日時・区画と元の告知へのリンクだけで、説明やフライヤーの画像は載せません。最初は「ハコのページだけ」にしてあります。主催の方が自分で載せたら、こちらは消してください。</p>{/if}
+		</div>
+	{:else if posting}
+		<p class="text-xs leading-relaxed text-dim">ハコが載せた、ほかの人の会です。載せるのは題・日時・区画と元の告知へのリンクだけです。主催の方が自分で載せたら、こちらは消してください。</p>
+	{/if}
 	<!-- 区画は、ハコが間取りを分けているときだけ要る。候補が分かっていれば上に、無ければ「もっと書く」の中に置く -->
-	{#if roomUp}{@render roomField()}{/if}
+	{#if roomUp || posting}{@render roomField()}{/if}
 
+	{#if posting}
+		{@render urlField()}
+		{@render visibilityField()}
+	{:else}
 	<details open={more} class="border-t border-line pt-4">
 		<summary class="cursor-pointer text-sm text-muted hover:text-accent-ink">もっと書く（住所・説明・料金・公開範囲など）</summary>
 		<div class="mt-6 space-y-6">
@@ -185,18 +243,12 @@ function clearFile() {
 			<Field label="説明"><textarea name="description" rows="8" class="input">{values.description}</textarea></Field>
 
 			<Field label="料金"><input name="feeText" value={values.feeText} class="input" placeholder="無料 / 500円 / 投げ銭" /></Field>
-			<Field label="告知ページの URL" hint="X のポスト、こくちーず、自分のサイトなど"><input name="url" value={values.url} class="input" inputmode="url" autocapitalize="off" spellcheck="false" placeholder="https://" /></Field>
+			{@render urlField()}
 
-			<div class="grid gap-4 sm:grid-cols-2">
-				<Field label="誰に見せるか">
-					<select name="visibility" class="input">
-						<option value="public" selected={values.visibility === 'public'}>公開（一覧に出る）</option>
-						<option value="unlisted" selected={values.visibility === 'unlisted'}>URL を知っている人だけ</option>
-					</select>
-				</Field>
-			</div>
+			{@render visibilityField()}
 		</div>
 	</details>
+	{/if}
 
 	{#if series}
 		<div class="border-t border-line pt-4">
@@ -206,19 +258,19 @@ function clearFile() {
 	{/if}
 
 	<div class="flex flex-wrap gap-3 pt-2">
-		<button type="submit" name="status" value="published" class="btn btn-primary">{submitLabel}</button>
+		<button type="submit" name="status" value="published" class="btn btn-primary">{posting && spaces !== null ? '載せる' : submitLabel}</button>
 		<button type="submit" name="status" value="draft" class="btn">下書きで保存</button>
 	</div>
 	<p class="text-xs text-dim">載せる内容（題・説明・画像）は、自分に権利があるか、載せてよいものだけにしてください。<a href="/terms" class="underline underline-offset-2 hover:text-accent-ink">利用規約</a></p>
 {/snippet}
 
 {#if flyerId}
-	{@const flyer = { id: v.id, title: v.title || 'ひとこと', startsAt, endsAt, allDay: v.allDay, place, host }}
+	{@const flyer = { id: v.id, title: v.title || 'ひとこと', startsAt, endsAt, allDay: v.allDay, place, host: posting ? null : host }}
 	<!-- 会のページと同じ 2 列。左のビラは打つそばから刷り上がり、保存後もこの見た目のまま -->
 	<form method="POST" action="?/save" enctype="multipart/form-data" class="detail-cols">
 		<input type="hidden" name="id" value={v.id} />
 		<div class="detail-flyer">
-			{#if preview}
+			{#if preview && !posting}
 				<div class="flyer-pin mx-auto mb-8 w-full max-w-[20rem] md:max-w-none"><img src={preview} alt="選んだフライヤー" /></div>
 			{:else}
 				<!-- スマホでは大きいビラを出さず、型の見本だけにして、打つ欄を最初の画面に入れる -->
@@ -227,10 +279,11 @@ function clearFile() {
 				</div>
 			{/if}
 			<!-- 画像を選んでも型と差し色は送る（あとで自動のビラに戻したときに使う） -->
-			<div hidden={!!preview}><FlyerPicker bind:look={chosen} {...flyer} /></div>
-			<div class="mt-6">
+			<div hidden={!!preview && !posting}><FlyerPicker bind:look={chosen} {...flyer} /></div>
+			<!-- ほかの人の会は、主催の画像を載せないので自動のビラだけ。選んだ画像は送らずに持っておく -->
+			<div class="mt-6" hidden={posting}>
 				<div class="flex items-center gap-2">
-					<input type="file" name="flyer" accept="image/jpeg,image/png,image/webp" bind:this={fileInput} onchange={pickFile} class="input min-w-0 flex-1 text-sm" />
+					<input type="file" name="flyer" accept="image/jpeg,image/png,image/webp" bind:this={fileInput} onchange={pickFile} disabled={posting} class="input min-w-0 flex-1 text-sm" />
 					{#if preview}<button type="button" class="btn shrink-0 px-4 py-1.5 text-sm" onclick={clearFile}>やめる</button>{/if}
 				</div>
 			</div>

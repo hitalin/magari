@@ -23,7 +23,7 @@ import {
 } from "#lib/server/me.ts";
 import { imageSize } from "#lib/server/media.ts";
 import { startSeries } from "#lib/server/series.ts";
-import { resolveSpace } from "#lib/server/spaces.ts";
+import { listManagedActors, resolveSpace } from "#lib/server/spaces.ts";
 import type { Actions, PageServerLoad } from "./$types";
 
 export const load: PageServerLoad = async ({ locals, url }) => {
@@ -65,6 +65,10 @@ export const load: PageServerLoad = async ({ locals, url }) => {
 		id: shortId(),
 		host: actor.name,
 		rooms,
+		// 管理しているハコ。ここを「ハコ」に書いたときだけ、ほかの人の会として載せられる
+		spaces: (await listManagedActors(locals.db, session.user.id))
+			.filter((a) => a.kind === "space")
+			.map((a) => a.handle),
 	};
 };
 
@@ -91,8 +95,24 @@ export const actions: Actions = {
 		const flyerError = file && checkFlyer(file);
 		if (flyerError)
 			return fail(400, { error: `フライヤー: ${flyerError}`, ...again });
+		const others = parsed.event.postedBySpace;
+		// 主催の画像を、主催の許しなく載せない
+		if (others && file)
+			return fail(400, {
+				error: "ほかの人の会には、フライヤーの画像を付けられません",
+				...again,
+			});
 		const ev = await toEventValues(locals.db, parsed.event);
 		if ("error" in ev) return fail(400, { error: ev.error, ...again });
+		// ほかの人の会を載せられるのは、自分が管理しているハコにだけ
+		const actorIds = others
+			? await listManagedActorIds(locals.db, session.user.id, actor)
+			: [];
+		if (others && !(ev.spaceActorId && actorIds.includes(ev.spaceActorId)))
+			return fail(400, {
+				error: "ほかの人の会を載せられるのは、自分が管理しているハコだけです",
+				...again,
+			});
 		const wanted = (form.get("id") as string | null) ?? "";
 		const id = await createEvent(
 			locals.db,
@@ -136,7 +156,7 @@ export const actions: Actions = {
 			locals.db,
 			wanted,
 			session.user.id,
-			[],
+			actorIds,
 		);
 		if (saved && isSameSubmission(saved, parsed.event)) done(saved.id);
 		return fail(400, {

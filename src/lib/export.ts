@@ -57,6 +57,8 @@ export function toExport(input: {
 			allDay: e.allDay ?? false,
 			status: e.status,
 			visibility: e.visibility,
+			// ハコが載せた、ほかの人の会（主催を持たない）
+			postedBySpace: e.postedBySpace ?? false,
 			// 繰り返しの決まり（iCal の RRULE）。単発なら null
 			repeat: e.repeat ?? null,
 			// 繰り返しの終わり（この時刻より前の回まで）。決めていなければ null

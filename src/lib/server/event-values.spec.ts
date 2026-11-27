@@ -44,6 +44,7 @@ const full: ParsedEvent = {
 	feeText: "ワンドリンク",
 	url: "https://example.com/post/1",
 	visibility: "unlisted",
+	postedBySpace: false,
 	status: "draft",
 };
 
@@ -62,6 +63,21 @@ describe("編集の往復", () => {
 			...full,
 			startsAt: new Date("2026-11-08T22:00:00+09:00"),
 			endsAt: new Date("2026-11-09T02:00:00+09:00"),
+		};
+		expect(roundTrip(event)).toEqual(event);
+	});
+
+	it("ハコが載せたほかの人の会は、ハコのページだけのまま", () => {
+		const event: ParsedEvent = {
+			...full,
+			locationName: null,
+			locationAddress: null,
+			locationVisibility: "public",
+			onlineUrl: null,
+			description: null,
+			feeText: null,
+			visibility: "space",
+			postedBySpace: true,
 		};
 		expect(roundTrip(event)).toEqual(event);
 	});

@@ -25,6 +25,7 @@ export function toFormValues(e: {
 	feeText: string | null;
 	url: string | null;
 	visibility: EventFormValues["visibility"];
+	postedBySpace: boolean;
 	status: string;
 }): EventFormValues {
 	const s = jstParts(e.startsAt);
@@ -44,6 +45,7 @@ export function toFormValues(e: {
 		feeText: e.feeText ?? "",
 		url: e.url ?? "",
 		visibility: e.visibility,
+		postedBySpace: e.postedBySpace,
 		status: e.status === "draft" ? "draft" : "published",
 	};
 }

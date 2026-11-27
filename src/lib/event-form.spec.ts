@@ -103,11 +103,73 @@ describe("readEventForm", () => {
 		expect(v.visibility).toBe("public");
 		expect(v.status).toBe("draft");
 	});
-	it("公開範囲は公開か URL 限定だけ（「自分だけ」は下書きで足りる）", () => {
+	it("公開範囲は公開・URL 限定・ハコのページだけ（「自分だけ」は下書きで足りる）", () => {
 		const read = (visibility: string) =>
 			readEventForm((k) => (k === "visibility" ? visibility : null)).visibility;
 		expect(read("unlisted")).toBe("unlisted");
+		expect(read("space")).toBe("space");
 		expect(read("private")).toBe("public");
+	});
+	it("「ほかの人の会として載せる」は印があるときだけ", () => {
+		const read = (data: Record<string, string>) =>
+			readEventForm((k) => data[k] ?? null).postedBySpace;
+		expect(read({ postedBySpace: "on" })).toBe(true);
+		expect(read({})).toBe(false);
+	});
+});
+
+describe("ハコのページにだけ出す", () => {
+	it("ハコを書いたときだけ選べる", () => {
+		expect(parseEventForm({ ...base, visibility: "space" }).ok).toBe(false);
+		const r = parseEventForm({
+			...base,
+			space: "curry_shop",
+			visibility: "space",
+		});
+		expect(r.ok && r.event.visibility).toBe("space");
+	});
+});
+
+describe("ほかの人の会（ハコが載せる）", () => {
+	const others = {
+		...base,
+		space: "curry_shop",
+		url: "https://x.com/someone/status/1",
+		postedBySpace: true,
+	};
+	it("ハコと元の告知の URL が要る（もう公開されている会だけ載せる）", () => {
+		expect(parseEventForm({ ...others, space: "" }).ok).toBe(false);
+		expect(parseEventForm({ ...others, url: "" }).ok).toBe(false);
+		const r = parseEventForm(others);
+		expect(r.ok && r.event.postedBySpace).toBe(true);
+	});
+	it("題・日時・区画・元の告知へのリンクのほかは載せない", () => {
+		const r = parseEventForm({
+			...others,
+			room: "カウンター",
+			locationName: "店の 2 階",
+			locationAddress: "東京都…",
+			locationVisibility: "attendees",
+			onlineUrl: "https://zoom.us/j/1",
+			description: "説明",
+			feeText: "500円",
+		});
+		expect(r.ok && r.event).toMatchObject({
+			title: "テスト会",
+			spaceHandle: "curry_shop",
+			room: "カウンター",
+			url: "https://x.com/someone/status/1",
+			locationName: null,
+			locationAddress: null,
+			locationVisibility: "public",
+			onlineUrl: null,
+			description: null,
+			feeText: null,
+		});
+	});
+	it("本人の会は、ほかの人の会にならない", () => {
+		const r = parseEventForm(base);
+		expect(r.ok && r.event.postedBySpace).toBe(false);
 	});
 });
 

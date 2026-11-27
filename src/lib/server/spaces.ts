@@ -33,7 +33,8 @@ export async function listSpaces(
 		.where(
 			and(
 				eq(events.status, "published"),
-				eq(events.visibility, "public"),
+				// ハコのページにだけ出す会も、そのハコの数には入れる
+				inArray(events.visibility, ["public", "space"]),
 				gte(events.startsAt, new Date()),
 			),
 		)

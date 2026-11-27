@@ -57,6 +57,17 @@ describe("toExport", () => {
 		expect(doc.events[0].repeat).toBe("FREQ=WEEKLY");
 		expect(doc.events[0].hosts).toEqual(["taro"]);
 	});
+	it("ハコが載せたほかの人の会かどうかを出す（無ければ本人の会）", () => {
+		expect(doc.events[0].postedBySpace).toBe(false);
+		const others = toExport({
+			origin: "https://magari.cc",
+			exportedAt: at,
+			logins: [],
+			pages: [],
+			events: [{ id: "x", title: "借りる人の会", postedBySpace: true }],
+		});
+		expect(others.events[0].postedBySpace).toBe(true);
+	});
 	it("ログイン方法は種類と ID だけ", () => {
 		expect(doc.logins).toEqual([
 			{ provider: "miauth", id: "taro@example.com" },

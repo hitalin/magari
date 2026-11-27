@@ -329,6 +329,66 @@ check(
 	},
 );
 
+const lent = {
+	title: "借りる人の会",
+	date: day(3),
+	startTime: "19:00",
+	status: "published",
+	space: "smoke_house",
+	postedBySpace: "on",
+	visibility: "space",
+	url: "https://example.com/post/1",
+};
+let lentId;
+check(
+	"ハコの管理者は、自分のハコにほかの人の会を、元の告知があれば載せられる",
+	async () => {
+		const { url, ...noUrl } = lent;
+		assert.equal((await post("/new?/save", noUrl)).status, 400);
+		// 管理していないハコには載せられない
+		const guest = await post("/new?/save", lent, { cookie: GUEST });
+		assert.equal(guest.status, 400);
+		const res = await post("/new?/save", { ...lent, description: "説明" });
+		assert.equal(res.status, 303);
+		lentId = /^\/e\/([a-z0-9]+)/.exec(res.headers.get("location"))?.[1];
+		const event = await json(`/api/events/${lentId}`);
+		assert.deepEqual(event.hosts, []);
+		assert.equal(event.postedBySpace, true);
+		assert.equal(event.description, null);
+		assert.equal(event.space.handle, "smoke_house");
+		const html = await (await get(`/e/${lentId}`)).text();
+		assert.match(html, /noindex/);
+		assert.match(html, /煙の家が載せた情報です/);
+	},
+);
+
+check("ハコのページにだけ出す会は、一覧に出ずハコのページに出る", async () => {
+	const listed = await json("/api/events");
+	assert(!listed.some((e) => e.id === lentId));
+	const { events } = await json("/api/actors/smoke_house");
+	assert(events.some((e) => e.id === lentId));
+	// 載せた人のページにも出さない
+	const mine = await json("/api/actors/smoke_test");
+	assert(!mine.events.some((e) => e.id === lentId));
+});
+
+check("ほかの人の会は、ハコの管理者だけが直し、主催は足せない", async () => {
+	const edit = `/e/${lentId}/edit`;
+	assert.equal((await get(edit, { cookie: GUEST })).status, 404);
+	assert.equal(
+		(await post(`${edit}?/addHost`, { handle: "smoke_guest" })).status,
+		400,
+	);
+	// 別のハコへは移せない
+	const moved = await post(`${edit}?/save`, { ...lent, space: "" });
+	assert.equal(moved.status, 400);
+	// 一覧に広げるのは、載せるハコが選ぶ
+	const saved = await post(`${edit}?/save`, { ...lent, visibility: "public" });
+	assert.equal(saved.status, 303);
+	const listed = await json("/api/events");
+	assert(listed.some((e) => e.id === lentId && e.hosts.length === 0));
+});
+
 const ng = { kind: "ng", a: "@smoke_house", b: "@smoke_test" };
 check("主催どうしの関係のメモは、ページの管理者にだけ見える", async () => {
 	const added = await post("/@smoke_house/moderation?/add", ng);
@@ -481,8 +541,9 @@ check("自分のデータを JSON で書き出せる", async () => {
 	assert.equal(cacheControl(res), "private, no-store");
 	const doc = await res.json();
 	assert.equal(doc.pages[0].handle, "smoke_test");
-	// 煙の会の 4 回と、屋上の会
-	assert.equal(doc.events.length, 5);
+	// 煙の会の 4 回と、屋上の会と、ハコに載せた借りる人の会
+	assert.equal(doc.events.length, 6);
+	assert.equal(doc.events.filter((e) => e.postedBySpace).length, 1);
 	assert(doc.events.some((e) => e.room === "屋上"));
 	assert.equal(doc.events.filter((e) => e.repeat === "FREQ=WEEKLY").length, 2);
 });

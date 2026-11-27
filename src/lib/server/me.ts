@@ -208,9 +208,21 @@ export async function listMyEvents(
 		.where(
 			and(
 				isNull(events.source),
-				hosted
-					? or(eq(events.createdByUserId, userId), inArray(events.id, hosted))
-					: eq(events.createdByUserId, userId),
+				// 直せる会だけ（canEditEvent と同じ）
+				or(
+					and(
+						eq(events.createdByUserId, userId),
+						eq(events.postedBySpace, false),
+					),
+					hosted ? inArray(events.id, hosted) : undefined,
+					// 管理しているハコが載せた、ほかの人の会
+					actorIds.length
+						? and(
+								eq(events.postedBySpace, true),
+								inArray(events.spaceActorId, actorIds),
+							)
+						: undefined,
+				),
 			),
 		)
 		.orderBy(desc(events.startsAt))
@@ -241,9 +253,7 @@ export async function getEditableEvent(
 		.from(eventHosts)
 		.where(eq(eventHosts.eventId, id));
 	const hostIds = hosts.map((h) => h.actorId);
-	const mine =
-		row.createdByUserId === userId || hostIds.some((h) => actorIds.includes(h));
-	if (!mine) return null;
+	if (!canEditEvent(row, hostIds, userId, actorIds)) return null;
 	const [space] = row.spaceActorId
 		? await db
 				.select({ handle: actors.handle, name: actors.name })
@@ -257,6 +267,25 @@ export async function getEditableEvent(
 		spaceHandle: space?.handle ?? null,
 		spaceName: space?.name ?? null,
 	};
+}
+
+// 会を直せるか。本人の会は作った人と主催（管理しているハコ・団体を含む）。
+// ハコが載せたほかの人の会は主催を持たないので、そのハコの管理者
+export function canEditEvent(
+	row: {
+		createdByUserId: string | null;
+		postedBySpace: boolean;
+		spaceActorId: string | null;
+	},
+	hostIds: string[],
+	userId: string,
+	actorIds: string[],
+): boolean {
+	if (row.postedBySpace)
+		return !!row.spaceActorId && actorIds.includes(row.spaceActorId);
+	return (
+		row.createdByUserId === userId || hostIds.some((h) => actorIds.includes(h))
+	);
 }
 
 // ParsedEvent の spaceHandle を actors.id に解決する。見つからなければ error
@@ -301,9 +330,11 @@ export async function createEvent(
 		.onConflictDoNothing()
 		.returning({ id: events.id });
 	if (!row) return null;
-	await db
-		.insert(eventHosts)
-		.values({ eventId: row.id, actorId: hostActorId, role: "host" });
+	// ハコが載せたほかの人の会は、主催を持たない
+	if (!input.postedBySpace)
+		await db
+			.insert(eventHosts)
+			.values({ eventId: row.id, actorId: hostActorId, role: "host" });
 	return row.id;
 }
 

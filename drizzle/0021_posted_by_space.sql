@@ -1,0 +1,1 @@
+ALTER TABLE `events` ADD `posted_by_space` integer DEFAULT false NOT NULL;

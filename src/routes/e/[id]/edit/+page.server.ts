@@ -95,6 +95,8 @@ export const load: PageServerLoad = async ({ locals, params }) => {
 		// ハコの間取り（区画の候補）
 		rooms: "error" in space ? [] : space.rooms,
 		status: ev.status,
+		// ハコが載せたほかの人の会。フライヤーの画像・主催・壁は持たない
+		postedBySpace: ev.postedBySpace,
 		wallOpen: ev.wallOpen,
 		// 繰り返しの中の回なら、その決まりの言い方（「毎週火曜」）
 		series: series ? ruleLabel(series.rrule, ev.startsAt) : null,
@@ -120,6 +122,11 @@ export const actions: Actions = {
 	// フライヤーを上げる。自動のビラと入れ替わり、X で共有したときの画像にもなる
 	flyer: async ({ request, locals, params, url }) => {
 		const ev = await editable(locals, params.id);
+		// 主催の画像を、主催の許しなく載せない
+		if (ev.postedBySpace)
+			return fail(400, {
+				flyerError: "ほかの人の会には、フライヤーの画像を付けられません",
+			});
 		const form = await request.formData();
 		const file = form.get("flyer");
 		if (!(file instanceof File) || file.size === 0)
@@ -177,7 +184,10 @@ export const actions: Actions = {
 	},
 	// 一緒に開く人・ハコ・団体を主催に加える
 	addHost: async ({ request, locals, params }) => {
-		await editable(locals, params.id);
+		const ev = await editable(locals, params.id);
+		// 承諾なしで本人の会に見せてしまうので、ほかの人の会には主催を足さない
+		if (ev.postedBySpace)
+			return fail(400, { hostError: "ほかの人の会には、主催を加えられません" });
 		const form = await request.formData();
 		const handle = parseHandleInput(String(form.get("handle") ?? ""));
 		if (!handle)
@@ -199,7 +209,11 @@ export const actions: Actions = {
 	save: async ({ request, locals, params, url }) => {
 		const current = await editable(locals, params.id);
 		const form = await request.formData();
-		const values = readEventForm((k) => (form.get(k) as string | null) ?? null);
+		// ほかの人の会かどうかは、作ったときに決まる
+		const values = {
+			...readEventForm((k) => (form.get(k) as string | null) ?? null),
+			postedBySpace: current.postedBySpace,
+		};
 		// 単発の間を、繰り返しの最初の回にする（もう繰り返しの中の回と、中止した間には欄を出していない）
 		const repeat =
 			current.seriesId || current.status === "cancelled"
@@ -209,6 +223,15 @@ export const actions: Actions = {
 		const again = { values, repeat, repeatUntil };
 		const parsed = parseEventForm(values);
 		if (!parsed.ok) return fail(400, { error: parsed.error, ...again });
+		// ほかの人の会は、載せたハコのもの。別のハコへは移せない
+		if (
+			current.postedBySpace &&
+			parsed.event.spaceHandle !== current.spaceHandle
+		)
+			return fail(400, {
+				error: "ほかの人の会は、載せたハコから移せません",
+				...again,
+			});
 		const until = parseUntil(repeat ? repeatUntil : "", parsed.event.startsAt);
 		if (!until.ok) return fail(400, { error: until.error, ...again });
 		const ev = await toEventValues(locals.db, parsed.event, current);
@@ -249,6 +272,8 @@ export const actions: Actions = {
 	// この会だけの落書きの壁を開ける・閉じる（繰り返しの中の回でも、この回だけ）
 	wall: async ({ request, locals, params }) => {
 		const ev = await editable(locals, params.id);
+		// 落書きの壁は主催が開けるもの。主催のいない、ほかの人の会には開けない
+		if (ev.postedBySpace) error(400, "ほかの人の会には、壁を開けられません");
 		const form = await request.formData();
 		await setWallOpen(
 			locals.db,

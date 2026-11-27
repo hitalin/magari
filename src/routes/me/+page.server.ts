@@ -32,6 +32,7 @@ export const load: PageServerLoad = async ({ locals, request, url }) => {
 		allDay: e.allDay,
 		status: e.status,
 		visibility: e.visibility,
+		postedBySpace: e.postedBySpace,
 	});
 	return {
 		actor,

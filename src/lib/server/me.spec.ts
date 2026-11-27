@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { largeAvatarUrl, soleHostedEventIds } from "./me";
+import { canEditEvent, largeAvatarUrl, soleHostedEventIds } from "./me";
 
 describe("largeAvatarUrl", () => {
 	it("X の _normal を 400x400 にする", () => {
@@ -31,5 +31,24 @@ describe("soleHostedEventIds", () => {
 			{ eventId: "theirs", actorId: "other" },
 		];
 		expect(soleHostedEventIds(rows, "me")).toEqual(["mine"]);
+	});
+});
+
+describe("canEditEvent", () => {
+	const own = {
+		createdByUserId: "u1",
+		postedBySpace: false,
+		spaceActorId: "shop",
+	};
+	it("本人の会は、作った人と主催（管理しているページを含む）が編集できる", () => {
+		expect(canEditEvent(own, ["me"], "u1", [])).toBe(true);
+		expect(canEditEvent(own, ["me"], "u2", ["me"])).toBe(true);
+		expect(canEditEvent(own, ["me"], "u2", ["shop"])).toBe(false);
+	});
+	it("ハコが載せたほかの人の会は、そのハコの管理者が編集できる", () => {
+		const others = { ...own, postedBySpace: true };
+		expect(canEditEvent(others, [], "u2", ["shop"])).toBe(true);
+		// 作った人でも、ハコの管理者から外れたらもう直せない
+		expect(canEditEvent(others, [], "u1", ["me"])).toBe(false);
 	});
 });

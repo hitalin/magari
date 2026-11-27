@@ -47,7 +47,9 @@ export type EventDetail = EventSummary & {
 	locationVisibility: "public" | "attendees";
 	feeText: string | null;
 	status: "draft" | "published" | "cancelled";
-	visibility: "public" | "unlisted";
+	visibility: "public" | "unlisted" | "space";
+	// ハコの管理者が、主催本人でなく載せたほかの人の会（主催を持たない）
+	postedBySpace: boolean;
 	// 運営が非表示にしている（主催にだけ見える）
 	hidden: boolean;
 	// 主催がこの会の落書きの壁を開けていれば、その鍵（無ければ共有の地面）

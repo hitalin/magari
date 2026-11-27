@@ -16,7 +16,10 @@ export type EventFormValues = {
 	description: string;
 	feeText: string;
 	url: string;
-	visibility: "public" | "unlisted";
+	// space: ハコのページにだけ出す（一覧・カレンダー・壁には出さない）
+	visibility: "public" | "unlisted" | "space";
+	// ハコの管理者が、主催本人でなく、ほかの人の会として載せる
+	postedBySpace: boolean;
 	status: "published" | "draft";
 };
 
@@ -36,6 +39,7 @@ export const EMPTY_EVENT_FORM: EventFormValues = {
 	feeText: "",
 	url: "",
 	visibility: "public",
+	postedBySpace: false,
 	status: "published",
 };
 
@@ -56,6 +60,7 @@ export type ParsedEvent = {
 	feeText: string | null;
 	url: string | null;
 	visibility: EventFormValues["visibility"];
+	postedBySpace: boolean;
 	status: EventFormValues["status"];
 };
 
@@ -95,7 +100,8 @@ export function readEventForm(
 		description: s("description"),
 		feeText: s("feeText"),
 		url: s("url"),
-		visibility: pick("visibility", ["public", "unlisted"], "public"),
+		visibility: pick("visibility", ["public", "unlisted", "space"], "public"),
+		postedBySpace: get("postedBySpace") !== null,
 		status: pick("status", ["published", "draft"], "published"),
 	};
 }
@@ -145,6 +151,23 @@ export function parseEventForm(
 		return { ok: false, error: "区画は、ハコを書いたときだけ選べます" };
 	if (v.description.length > 10000)
 		return { ok: false, error: "説明が長すぎます" };
+	if (v.visibility === "space" && !spaceHandle)
+		return {
+			ok: false,
+			error: "ハコのページにだけ出すときは、ハコを書いてください",
+		};
+	// ほかの人の会は、もう公開されている告知があるものだけ。載せるのは題・日時・場所（ハコと区画）・元の告知へのリンクだけ
+	const others = v.postedBySpace;
+	if (others && !spaceHandle)
+		return {
+			ok: false,
+			error: "ほかの人の会は、自分が管理しているハコを書いて載せてください",
+		};
+	if (others && !v.url)
+		return {
+			ok: false,
+			error: "ほかの人の会は、元の告知の URL を入れてください",
+		};
 
 	return {
 		ok: true,
@@ -155,14 +178,15 @@ export function parseEventForm(
 			allDay: v.allDay,
 			spaceHandle,
 			room: nullable(v.room),
-			locationName: nullable(v.locationName),
-			locationAddress: nullable(v.locationAddress),
-			locationVisibility: v.locationVisibility,
-			onlineUrl: nullable(v.onlineUrl),
-			description: nullable(v.description),
-			feeText: nullable(v.feeText),
+			locationName: others ? null : nullable(v.locationName),
+			locationAddress: others ? null : nullable(v.locationAddress),
+			locationVisibility: others ? "public" : v.locationVisibility,
+			onlineUrl: others ? null : nullable(v.onlineUrl),
+			description: others ? null : nullable(v.description),
+			feeText: others ? null : nullable(v.feeText),
 			url: nullable(v.url),
 			visibility: v.visibility,
+			postedBySpace: others,
 			status: v.status,
 		},
 	};

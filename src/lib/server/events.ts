@@ -39,6 +39,7 @@ import {
 	events,
 	user,
 } from "./db/schema.ts";
+import { canEditEvent } from "./me.ts";
 
 function selectEvents(db: Db) {
 	return db
@@ -54,6 +55,8 @@ function selectEvents(db: Db) {
 			source: events.source,
 			status: events.status,
 			visibility: events.visibility,
+			postedBySpace: events.postedBySpace,
+			spaceActorId: events.spaceActorId,
 			room: events.room,
 			locationName: events.locationName,
 			locationAddress: events.locationAddress,
@@ -93,6 +96,15 @@ const notHidden = (db: Db) =>
 				.where(isNotNull(actors.hiddenAt)),
 		),
 	);
+
+// 一覧に出す会。「ハコのページにだけ」の会は、そのハコのページ（actorId がそのハコ）でだけ出す
+const listed = (actorId?: string) =>
+	actorId
+		? or(
+				eq(events.visibility, "public"),
+				and(eq(events.visibility, "space"), eq(events.spaceActorId, actorId)),
+			)
+		: eq(events.visibility, "public");
 
 async function hostsByEvent(
 	db: Db,
@@ -189,6 +201,7 @@ function toDetail(
 		source: row.source,
 		status: row.status,
 		visibility: row.visibility,
+		postedBySpace: row.postedBySpace,
 		hidden: row.hiddenAt !== null,
 		wall: row.wallOpen ? wallKey("event", row.id) : null,
 		room: row.room,
@@ -352,7 +365,7 @@ export async function listPastEvents(
 		.where(
 			and(
 				eq(events.status, "published"),
-				eq(events.visibility, "public"),
+				listed(opts.actorId),
 				lt(events.startsAt, opts.before),
 				notHidden(db),
 				ofActor(db, opts.actorId),
@@ -379,7 +392,7 @@ export async function listUpcomingEvents(
 	const from = opts.from ?? new Date();
 	const upcoming = and(
 		eq(events.status, "published"),
-		eq(events.visibility, "public"),
+		listed(opts.actorId),
 		gte(events.startsAt, from),
 		opts.to ? lt(events.startsAt, opts.to) : undefined,
 		notHidden(db),
@@ -431,10 +444,8 @@ export async function getEventForUser(
 		.select({ actorId: eventHosts.actorId })
 		.from(eventHosts)
 		.where(eq(eventHosts.eventId, id));
-	const mine =
-		row.createdByUserId === userId ||
-		hostRows.some((h) => actorIds.includes(h.actorId));
-	if (!mine) return null;
+	const hostIds = hostRows.map((h) => h.actorId);
+	if (!canEditEvent(row, hostIds, userId, actorIds)) return null;
 	const hosts = await hostsByEvent(db, [row.id]);
 	return toDetail(
 		row,
@@ -507,7 +518,7 @@ export async function getActorByHandle(
 }
 
 // 検索に出してよいページ（sitemap.xml 用）。ページ側で noindex にしているものは載せない:
-// 写した会（source あり）と、管理者のいないページ
+// 写した会（source あり）、ハコが載せたほかの人の会と、管理者のいないページ
 export async function listIndexable(db: Db): Promise<{
 	events: { id: string; updatedAt: Date }[];
 	actors: { handle: string; updatedAt: Date }[];
@@ -522,6 +533,7 @@ export async function listIndexable(db: Db): Promise<{
 					eq(events.status, "published"),
 					eq(events.visibility, "public"),
 					isNull(events.source),
+					eq(events.postedBySpace, false),
 					notHidden(db),
 				),
 			)

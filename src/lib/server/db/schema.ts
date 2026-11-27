@@ -117,7 +117,8 @@ export const events = sqliteTable(
 			.notNull()
 			.default("draft"),
 		// public: 一覧に出る / unlisted: URL を知る人だけ
-		visibility: text("visibility", { enum: ["public", "unlisted"] })
+		// space: そのハコのページ（と iCal）にだけ出し、一覧・カレンダー・壁には出さない
+		visibility: text("visibility", { enum: ["public", "unlisted", "space"] })
 			.notNull()
 			.default("public"),
 		spaceActorId: text("space_actor_id").references(() => actors.id, {
@@ -149,6 +150,10 @@ export const events = sqliteTable(
 		createdByUserId: text("created_by_user_id").references(() => user.id, {
 			onDelete: "set null",
 		}),
+		// ハコの管理者が、主催本人でなく載せたほかの人の会。主催（event_hosts）を持たず、そのハコの管理者が直す
+		postedBySpace: integer("posted_by_space", { mode: "boolean" })
+			.notNull()
+			.default(false),
 		// 外部カレンダーから取り込んだ会。source は取り込み元の識別子、sourceUid は元の UID
 		source: text("source"),
 		sourceUid: text("source_uid"),

@@ -18,6 +18,8 @@ const flyer = $derived({
 	place: data.flyer.place,
 	host: data.hosts[0]?.name ?? null,
 });
+// ハコが載せたほかの人の会は、フライヤーの画像・主催・壁を持たない
+const others = $derived(data.postedBySpace);
 </script>
 
 <svelte:head><title>間を編集 | ◱</title></svelte:head>
@@ -48,6 +50,7 @@ const flyer = $derived({
 					<p class="mt-4 text-center"><button type="submit" class="btn px-4 py-1.5 text-sm">このビラにする</button></p>
 				</form>
 			{/if}
+			{#if !others}
 			<div class="mt-6">
 				<form method="POST" action="?/flyer" enctype="multipart/form-data">
 					<div class="flex items-center gap-2">
@@ -63,6 +66,7 @@ const flyer = $derived({
 					</form>
 				{/if}
 			</div>
+			{/if}
 		</div>
 		<div class="min-w-0">
 			<!-- 題は下の欄に出ているので繰り返さない。保存せずに戻る道だけ右に置く -->
@@ -88,6 +92,7 @@ const flyer = $derived({
 		</section>
 	{/if}
 
+	{#if !others}
 	<section class="mt-12 border-t border-line pt-6">
 		<h2 class="section-title text-[1.25rem]">主催</h2>
 		<p class="mt-4 mb-4 text-sm text-muted">主催は間のページに並んで出て、全員がこの間を編集できます。ハコや団体を加えると、その管理者も編集できます。</p>
@@ -120,6 +125,7 @@ const flyer = $derived({
 		<h2 class="section-title mb-4 text-[1.25rem]">壁</h2>
 		<WallControl open={data.wallOpen} painted={form !== null && 'painted' in form} what="この間のページ" />
 	</section>
+	{/if}
 
 	<div class="mt-12 flex flex-wrap gap-3 border-t border-line pt-6">
 		{#if data.status === 'cancelled'}
