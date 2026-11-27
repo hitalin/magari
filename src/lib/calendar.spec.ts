@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { gridRange, monthGrid, parseMonth, shiftMonth } from "./calendar";
+import {
+	gridRange,
+	monthGrid,
+	parseMonth,
+	previewPosition,
+	shiftMonth,
+} from "./calendar";
 
 describe("monthGrid", () => {
 	it("日曜始まりで、前後の月の日も埋めて週ごとに返す", () => {
@@ -46,5 +52,38 @@ describe("gridRange", () => {
 		const { from, to } = gridRange(2026, 12);
 		expect(from.toISOString()).toBe("2026-11-28T15:00:00.000Z");
 		expect(to.toISOString()).toBe("2027-01-02T15:00:00.000Z");
+	});
+});
+
+describe("previewPosition", () => {
+	const view = { width: 1280, height: 800 };
+	const size = { width: 240, height: 360 };
+	const at = (left: number, top: number) => ({
+		left,
+		right: left + 120,
+		top,
+	});
+	it("右に入れば、項目の右に、上端を揃えて出す", () => {
+		expect(previewPosition(at(300, 200), size, view)).toEqual({
+			left: 428,
+			top: 200,
+		});
+	});
+	it("右に入らなければ、項目の左に出す", () => {
+		expect(previewPosition(at(1000, 200), size, view)).toEqual({
+			left: 752,
+			top: 200,
+		});
+	});
+	it("下にはみ出すなら、画面に収まるまで上へずらす", () => {
+		expect(previewPosition(at(300, 700), size, view).top).toBe(432);
+	});
+	it("画面より高ければ、画面の上端に付ける", () => {
+		const tall = { width: 240, height: 900 };
+		expect(previewPosition(at(300, 200), tall, view).top).toBe(8);
+	});
+	it("左右どちらにも入らなければ、画面の中に収める", () => {
+		const narrow = { width: 400, height: 800 };
+		expect(previewPosition(at(100, 200), size, narrow).left).toBe(152);
 	});
 });

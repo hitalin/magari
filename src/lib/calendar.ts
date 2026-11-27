@@ -66,3 +66,26 @@ export function gridRange(
 	const to = new Date(jstMidnight(lastKey).getTime() + 86_400_000);
 	return { from: jstMidnight(grid[0][0]), to };
 }
+
+// カレンダーの項目に重ねるプレビューの位置（画面の座標）。右に入れば右、入らなければ左に出す。
+// 上端は項目に揃え、画面からはみ出す分だけずらす
+export function previewPosition(
+	anchor: { left: number; right: number; top: number },
+	size: { width: number; height: number },
+	view: { width: number; height: number },
+	gap = 8,
+): { left: number; top: number } {
+	const right = anchor.right + gap;
+	const left = anchor.left - gap - size.width;
+	const x =
+		right + size.width <= view.width - gap
+			? right
+			: left >= gap
+				? left
+				: Math.max(gap, Math.min(right, view.width - size.width - gap));
+	const y = Math.max(
+		gap,
+		Math.min(anchor.top, view.height - size.height - gap),
+	);
+	return { left: x, top: y };
+}

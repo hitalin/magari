@@ -1,6 +1,9 @@
 <script lang="ts">
-import { monthKey, shiftMonth } from "#lib/calendar.ts";
-import { dayKey, formatTime } from "#lib/date.ts";
+import { monthKey, previewPosition, shiftMonth } from "#lib/calendar.ts";
+import Flyer from "#lib/components/Flyer.svelte";
+import Picture from "#lib/components/Picture.svelte";
+import { dayKey, formatTime, formatWhen } from "#lib/date.ts";
+import { flyerStyle } from "#lib/flyer.ts";
 import { collapseByActor } from "#lib/group.ts";
 import type { EventSummary } from "#lib/types.ts";
 
@@ -36,7 +39,36 @@ const thisMonth = $derived(monthKey(year, month));
 const today = $derived(dayKey(new Date()));
 const prev = $derived(shiftMonth(year, month, -1));
 const next = $derived(shiftMonth(year, month, 1));
+
+// マウスを載せた会のプレビュー（壁と同じビラ）。タッチの端末では出さず、押せば会のページへ
+let preview = $state<{ event: EventSummary; anchor: DOMRect } | null>(null);
+let popup = $state<HTMLElement>();
+let timer: ReturnType<typeof setTimeout> | undefined;
+function showPreview(e: PointerEvent, event: EventSummary) {
+	if (e.pointerType !== "mouse") return;
+	const anchor = (e.currentTarget as HTMLElement).getBoundingClientRect();
+	clearTimeout(timer);
+	// 升の上を通り過ぎただけでは出さない。もう出ていれば、すぐ差し替える
+	timer = setTimeout(() => (preview = { event, anchor }), preview ? 0 : 250);
+}
+function hidePreview() {
+	clearTimeout(timer);
+	preview = null;
+}
+// 出してから大きさを測り、画面に収まる位置に置く（升の箱は overflow-hidden なので、画面に対して置く）
+$effect(() => {
+	if (!preview || !popup) return;
+	const { left, top } = previewPosition(
+		preview.anchor,
+		{ width: popup.offsetWidth, height: popup.offsetHeight },
+		{ width: window.innerWidth, height: window.innerHeight },
+	);
+	popup.style.left = `${left}px`;
+	popup.style.top = `${top}px`;
+});
 </script>
+
+<svelte:window onscroll={hidePreview} onresize={hidePreview} />
 
 <div class="section-head">
 	<h2 class="section-title {compact ? 'text-[1.3rem]' : ''}">{year}年{month}月</h2>
@@ -79,10 +111,13 @@ const next = $derived(shiftMonth(year, month, 1));
 					<div class="hidden sm:block">
 					{#each items.slice(0, MAX_VISIBLE) as item, j (item.kind === 'event' ? item.event.id : `g-${item.actor.handle}-${j}`)}
 						{#if item.kind === 'event'}
+							{@const event = item.event}
 							<a
-								href="/e/{item.event.id}"
+								href="/e/{event.id}"
 								class="mb-0.5 block truncate rounded-[3px] px-1 py-0.5 text-[0.7rem] leading-tight text-text hover:bg-accent-soft sm:text-xs"
-								title={item.event.title}
+								onpointerenter={(e) => showPreview(e, event)}
+								onpointerleave={hidePreview}
+								onclick={hidePreview}
 							>
 								{#if !item.event.allDay}<span class="hidden font-mono text-muted sm:inline">{formatTime(item.event.startsAt)}</span>{/if}
 								{item.event.title}
@@ -107,7 +142,37 @@ const next = $derived(shiftMonth(year, month, 1));
 	{/each}
 </div>
 
+<!-- ビラに題・日時・場所・主催が刷ってあるので、それだけを見せる。上げた画像は読めるとは限らないので、題と日時・場所を添える -->
+{#if preview}
+	{@const e = preview.event}
+	{@const place = e.space?.name ?? e.locationName}
+	<div bind:this={popup} class="cal-preview" style="left: -9999px; top: 0" aria-hidden="true">
+		<div class="flyer-pin" style="--tilt: {flyerStyle(e.id).tilt / 2}deg">
+			{#if e.flyerUrl}
+				<Picture src={e.flyerUrl} alt="" sizes="15rem" />
+			{:else}
+				<Flyer id={e.id} title={e.title} startsAt={e.startsAt} endsAt={e.endsAt} allDay={e.allDay} {place} host={e.hosts[0]?.name ?? null} look={e.flyerLook} />
+			{/if}
+		</div>
+		{#if e.flyerUrl}
+			<p class="mt-4 font-serif font-bold leading-snug">{e.title}</p>
+			<p class="mt-1 text-xs text-muted">{formatWhen(e)}{#if place} · {place}{/if}</p>
+		{/if}
+	</div>
+{/if}
+
 <style>
+	.cal-preview {
+		position: fixed;
+		z-index: 40;
+		width: 15rem;
+		padding: 1.25rem 1rem 1rem;
+		background: var(--color-surface);
+		border: 1px solid var(--color-line);
+		border-radius: var(--radius-md);
+		/* 見せるだけ。下の升の操作を妨げない */
+		pointer-events: none;
+	}
 	/* 升いっぱいを押せる面にして、件数は下に小さなテープの切れ端で出す */
 	.day-tap {
 		position: absolute;
