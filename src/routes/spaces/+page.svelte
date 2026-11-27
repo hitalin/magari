@@ -27,7 +27,7 @@ const spaces = $derived(
 <!-- イベントの「見せ方」と同じ段に、並べ替えを置く -->
 <div class="pills mt-4 mb-6" role="group" aria-label="並べ替え">
 	{#each SPACE_SORTS as o (o.key)}
-		<button type="button" class="chip {sort === o.key ? 'chip-tape' : 'chip-plain'}" aria-pressed={sort === o.key} onclick={() => (sort = o.key)}>{o.label}</button>
+		<button type="button" class="chip {sort === o.key ? 'chip-on' : 'chip-plain'}" aria-pressed={sort === o.key} onclick={() => (sort = o.key)}>{o.label}</button>
 	{/each}
 </div>
 <section>
@@ -57,7 +57,7 @@ const spaces = $derived(
 					<!-- 下端: これからの間の数と、非公式の判 -->
 					<div class="mt-2 flex items-center justify-between gap-2 border-t border-dashed border-line px-1.5 pt-2 text-[0.8rem]">
 						{#if s.upcoming > 0}
-							<p><span class="font-mono text-base font-bold">{s.upcoming}</span> 件の間</p>
+							<p><span class="text-base font-bold tabular-nums">{s.upcoming}</span> 件の間</p>
 						{:else}
 							<p class="text-dim">いまは予定なし</p>
 						{/if}

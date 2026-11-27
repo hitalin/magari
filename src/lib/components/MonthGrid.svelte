@@ -119,7 +119,7 @@ $effect(() => {
 								onpointerleave={hidePreview}
 								onclick={hidePreview}
 							>
-								{#if !item.event.allDay}<span class="hidden font-mono text-muted sm:inline">{formatTime(item.event.startsAt)}</span>{/if}
+								{#if !item.event.allDay}<span class="hidden tabular-nums text-muted sm:inline">{formatTime(item.event.startsAt)}</span>{/if}
 								{item.event.title}
 							</a>
 						{:else}

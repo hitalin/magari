@@ -78,7 +78,7 @@ async function unlink(id: string) {
 			<div class="rule-list">
 				{#each items as e (e.id)}
 					<div class="row">
-						<span class="font-mono text-xs text-muted">{formatWhen(e).replace(' ', '\n')}</span>
+						<span class="text-xs tabular-nums text-muted">{formatWhen(e).replace(' ', '\n')}</span>
 						<span class="min-w-0">
 							<a href="/e/{e.id}/edit" class="block font-serif text-[1.05rem] font-bold hover:text-accent-ink">{e.title}</a>
 							<span class="mt-1 flex flex-wrap gap-2 text-xs text-muted">
@@ -112,7 +112,7 @@ async function unlink(id: string) {
 		<div class="rule-list">
 			{#each data.managed as a (a.id)}
 				<div class="row items-center">
-					<span class="font-mono text-xs text-muted">{a.kind === 'space' ? 'ハコ' : '団体'}</span>
+					<span class="text-xs text-muted">{a.kind === 'space' ? 'ハコ' : '団体'}</span>
 					<span class="flex flex-wrap items-center gap-3">
 						<a href="/@{a.handle}/edit" class="font-serif text-[1.05rem] font-bold hover:text-accent-ink">{a.name}</a>
 						<span class="text-xs text-muted">@{a.handle}</span>
@@ -135,7 +135,7 @@ async function unlink(id: string) {
 				{#if a.providerId === 'twitter' || a.providerId === 'miauth'}
 				<span class="text-muted" role="img" aria-label={a.label}><svg viewBox="0 0 24 24" class="h-4 w-4" fill="currentColor" aria-hidden="true"><path d={a.providerId === 'twitter' ? SNS_ICON.x : MISSKEY_ICON} /></svg></span>
 			{:else}
-				<span class="font-mono text-xs text-muted">{a.label}</span>
+				<span class="text-xs text-muted">{a.label}</span>
 			{/if}
 				<span class="flex flex-wrap items-center gap-3 text-sm">
 					<span class="break-all">{a.detail ?? 'つながっています'}</span>

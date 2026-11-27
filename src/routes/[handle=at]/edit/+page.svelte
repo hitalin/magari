@@ -137,7 +137,7 @@ const KIND_WORD: Record<string, string> = {
 		<div class="rule-list">
 			{#each data.members as m (m.userId)}
 				<div class="row items-center">
-					<span class="font-mono text-xs text-muted">{m.role === 'owner' ? '作った人' : '管理者'}</span>
+					<span class="text-xs text-muted">{m.role === 'owner' ? '作った人' : '管理者'}</span>
 					<span class="flex flex-wrap items-center gap-3">
 						<a href="/@{m.handle}" class="font-serif text-[1.05rem] font-bold hover:text-accent-ink">{m.name}</a>
 						<span class="text-xs text-muted">@{m.handle}</span>

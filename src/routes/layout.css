@@ -17,7 +17,7 @@
 	--color-surface-2: #2a2a2a;
 	--color-text: #f1efe9;
 	--color-muted: #a9a49c;
-	--color-dim: #6e6a64;
+	--color-dim: #8a857d;
 	--color-line: rgb(241 239 233 / 0.14);
 
 	/* アクセント: 黒いアスファルトに貼ったガムテープの茶。soft(14%) と border(45%) が hover と選択の基盤 */
@@ -74,15 +74,15 @@ button:not(:disabled) {
 	cursor: pointer;
 }
 
-/* くしゃくしゃの黒い紙やすり。画像ではなく SVG フィルタで作る（転送量ゼロ）
-   1層目: 細かく硬い明るい砂粒（まばら） / 2層目: 暗い砂粒 / 3層目: 低周波の凹凸に光を当てた折れ目（控えめ） / 4層目: 下地 */
+/* 黒いアスファルト。画像ではなく SVG フィルタで作る（転送量ゼロ）。貼った物が映えるよう、地は静かにする
+   1層目: 細かく硬い明るい砂粒（まばら） / 2層目: 暗い砂粒 / 3層目: 低周波のゆるいムラ（細かい擦れは柄に見えるので出さない） / 4層目: 下地 */
 body {
 	color: var(--color-text);
 	background-color: var(--color-bg);
 	background-image:
-		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='2.6' numOctaves='2' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.9  0 0 0 0 0.92  0 0 0 0 0.95  0 0 0 1 0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='discrete' tableValues='0 0 0 0 0 0 0 0 0.3 0.8'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)' opacity='0.16'/%3E%3C/svg%3E"),
+		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='2.6' numOctaves='2' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.9  0 0 0 0 0.92  0 0 0 0 0.95  0 0 0 1 0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='discrete' tableValues='0 0 0 0 0 0 0 0 0.3 0.8'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)' opacity='0.1'/%3E%3C/svg%3E"),
 		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='d'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='2.1' numOctaves='2' seed='19' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='discrete' tableValues='1 0.5 0.2 0 0 0 0 0 0 0'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23d)' opacity='0.6'/%3E%3C/svg%3E"),
-		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='900' height='900'%3E%3Cfilter id='c'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.02' numOctaves='6' seed='3' stitchTiles='stitch' result='n'/%3E%3CfeDiffuseLighting in='n' lighting-color='white' surfaceScale='4' diffuseConstant='1'%3E%3CfeDistantLight azimuth='40' elevation='50'/%3E%3C/feDiffuseLighting%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='0.014'/%3E%3CfeFuncG type='linear' slope='0.014'/%3E%3CfeFuncB type='linear' slope='0.016'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23c)'/%3E%3C/svg%3E"),
+		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='900' height='900'%3E%3Cfilter id='c'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.02' numOctaves='2' seed='3' stitchTiles='stitch' result='n'/%3E%3CfeDiffuseLighting in='n' lighting-color='white' surfaceScale='1.2' diffuseConstant='1'%3E%3CfeDistantLight azimuth='40' elevation='50'/%3E%3C/feDiffuseLighting%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='0.006'/%3E%3CfeFuncG type='linear' slope='0.006'/%3E%3CfeFuncB type='linear' slope='0.0065'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23c)'/%3E%3C/svg%3E"),
 		linear-gradient(#0e0f10, #08090a);
 	background-blend-mode: screen, multiply, screen, normal;
 	padding-top: var(--spacing-header);
@@ -229,7 +229,7 @@ h4 {
 		text-decoration-color: currentColor;
 	}
 
-	/* 日付の区切り: 両脇に罫線（エデンの「―― 題 ――」） */
+	/* 日付の区切り: 左に日付、右へ路面の破線を一本 */
 	.day-rule {
 		display: flex;
 		align-items: center;
@@ -238,15 +238,15 @@ h4 {
 		font-size: 1.1rem;
 		font-weight: 700;
 		letter-spacing: 0.06em;
+		padding-left: 0.6rem;
 	}
-	.day-rule::before,
 	.day-rule::after {
 		content: "";
 		flex: 1;
 		height: 2px;
 		background: repeating-linear-gradient(
 			90deg,
-			rgb(241 239 233 / 0.3) 0 28px,
+			rgb(241 239 233 / 0.22) 0 28px,
 			transparent 28px 46px
 		);
 		mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='w'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' seed='5' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 2.2 -0.2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23w)'/%3E%3C/svg%3E");
@@ -376,14 +376,12 @@ h4 {
 			0.9% 30%,
 			0 14%
 		);
-		transform: rotate(-1deg);
 	}
 	.btn-primary:hover {
-		transform: rotate(-1deg) translateY(-1px);
+		transform: translateY(-1px);
 		background-color: var(--color-accent-2);
 	}
 	.btn-primary:active {
-		transform: rotate(-1deg) translateY(1px);
 		background-color: var(--color-accent);
 	}
 	/* ちぎった形（clip-path）は外側の輪郭線が切り落とされて見えない。内側にマジックの線で出す */
@@ -440,7 +438,7 @@ h4 {
 			font-size: 0.8rem;
 		}
 	}
-	/* タグはテープの切れ端 */
+	/* テープの切れ端。字が載るので傾けない（傾けるのは見出しの帯や看板のテープなど、大きい物だけ） */
 	.chip-tape {
 		color: #1b1510;
 		background-color: var(--color-accent);
@@ -465,10 +463,15 @@ h4 {
 			0 65%,
 			1% 35%
 		);
-		transform: rotate(-1.2deg);
 	}
-	.chip-tape:nth-child(even) {
-		transform: rotate(1deg);
+	/* いま選んでいる絞り込み・並べ替え。テープは使わず、白い紙の札 */
+	.chip-on {
+		background: var(--color-text);
+		color: #1b1510;
+	}
+	a.chip-on:active,
+	button.chip-on:not(:disabled):active {
+		background-color: var(--color-muted);
 	}
 
 	.gradient-text {
@@ -573,8 +576,15 @@ h4 {
 			0 25%
 		);
 		filter: drop-shadow(0 1px 1px rgb(0 0 0 / 0.35));
-		transform: translateX(-50%) rotate(-1.5deg);
+		transform: translateX(-50%) rotate(var(--tape-tilt, -1.5deg));
 		pointer-events: none;
+	}
+	/* 並べた看板は、テープの角度を一枚ずつ変える（同じ傾きが並ぶと機械的に見える） */
+	.cardboard:nth-child(3n + 2)::before {
+		--tape-tilt: 1.2deg;
+	}
+	.cardboard:nth-child(4n + 3)::before {
+		--tape-tilt: -0.4deg;
 	}
 	/* 壁に貼ったフライヤー。会ごとの傾き（--tilt）で貼り、上辺をマスキングテープで留める */
 	.flyer-pin {
@@ -695,7 +705,7 @@ h4 {
 		transform: translateY(-200%);
 	}
 	.skip-link:focus-visible {
-		transform: rotate(-1deg);
+		transform: none;
 	}
 
 	/* ピルの列: スマホでは横スクロール（両端フェード）、広い画面では折り返す */
@@ -807,7 +817,7 @@ h4 {
 		mask-image: linear-gradient(
 			to right,
 			transparent,
-			#000 2.5rem,
+			#000 1.25rem,
 			#000 calc(100% - 2.5rem),
 			transparent
 		);

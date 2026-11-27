@@ -10,7 +10,7 @@ const views = [
 ];
 </script>
 
-<!-- 絞り込み（エリアのチップ）とは別の物なので、形を変える。ナビと同じく、いまいる所の下にテープを一本 -->
+<!-- 絞り込み（エリアのチップ）とは別の物なので、形を変える。ナビと同じく、いまいる所の下に白い線を一本 -->
 <nav class="views mt-5 mb-6" aria-label="見せ方">
 	{#each views as v (v.href)}
 		{@const active = page.url.pathname.startsWith(v.href)}
@@ -39,9 +39,8 @@ const views = [
 	.views > a[aria-current]::after {
 		content: "";
 		position: absolute;
-		inset: auto 0 -2px;
-		height: 3px;
-		background: var(--color-accent);
-		transform: rotate(-1deg);
+		inset: auto 0 -1px;
+		height: 2px;
+		background: var(--color-text);
 	}
 </style>

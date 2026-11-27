@@ -9,7 +9,7 @@ const preview = $derived(events.slice(0, 3).map((e) => e.title));
 </script>
 
 <a href="/@{actor.handle}#d-{day}" class="row group">
-	<span class="font-mono text-sm text-muted">まとめ</span>
+	<span class="text-sm text-muted">まとめ</span>
 	<span class="relative block min-h-9 min-w-0 pl-12">
 		<ActorFace {actor} />
 		<span class="flex flex-wrap items-baseline gap-x-2 font-serif text-[1.1rem] font-bold leading-snug group-hover:text-accent-ink">

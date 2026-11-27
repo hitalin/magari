@@ -24,7 +24,7 @@ const place = $derived.by(() => {
 
 <!-- 左に顔、「誰が」を小さく先に、その下にひとこと（会の名前）を大きく、場所はさらに下 -->
 <a href="/e/{event.id}" class="row group">
-	<span class="font-mono text-sm leading-snug tabular-nums text-muted">
+	<span class="text-sm leading-snug tabular-nums text-muted">
 		{#if event.allDay}終日{:else}{formatTime(event.startsAt)}{#if event.endsAt && event.endsAt !== event.startsAt}<br /><span class="text-dim">〜{formatTime(event.endsAt)}</span>{/if}{/if}
 	</span>
 	<span class="relative block min-h-9 min-w-0 pl-12">

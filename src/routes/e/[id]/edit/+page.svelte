@@ -100,7 +100,7 @@ const others = $derived(data.postedBySpace);
 		<div class="rule-list">
 			{#each data.hosts as h (h.actorId)}
 				<div class="row items-center">
-					<span class="font-mono text-xs text-muted">{h.role === 'host' ? '主催' : '共同主催'}</span>
+					<span class="text-xs text-muted">{h.role === 'host' ? '主催' : '共同主催'}</span>
 					<span class="flex flex-wrap items-center gap-3">
 						<a href="/@{h.handle}" class="font-serif text-[1.05rem] font-bold hover:text-accent-ink">{h.name}</a>
 						<span class="text-xs text-muted">@{h.handle}</span>

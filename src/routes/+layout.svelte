@@ -132,11 +132,10 @@ const filterItems = $derived<{ area: string | null }[] | undefined>(
 
 <!-- 図像と字だけのナビ。上に固定するが帯は見せない。下を流れる本文は、下端へ向けて消えるぼかしで溶かす（.site-header） -->
 <header class="site-header fixed inset-x-0 top-0 z-50 h-header" style:--nav-tint={tint}>
-	<div class="flex h-full items-center gap-3 px-4 text-[0.8rem] sm:gap-6 sm:px-5 sm:text-sm">
+	<div class="mx-auto flex h-full max-w-content items-center gap-3 px-4 text-[0.8rem] sm:gap-6 sm:text-sm">
 		<a href="/" class="-m-2 flex shrink-0 items-center p-2" aria-label="まがり"><img src={logo} alt="" class="h-7 w-7" /></a>
-		<!-- タブ（実体の「イベント」「ハコ」だけ）の左端を、本文の左端に揃える（図像は左端、「まがり」は右端のまま）。狭い画面では図像のすぐ右。
-		     % はこの行の中身の幅（ヘッダー幅 − 左右 2.5rem）。本文の左端 (ヘッダー幅 − content)/2 + 1rem から、左余白・図像・間の 4.5rem を引くと -2.25rem -->
-		<nav class="flex gap-3 font-medium whitespace-nowrap sm:gap-6" style="margin-left: max(0px, calc((100% - var(--container-content)) / 2 - 2.25rem))">
+		<!-- ナビは本文と同じ幅に収める。図像の左端と「まがり」の右端が、本文の両端に揃う -->
+		<nav class="flex gap-3 font-medium whitespace-nowrap sm:gap-6">
 			{#each nav as item (item.href)}
 				{@const active = isActive(item.href)}
 				<a href={item.href} class="nav-link -my-3 flex items-center gap-1.5 py-3 transition hover:text-text {active ? 'text-text' : 'text-muted'}" aria-current={active ? 'page' : undefined}>
@@ -201,7 +200,7 @@ const filterItems = $derived<{ area: string | null }[] | undefined>(
 </footer>
 
 <style>
-	/* いまいる所の印。字の明るさだけに頼らず、下にテープを一本引く */
+	/* いまいる所の印。字の明るさだけに頼らず、下に白い線を一本引く（テープは「まがり」だけ） */
 	.nav-link {
 		position: relative;
 	}
@@ -209,9 +208,8 @@ const filterItems = $derived<{ area: string | null }[] | undefined>(
 		content: "";
 		position: absolute;
 		inset: auto 0 0.45rem;
-		height: 2px;
-		background: var(--color-accent);
-		transform: rotate(-1deg);
+		height: 1px;
+		background: var(--color-text);
 	}
 	.footer-link {
 		text-decoration: underline;

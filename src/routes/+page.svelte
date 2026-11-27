@@ -58,7 +58,7 @@ const WORDS = [
 
 <!-- 最初の画面は、左に一文・ボタン・いまの規模、右にロゴ。その下に実物（間・ハコ・エリア）を続ける -->
 <div class="ticker mt-2" aria-hidden="true">
-	<span class="chip chip-tape ticker-label">こんな間</span>
+	<span class="label ticker-label">こんな間</span>
 	<span class="ticker-items">
 		<span class="ticker-track">
 			{#each [...WORDS, ...WORDS] as word, i (i)}<span>{word}</span>{/each}
@@ -69,7 +69,7 @@ const WORDS = [
 
 <section class="landing">
 	<div>
-		<h1 class="text-[clamp(1.9rem,4.2vw,2.75rem)] leading-[1.35] whitespace-nowrap">
+		<h1 class="text-[clamp(2.1rem,6vw,3.5rem)] leading-[1.3] whitespace-nowrap">
 			今日も、<br /><span class="tape mr-1 px-3 leading-[1.15]">誰か</span>が開けている。
 		</h1>
 		<p class="mt-6 text-[1.05rem] leading-loose text-muted">
@@ -119,11 +119,14 @@ const WORDS = [
 			<h2 class="section-title">エリア</h2>
 			<a href="/events" class="more">この7日の間 ›</a>
 		</div>
-		<p class="flex flex-wrap gap-2">
+		<div class="rule-list">
 			{#each areas as [area, n] (area)}
-				<a href="/events" class="chip chip-plain px-3 py-1 text-sm" onclick={() => pickArea(area)}>{area} <span class="ml-1.5 opacity-70">{n}</span></a>
+				<a href="/events" class="space-row group" onclick={() => pickArea(area)}>
+					<span class="font-serif text-[1.05rem] font-bold group-hover:text-accent-ink">{area}</span>
+					<span class="ml-auto text-sm whitespace-nowrap text-muted tabular-nums">{n} 件</span>
+				</a>
 			{/each}
-		</p>
+		</div>
 	</section>
 </div>
 
