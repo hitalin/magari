@@ -74,15 +74,15 @@ button:not(:disabled) {
 	cursor: pointer;
 }
 
-/* 黒いアスファルト。画像ではなく SVG フィルタで作る（転送量ゼロ）。貼った物が映えるよう、地は静かにする
-   1層目: 細かく硬い明るい砂粒（まばら） / 2層目: 暗い砂粒 / 3層目: 低周波のゆるいムラ（細かい擦れは柄に見えるので出さない） / 4層目: 下地 */
+/* くしゃくしゃの黒い紙やすり。画像ではなく SVG フィルタで作る（転送量ゼロ）
+   1層目: 細かく硬い明るい砂粒（まばら） / 2層目: 暗い砂粒 / 3層目: 低周波の凹凸に光を当てた折れ目（控えめ） / 4層目: 下地 */
 body {
 	color: var(--color-text);
 	background-color: var(--color-bg);
 	background-image:
-		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='2.6' numOctaves='2' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.9  0 0 0 0 0.92  0 0 0 0 0.95  0 0 0 1 0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='discrete' tableValues='0 0 0 0 0 0 0 0 0.3 0.8'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)' opacity='0.1'/%3E%3C/svg%3E"),
+		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='g'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='2.6' numOctaves='2' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.9  0 0 0 0 0.92  0 0 0 0 0.95  0 0 0 1 0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='discrete' tableValues='0 0 0 0 0 0 0 0 0.3 0.8'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23g)' opacity='0.16'/%3E%3C/svg%3E"),
 		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='d'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='2.1' numOctaves='2' seed='19' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0'/%3E%3CfeComponentTransfer%3E%3CfeFuncA type='discrete' tableValues='1 0.5 0.2 0 0 0 0 0 0 0'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23d)' opacity='0.6'/%3E%3C/svg%3E"),
-		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='900' height='900'%3E%3Cfilter id='c'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.02' numOctaves='2' seed='3' stitchTiles='stitch' result='n'/%3E%3CfeDiffuseLighting in='n' lighting-color='white' surfaceScale='1.2' diffuseConstant='1'%3E%3CfeDistantLight azimuth='40' elevation='50'/%3E%3C/feDiffuseLighting%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='0.006'/%3E%3CfeFuncG type='linear' slope='0.006'/%3E%3CfeFuncB type='linear' slope='0.0065'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23c)'/%3E%3C/svg%3E"),
+		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='900' height='900'%3E%3Cfilter id='c'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.02' numOctaves='6' seed='3' stitchTiles='stitch' result='n'/%3E%3CfeDiffuseLighting in='n' lighting-color='white' surfaceScale='4' diffuseConstant='1'%3E%3CfeDistantLight azimuth='40' elevation='50'/%3E%3C/feDiffuseLighting%3E%3CfeComponentTransfer%3E%3CfeFuncR type='linear' slope='0.009'/%3E%3CfeFuncG type='linear' slope='0.009'/%3E%3CfeFuncB type='linear' slope='0.0105'/%3E%3C/feComponentTransfer%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23c)'/%3E%3C/svg%3E"),
 		linear-gradient(#0e0f10, #08090a);
 	background-blend-mode: screen, multiply, screen, normal;
 	padding-top: var(--spacing-header);
@@ -463,15 +463,6 @@ h4 {
 			0 65%,
 			1% 35%
 		);
-	}
-	/* いま選んでいる絞り込み・並べ替え。テープは使わず、白い紙の札 */
-	.chip-on {
-		background: var(--color-text);
-		color: #1b1510;
-	}
-	a.chip-on:active,
-	button.chip-on:not(:disabled):active {
-		background-color: var(--color-muted);
 	}
 
 	.gradient-text {

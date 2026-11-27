@@ -58,7 +58,7 @@ const WORDS = [
 
 <!-- 最初の画面は、左に一文・ボタン・いまの規模、右にロゴ。その下に実物（間・ハコ・エリア）を続ける -->
 <div class="ticker mt-2" aria-hidden="true">
-	<span class="label ticker-label">こんな間</span>
+	<span class="chip chip-tape ticker-label">こんな間</span>
 	<span class="ticker-items">
 		<span class="ticker-track">
 			{#each [...WORDS, ...WORDS] as word, i (i)}<span>{word}</span>{/each}

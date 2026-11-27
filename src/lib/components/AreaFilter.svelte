@@ -84,10 +84,10 @@ function save() {
 
 {#if areas.length > 1}
 	<div class="pills {center ? 'pills-center' : ''}" role="group" aria-label="エリアで絞る">
-		<button type="button" class="chip {value.length === 0 ? 'chip-on' : 'chip-plain'}" aria-pressed={value.length === 0} onclick={clear}>すべて</button>
+		<button type="button" class="chip {value.length === 0 ? 'chip-tape' : 'chip-plain'}" aria-pressed={value.length === 0} onclick={clear}>すべて</button>
 		{#each visible as a (a.area)}
 			{@const on = value.includes(a.area)}
-			<button type="button" class="chip {on ? 'chip-on' : 'chip-plain'}" aria-pressed={on} onclick={() => toggle(a.area)}>
+			<button type="button" class="chip {on ? 'chip-tape' : 'chip-plain'}" aria-pressed={on} onclick={() => toggle(a.area)}>
 				{a.area} <span class="ml-1 opacity-70">{a.count}</span>
 			</button>
 		{/each}

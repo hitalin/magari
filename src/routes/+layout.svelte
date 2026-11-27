@@ -200,7 +200,7 @@ const filterItems = $derived<{ area: string | null }[] | undefined>(
 </footer>
 
 <style>
-	/* いまいる所の印。字の明るさだけに頼らず、下に白い線を一本引く（テープは「まがり」だけ） */
+	/* いまいる所の印。字の明るさだけに頼らず、下にテープを一本引く */
 	.nav-link {
 		position: relative;
 	}
@@ -208,8 +208,9 @@ const filterItems = $derived<{ area: string | null }[] | undefined>(
 		content: "";
 		position: absolute;
 		inset: auto 0 0.45rem;
-		height: 1px;
-		background: var(--color-text);
+		height: 2px;
+		background: var(--color-accent);
+		transform: rotate(-1deg);
 	}
 	.footer-link {
 		text-decoration: underline;
