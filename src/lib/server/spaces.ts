@@ -5,6 +5,7 @@ import { compareArea, detectArea } from "#lib/area.ts";
 import { planRooms, type Room } from "#lib/floor-plan.ts";
 import type { ParsedSpace } from "#lib/space-form.ts";
 import { mediaUrl, type SpaceSummary } from "#lib/types.ts";
+import { visibilitiesWhere } from "#lib/visibility.ts";
 import type { Db } from "./db/index.ts";
 import { actorMembers, actors, events } from "./db/schema.ts";
 import { isBlockedHandle } from "./moderation.ts";
@@ -33,8 +34,8 @@ export async function listSpaces(
 		.where(
 			and(
 				eq(events.status, "published"),
-				// ハコのページにだけ出す会も、そのハコの数には入れる
-				inArray(events.visibility, ["public", "space"]),
+				// ハコのページに出る会の数（一覧に出さない「ページだけ」の会も入れる）
+				inArray(events.visibility, visibilitiesWhere("pages")),
 				gte(events.startsAt, new Date()),
 			),
 		)

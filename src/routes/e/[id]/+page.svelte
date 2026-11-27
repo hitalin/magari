@@ -15,6 +15,7 @@ import {
 } from "#lib/share.ts";
 import { MISSKEY_ICON, SNS_ICON } from "#lib/sns.ts";
 import { viewer } from "#lib/viewer.svelte.ts";
+import { reach } from "#lib/visibility.ts";
 import { page } from "$app/state";
 import type { PageProps } from "./$types";
 
@@ -54,18 +55,27 @@ async function copyLink() {
 	await navigator.clipboard.writeText(cleanUrl);
 	copied = true;
 }
-// 中止は題の頭に出す（X のカードや検索結果でも分かるように）
+// 公開範囲で、共有（RN に当たる）と検索に出すかが決まる
+const r = $derived(reach(event.visibility));
+// 中止は題の頭に出す（X のカードや検索結果でも分かるように）。
+// URL を知っている人だけの会は、どこかに貼られても題・日時・場所がカードから広がらないよう、無地にする
 const cardTitle = $derived(
-	event.status === "cancelled" ? `【中止】${event.title}` : event.title,
+	!r.share
+		? "間"
+		: event.status === "cancelled"
+			? `【中止】${event.title}`
+			: event.title,
 );
 // リンクカードの説明: 日時と場所を先頭に、続けて説明文
 const cardDescription = $derived(
-	[
-		[formatWhen(event), eventPlace(event)].filter(Boolean).join(" · "),
-		event.description?.slice(0, 100),
-	]
-		.filter(Boolean)
-		.join(" — "),
+	!r.share
+		? "URL を知っている人にだけ見せている間です。"
+		: [
+				[formatWhen(event), eventPlace(event)].filter(Boolean).join(" · "),
+				event.description?.slice(0, 100),
+			]
+				.filter(Boolean)
+				.join(" — "),
 );
 </script>
 
@@ -76,18 +86,20 @@ const cardDescription = $derived(
 	<meta name="description" content={cardDescription} />
 	<meta property="og:description" content={cardDescription} />
 	<meta name="twitter:card" content="summary_large_image" />
-	<!-- 写した会と、ハコが載せたほかの人の会は元の告知が正。検索には元を出してもらう -->
-	{#if event.source || event.postedBySpace}<meta name="robots" content="noindex" />{/if}
+	<!-- 写した会と、ハコが載せたほかの人の会は元の告知が正。検索には元を出してもらう。URL を知っている人だけの会も載せない -->
+	{#if event.source || event.postedBySpace || !r.index}<meta name="robots" content="noindex" />{/if}
 </svelte:head>
 
 <article class="mt-4">
 	{#if opened}
 		<div class="panel mt-4 p-5">
-			<p class="font-serif text-lg font-bold">開けました。あとは貼るだけ。</p>
+			<p class="font-serif text-lg font-bold">{r.share ? '開けました。あとは貼るだけ。' : '開けました。URL を渡した人だけが見られます。'}</p>
 			<div class="mt-3 flex flex-wrap gap-3">
-				<a href={shareUrl} class="btn btn-primary" rel="noopener" onclick={warmCard} aria-label="X に貼る"><svg viewBox="0 0 24 24" class="h-4 w-4 shrink-0" fill="currentColor" aria-hidden="true"><path d={SNS_ICON.x} /></svg>に貼る</a>
-				<a href={misskeyUrl} class="btn" rel="noopener" onclick={warmCard} aria-label="Misskey に貼る"><svg viewBox="0 0 24 24" class="h-4 w-4 shrink-0" fill="currentColor" aria-hidden="true"><path d={MISSKEY_ICON} /></svg>に貼る</a>
-				<button type="button" class="btn" onclick={copyLink}>{copied ? 'コピーしました' : 'リンクをコピー'}</button>
+				{#if r.share}
+					<a href={shareUrl} class="btn btn-primary" rel="noopener" onclick={warmCard} aria-label="X に貼る"><svg viewBox="0 0 24 24" class="h-4 w-4 shrink-0" fill="currentColor" aria-hidden="true"><path d={SNS_ICON.x} /></svg>に貼る</a>
+					<a href={misskeyUrl} class="btn" rel="noopener" onclick={warmCard} aria-label="Misskey に貼る"><svg viewBox="0 0 24 24" class="h-4 w-4 shrink-0" fill="currentColor" aria-hidden="true"><path d={MISSKEY_ICON} /></svg>に貼る</a>
+				{/if}
+				<button type="button" class={r.share ? 'btn' : 'btn btn-primary'} onclick={copyLink}>{copied ? 'コピーしました' : 'リンクをコピー'}</button>
 			</div>
 		</div>
 	{/if}
@@ -173,8 +185,10 @@ const cardDescription = $derived(
 			<!-- 開けた直後は、上の「あとは貼るだけ」が同じ役目なので出さない -->
 			{#if !opened}
 				<div class="mt-4 flex flex-wrap gap-3">
-					<a href={shareUrl} class="btn btn-primary" rel="noopener" onclick={warmCard} aria-label="X で共有"><svg viewBox="0 0 24 24" class="h-4 w-4 shrink-0" fill="currentColor" aria-hidden="true"><path d={SNS_ICON.x} /></svg>で共有</a>
-					<a href={misskeyUrl} class="btn" rel="noopener" onclick={warmCard} aria-label="Misskey で共有"><svg viewBox="0 0 24 24" class="h-4 w-4 shrink-0" fill="currentColor" aria-hidden="true"><path d={MISSKEY_ICON} /></svg>で共有</a>
+					{#if r.share}
+						<a href={shareUrl} class="btn btn-primary" rel="noopener" onclick={warmCard} aria-label="X で共有"><svg viewBox="0 0 24 24" class="h-4 w-4 shrink-0" fill="currentColor" aria-hidden="true"><path d={SNS_ICON.x} /></svg>で共有</a>
+						<a href={misskeyUrl} class="btn" rel="noopener" onclick={warmCard} aria-label="Misskey で共有"><svg viewBox="0 0 24 24" class="h-4 w-4 shrink-0" fill="currentColor" aria-hidden="true"><path d={MISSKEY_ICON} /></svg>で共有</a>
+					{/if}
 					{#if event.status !== 'draft' && !event.hidden}<a href="/e/{event.id}/event.ics" class="btn" download>カレンダーに入れる</a>{/if}
 				</div>
 			{/if}

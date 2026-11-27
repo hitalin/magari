@@ -336,7 +336,7 @@ const lent = {
 	status: "published",
 	space: "smoke_house",
 	postedBySpace: "on",
-	visibility: "space",
+	visibility: "home",
 	url: "https://example.com/post/1",
 };
 let lentId;
@@ -362,15 +362,55 @@ check(
 	},
 );
 
-check("ハコのページにだけ出す会は、一覧に出ずハコのページに出る", async () => {
+check("ページだけの会は、一覧に出ず、ハコのページに出る", async () => {
 	const listed = await json("/api/events");
 	assert(!listed.some((e) => e.id === lentId));
 	const { events } = await json("/api/actors/smoke_house");
 	assert(events.some((e) => e.id === lentId));
-	// 載せた人のページにも出さない
+	// 主催を持たないので、載せた人のページには出ない
 	const mine = await json("/api/actors/smoke_test");
 	assert(!mine.events.some((e) => e.id === lentId));
 });
+
+check("ページだけの本人の会は、主催のページに出る", async () => {
+	const res = await post("/new?/save", {
+		title: "家の会",
+		date: day(4),
+		startTime: "19:00",
+		status: "published",
+		visibility: "home",
+	});
+	assert.equal(res.status, 303);
+	const id = /^\/e\/([a-z0-9]+)/.exec(res.headers.get("location"))?.[1];
+	assert(!(await json("/api/events")).some((e) => e.id === id));
+	const { events } = await json("/api/actors/smoke_test");
+	assert(events.some((e) => e.id === id));
+});
+
+check(
+	"URL を知っている人だけの会は、共有ボタンもカードの中身も出さない",
+	async () => {
+		const res = await post("/new?/save", {
+			title: "内緒の会",
+			date: day(5),
+			startTime: "19:00",
+			status: "published",
+			visibility: "unlisted",
+		});
+		assert.equal(res.status, 303);
+		const id = /^\/e\/([a-z0-9]+)/.exec(res.headers.get("location"))?.[1];
+		assert.equal((await json(`/api/events/${id}`)).title, "内緒の会");
+		const html = await (await get(`/e/${id}`)).text();
+		assert.match(html, /noindex/);
+		assert.doesNotMatch(html, /x\.com\/intent/);
+		assert.doesNotMatch(html, /<title>内緒の会/);
+		assert.doesNotMatch(html, /og:title" content="内緒の会/);
+		// カード画像は、会のものでなくサイト既定の画像
+		assert.doesNotMatch(html, /og\.png\?v=/);
+		const { events } = await json("/api/actors/smoke_test");
+		assert(!events.some((e) => e.id === id));
+	},
+);
 
 check("ほかの人の会は、ハコの管理者だけが直し、主催は足せない", async () => {
 	const edit = `/e/${lentId}/edit`;
@@ -541,8 +581,8 @@ check("自分のデータを JSON で書き出せる", async () => {
 	assert.equal(cacheControl(res), "private, no-store");
 	const doc = await res.json();
 	assert.equal(doc.pages[0].handle, "smoke_test");
-	// 煙の会の 4 回と、屋上の会と、ハコに載せた借りる人の会
-	assert.equal(doc.events.length, 6);
+	// 煙の会の 4 回と、屋上の会、ハコに載せた借りる人の会、家の会、内緒の会
+	assert.equal(doc.events.length, 8);
 	assert.equal(doc.events.filter((e) => e.postedBySpace).length, 1);
 	assert(doc.events.some((e) => e.room === "屋上"));
 	assert.equal(doc.events.filter((e) => e.repeat === "FREQ=WEEKLY").length, 2);

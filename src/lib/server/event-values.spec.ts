@@ -67,7 +67,7 @@ describe("編集の往復", () => {
 		expect(roundTrip(event)).toEqual(event);
 	});
 
-	it("ハコが載せたほかの人の会は、ハコのページだけのまま", () => {
+	it("ハコが載せたほかの人の会は、ページだけのまま", () => {
 		const event: ParsedEvent = {
 			...full,
 			locationName: null,
@@ -76,7 +76,7 @@ describe("編集の往復", () => {
 			onlineUrl: null,
 			description: null,
 			feeText: null,
-			visibility: "space",
+			visibility: "home",
 			postedBySpace: true,
 		};
 		expect(roundTrip(event)).toEqual(event);

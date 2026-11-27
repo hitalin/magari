@@ -103,11 +103,12 @@ describe("readEventForm", () => {
 		expect(v.visibility).toBe("public");
 		expect(v.status).toBe("draft");
 	});
-	it("公開範囲は公開・URL 限定・ハコのページだけ（「自分だけ」は下書きで足りる）", () => {
+	it("公開範囲は公開・ページだけ・URL 限定（「自分だけ」は下書きで足りる）", () => {
 		const read = (visibility: string) =>
 			readEventForm((k) => (k === "visibility" ? visibility : null)).visibility;
+		expect(read("home")).toBe("home");
 		expect(read("unlisted")).toBe("unlisted");
-		expect(read("space")).toBe("space");
+		expect(read("space")).toBe("public");
 		expect(read("private")).toBe("public");
 	});
 	it("「ほかの人の会として載せる」は印があるときだけ", () => {
@@ -118,15 +119,10 @@ describe("readEventForm", () => {
 	});
 });
 
-describe("ハコのページにだけ出す", () => {
-	it("ハコを書いたときだけ選べる", () => {
-		expect(parseEventForm({ ...base, visibility: "space" }).ok).toBe(false);
-		const r = parseEventForm({
-			...base,
-			space: "curry_shop",
-			visibility: "space",
-		});
-		expect(r.ok && r.event.visibility).toBe("space");
+describe("ページだけ", () => {
+	it("ハコが無くても選べる（主催のページに出る）", () => {
+		const r = parseEventForm({ ...base, visibility: "home" });
+		expect(r.ok && r.event.visibility).toBe("home");
 	});
 });
 

@@ -29,6 +29,7 @@ import {
 	mediaUrl,
 	type ShareMention,
 } from "#lib/types.ts";
+import { visibilitiesWhere } from "#lib/visibility.ts";
 import type { Db } from "./db/index.ts";
 import {
 	account,
@@ -97,14 +98,9 @@ const notHidden = (db: Db) =>
 		),
 	);
 
-// 一覧に出す会。「ハコのページにだけ」の会は、そのハコのページ（actorId がそのハコ）でだけ出す
+// 出してよい会。actorId があればそのページ（ofActor と合わせて、主催かハコのページ）、無ければ一覧
 const listed = (actorId?: string) =>
-	actorId
-		? or(
-				eq(events.visibility, "public"),
-				and(eq(events.visibility, "space"), eq(events.spaceActorId, actorId)),
-			)
-		: eq(events.visibility, "public");
+	inArray(events.visibility, visibilitiesWhere(actorId ? "pages" : "lists"));
 
 async function hostsByEvent(
 	db: Db,
@@ -518,7 +514,7 @@ export async function getActorByHandle(
 }
 
 // 検索に出してよいページ（sitemap.xml 用）。ページ側で noindex にしているものは載せない:
-// 写した会（source あり）、ハコが載せたほかの人の会と、管理者のいないページ
+// 写した会（source あり）、ハコが載せたほかの人の会、URL を知っている人だけの会と、管理者のいないページ
 export async function listIndexable(db: Db): Promise<{
 	events: { id: string; updatedAt: Date }[];
 	actors: { handle: string; updatedAt: Date }[];
@@ -531,7 +527,7 @@ export async function listIndexable(db: Db): Promise<{
 			.where(
 				and(
 					eq(events.status, "published"),
-					eq(events.visibility, "public"),
+					inArray(events.visibility, visibilitiesWhere("index")),
 					isNull(events.source),
 					eq(events.postedBySpace, false),
 					notHidden(db),

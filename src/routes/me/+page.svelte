@@ -84,7 +84,7 @@ async function unlink(id: string) {
 							<span class="mt-1 flex flex-wrap gap-2 text-xs text-muted">
 								<!-- 下書きは見出しで分かり、公開は既定なので、札は中止だけ -->
 								{#if e.status === 'cancelled'}<span class="chip chip-plain">中止</span>{/if}
-								{#if e.visibility === 'unlisted'}<span class="chip chip-plain">URL 限定</span>{:else if e.visibility === 'space'}<span class="chip chip-plain">ハコのページだけ</span>{/if}
+								{#if e.visibility === 'unlisted'}<span class="chip chip-plain">URL 限定</span>{:else if e.visibility === 'home'}<span class="chip chip-plain">ページだけ</span>{/if}
 								{#if e.postedBySpace}<span class="chip chip-plain">ほかの人の会</span>{/if}
 								<a href="/e/{e.id}" class="hover:text-accent-ink">見る ›</a>
 								<a href="/new?from={e.id}" class="hover:text-accent-ink">複製 ›</a>

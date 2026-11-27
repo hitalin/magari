@@ -8,6 +8,7 @@ import type { EventFormValues } from "#lib/event-form.ts";
 import type { Room } from "#lib/floor-plan.ts";
 import { type FlyerLook, flyerStyle } from "#lib/flyer.ts";
 import { REPEATS, type Repeat, repeatRule, ruleLabel } from "#lib/repeat.ts";
+import type { Visibility } from "#lib/visibility.ts";
 
 let {
 	values,
@@ -73,11 +74,17 @@ const canChoose = $derived(
 const posting = $derived(
 	spaces === null ? values.postedBySpace : canChoose && others,
 );
-// ほかの人の会は、最初はハコのページにだけ出す（当事者会などを、本人の知らない所へ広げない）
+// ほかの人の会は、最初は「ページだけ」（主催を持たないので、ハコのページにだけ出る）。
+// 当事者会などを、本人の知らない所へ広げない
 function pickOthers(on: boolean) {
 	others = on;
-	visibility = on ? "space" : "public";
+	visibility = on ? "home" : "public";
 }
+const VISIBILITY_HINT: Partial<Record<Visibility, string>> = {
+	home: "一覧・カレンダー・壁には出さず、主催とハコのページ（と iCal）にだけ載せる",
+	unlisted:
+		"どこにも載せず、URL を渡した人だけが見られる。共有ボタンとリンクカードも出さない",
+};
 // 要るのは「ひとこと・日時・場所」だけ。残りは畳んでおき、何か書いてあるとき（編集・複製）だけ開く
 const more = $derived(
 	!!(
@@ -167,10 +174,10 @@ function clearFile() {
 
 {#snippet visibilityField()}
 	<div class="grid gap-4 sm:grid-cols-2">
-		<Field label="誰に見せるか" hint={visibility === 'space' ? '一覧・カレンダー・壁には出さず、ハコのページと iCal にだけ載せる' : undefined}>
+		<Field label="誰に見せるか" hint={VISIBILITY_HINT[visibility]}>
 			<select name="visibility" bind:value={visibility} class="input">
 				<option value="public">公開（一覧に出る）</option>
-				<option value="space">ハコのページだけ</option>
+				<option value="home">ページだけ</option>
 				<option value="unlisted">URL を知っている人だけ</option>
 			</select>
 		</Field>
@@ -215,7 +222,7 @@ function clearFile() {
 	{#if canChoose}
 		<div>
 			<label class="flex items-start gap-2 text-sm"><input type="checkbox" name="postedBySpace" checked={others} onchange={(e) => pickOthers(e.currentTarget.checked)} class="mt-1 accent-accent" /><span>ほかの人の会として載せる（主催は自分ではない）</span></label>
-			{#if others}<p class="mt-2 text-xs leading-relaxed text-dim">主催を空けて、@{v.space.replace(/^@/, '')} が載せた会として出します。載せるのは題・日時・区画と元の告知へのリンクだけで、説明やフライヤーの画像は載せません。最初は「ハコのページだけ」にしてあります。主催の方が自分で載せたら、こちらは消してください。</p>{/if}
+			{#if others}<p class="mt-2 text-xs leading-relaxed text-dim">主催を空けて、@{v.space.replace(/^@/, '')} が載せた会として出します。載せるのは題・日時・区画と元の告知へのリンクだけで、説明やフライヤーの画像は載せません。最初は「ページだけ」にしてあります。主催の方が自分で載せたら、こちらは消してください。</p>{/if}
 		</div>
 	{:else if posting}
 		<p class="text-xs leading-relaxed text-dim">ハコが載せた、ほかの人の会です。載せるのは題・日時・区画と元の告知へのリンクだけです。主催の方が自分で載せたら、こちらは消してください。</p>

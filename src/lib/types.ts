@@ -2,6 +2,7 @@
 
 import type { Room } from "./floor-plan";
 import type { FlyerLook } from "./flyer";
+import type { Visibility } from "./visibility";
 
 export type ActorRef = {
 	handle: string;
@@ -47,7 +48,7 @@ export type EventDetail = EventSummary & {
 	locationVisibility: "public" | "attendees";
 	feeText: string | null;
 	status: "draft" | "published" | "cancelled";
-	visibility: "public" | "unlisted" | "space";
+	visibility: Visibility;
 	// ハコの管理者が、主催本人でなく載せたほかの人の会（主催を持たない）
 	postedBySpace: boolean;
 	// 運営が非表示にしている（主催にだけ見える）

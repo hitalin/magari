@@ -1,5 +1,6 @@
 // 会の作成・編集フォームの検証と変換。サーバー側の form action から使う（純粋関数）。
 import { HANDLE_PATTERN, isValidHandle } from "./id";
+import { VISIBILITIES, type Visibility } from "./visibility";
 
 export type EventFormValues = {
 	title: string;
@@ -16,8 +17,8 @@ export type EventFormValues = {
 	description: string;
 	feeText: string;
 	url: string;
-	// space: ハコのページにだけ出す（一覧・カレンダー・壁には出さない）
-	visibility: "public" | "unlisted" | "space";
+	// どこまで流れるか（src/lib/visibility.ts）
+	visibility: Visibility;
 	// ハコの管理者が、主催本人でなく、ほかの人の会として載せる
 	postedBySpace: boolean;
 	status: "published" | "draft";
@@ -100,7 +101,7 @@ export function readEventForm(
 		description: s("description"),
 		feeText: s("feeText"),
 		url: s("url"),
-		visibility: pick("visibility", ["public", "unlisted", "space"], "public"),
+		visibility: pick("visibility", VISIBILITIES, "public"),
 		postedBySpace: get("postedBySpace") !== null,
 		status: pick("status", ["published", "draft"], "published"),
 	};
@@ -151,11 +152,6 @@ export function parseEventForm(
 		return { ok: false, error: "区画は、ハコを書いたときだけ選べます" };
 	if (v.description.length > 10000)
 		return { ok: false, error: "説明が長すぎます" };
-	if (v.visibility === "space" && !spaceHandle)
-		return {
-			ok: false,
-			error: "ハコのページにだけ出すときは、ハコを書いてください",
-		};
 	// ほかの人の会は、もう公開されている告知があるものだけ。載せるのは題・日時・場所（ハコと区画）・元の告知へのリンクだけ
 	const others = v.postedBySpace;
 	if (others && !spaceHandle)

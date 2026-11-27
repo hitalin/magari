@@ -8,6 +8,7 @@ import {
 	uniqueIndex,
 } from "drizzle-orm/sqlite-core";
 import { shortId } from "#lib/id.ts";
+import { VISIBILITIES } from "#lib/visibility.ts";
 import { user } from "./auth-schema";
 
 export * from "./auth-schema";
@@ -117,8 +118,8 @@ export const events = sqliteTable(
 			.notNull()
 			.default("draft"),
 		// public: 一覧に出る / unlisted: URL を知る人だけ
-		// space: そのハコのページ（と iCal）にだけ出し、一覧・カレンダー・壁には出さない
-		visibility: text("visibility", { enum: ["public", "unlisted", "space"] })
+		// どこまで流れるか（src/lib/visibility.ts）
+		visibility: text("visibility", { enum: VISIBILITIES })
 			.notNull()
 			.default("public"),
 		spaceActorId: text("space_actor_id").references(() => actors.id, {
