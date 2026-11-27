@@ -80,12 +80,14 @@ function pickOthers(on: boolean) {
 	others = on;
 	visibility = on ? "home" : "public";
 }
-const VISIBILITY_HINT: Partial<Record<Visibility, string>> = {
+const VISIBILITY_HINT: Record<Visibility, string> = {
+	public: "一覧・カレンダー・壁に出て、だれでも共有できる",
 	home: "一覧・カレンダー・壁には出さず、主催とハコのページ（と iCal）にだけ載せる",
 	unlisted:
 		"どこにも載せず、URL を渡した人だけが見られる。共有ボタンとリンクカードも出さない",
 };
-// 要るのは「ひとこと・日時・場所」だけ。残りは畳んでおき、何か書いてあるとき（編集・複製）だけ開く
+// 要るのは「ひとこと・日時・場所」と、どこまで広げるか（誰に見せるか）。
+// 残りの補足は畳んでおき、何か書いてあるとき（編集・複製）だけ開く
 const more = $derived(
 	!!(
 		values.locationAddress ||
@@ -93,10 +95,10 @@ const more = $derived(
 		values.description ||
 		values.feeText ||
 		values.url
-	) ||
-		values.locationVisibility !== "public" ||
-		values.visibility !== "public",
+	) || values.locationVisibility !== "public",
 );
+// svelte-ignore state_referenced_locally -- 同上
+let repeatKind = $state(repeat ?? "");
 
 // ビラ用の日時。まだ打っていない所は今日・開始時刻で埋める（保存時の解釈は parseEventForm）
 const iso = (time: string) => {
@@ -172,6 +174,7 @@ function clearFile() {
 	{/if}
 {/snippet}
 
+<!-- 載る所と共有の可否を決めるので畳まず、SNS の投稿と同じく「開ける」の手前に出す -->
 {#snippet visibilityField()}
 	<div class="grid gap-4 sm:grid-cols-2">
 		<Field label="誰に見せるか" hint={VISIBILITY_HINT[visibility]}>
@@ -201,14 +204,17 @@ function clearFile() {
 	{#if repeatable}
 		<div class="grid gap-4 sm:grid-cols-2">
 			<Field label="繰り返し" hint="選ぶと、先の回もまとめて開ける。回ごとに直したり中止にしたりできる">
-				<select name="repeat" class="input">
+				<select name="repeat" bind:value={repeatKind} class="input">
 					<option value="">この日だけ</option>
-					{#each repeats as r (r.kind)}<option value={r.kind} selected={repeat === r.kind}>{r.label}</option>{/each}
+					{#each repeats as r (r.kind)}<option value={r.kind}>{r.label}</option>{/each}
 				</select>
 			</Field>
-			<Field label="いつまで" hint="繰り返しの終わりの日。空欄なら、やめるまで続く">
-				<input type="date" name="repeatUntil" value={repeatUntil} class="input" />
-			</Field>
+			<!-- 終わりの日は、繰り返すときだけ要る -->
+			{#if repeatKind}
+				<Field label="いつまで" hint="繰り返しの終わりの日。空欄なら、やめるまで続く">
+					<input type="date" name="repeatUntil" value={repeatUntil} class="input" />
+				</Field>
+			{/if}
 		</div>
 	{/if}
 
@@ -232,10 +238,9 @@ function clearFile() {
 
 	{#if posting}
 		{@render urlField()}
-		{@render visibilityField()}
 	{:else}
 	<details open={more} class="border-t border-line pt-4">
-		<summary class="cursor-pointer text-sm text-muted hover:text-accent-ink">もっと書く（住所・説明・料金・公開範囲など）</summary>
+		<summary class="cursor-pointer text-sm text-muted hover:text-accent-ink">もっと書く（住所・説明・料金・告知の URL など）</summary>
 		<div class="mt-6 space-y-6">
 			{#if !roomUp}{@render roomField()}{/if}
 			<Field label="住所"><input name="locationAddress" value={values.locationAddress} class="input" /></Field>
@@ -251,8 +256,6 @@ function clearFile() {
 
 			<Field label="料金"><input name="feeText" value={values.feeText} class="input" placeholder="無料 / 500円 / 投げ銭" /></Field>
 			{@render urlField()}
-
-			{@render visibilityField()}
 		</div>
 	</details>
 	{/if}
@@ -263,6 +266,8 @@ function clearFile() {
 			<p class="mt-2 text-xs text-dim">印を付けなければ、この回だけを直して、繰り返しから外します。日付を変えられるのは、この回だけを直すときです。</p>
 		</div>
 	{/if}
+
+	{@render visibilityField()}
 
 	<div class="flex flex-wrap gap-3 pt-2">
 		<button type="submit" name="status" value="published" class="btn btn-primary">{posting && spaces !== null ? '載せる' : submitLabel}</button>
