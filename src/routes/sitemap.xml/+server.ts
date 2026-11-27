@@ -5,7 +5,7 @@ import type { RequestHandler } from "./$types";
 
 const PAGES = [
 	"/",
-	"/home",
+	"/events",
 	"/calendar",
 	"/wall",
 	"/spaces",

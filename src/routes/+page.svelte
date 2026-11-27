@@ -77,7 +77,7 @@ const WORDS = [
 		</p>
 		<div class="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
 			<a href="/new" class="btn btn-primary">とりあえず開ける</a>
-			<a href="/home" class="more">開いている所を見る ›</a>
+			<a href="/events" class="more">開いている所を見る ›</a>
 		</div>
 		<dl class="stats">
 			{#each stats as st (st.label)}
@@ -92,7 +92,7 @@ const WORDS = [
 	<section class="sect">
 		<div class="section-head">
 			<h2 class="section-title">これから開く間</h2>
-			<a href="/home" class="more">ぜんぶ見る ›</a>
+			<a href="/events" class="more">ぜんぶ見る ›</a>
 		</div>
 		<DayList events={soon} />
 	</section>
@@ -117,11 +117,11 @@ const WORDS = [
 	<section>
 		<div class="section-head">
 			<h2 class="section-title">エリア</h2>
-			<a href="/home" class="more">この7日の間 ›</a>
+			<a href="/events" class="more">この7日の間 ›</a>
 		</div>
 		<p class="flex flex-wrap gap-2">
 			{#each areas as [area, n] (area)}
-				<a href="/home" class="chip chip-plain px-3 py-1 text-sm" onclick={() => pickArea(area)}>{area} <span class="ml-1.5 opacity-70">{n}</span></a>
+				<a href="/events" class="chip chip-plain px-3 py-1 text-sm" onclick={() => pickArea(area)}>{area} <span class="ml-1.5 opacity-70">{n}</span></a>
 			{/each}
 		</p>
 	</section>

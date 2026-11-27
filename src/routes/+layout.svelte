@@ -79,7 +79,7 @@ const clearBusy = () => {
 const nav = [
 	// icon は 24×24 の線画（svg の path）。イベントは切符、ハコは店先
 	{
-		href: "/home",
+		href: "/events",
 		label: "イベント",
 		icon: "M3 9a3 3 0 0 0 0 6v2a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-2a3 3 0 0 0 0-6V7a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2zM14 5v2M14 11v2M14 17v2",
 	},
@@ -99,9 +99,9 @@ const onScroll = () => {
 };
 // 途中までスクロールした位置で開き直したときも、最初から敷く
 $effect(onScroll);
-const EVENT_VIEWS = ["/home", "/wall", "/calendar"];
+const EVENT_VIEWS = ["/events", "/wall", "/calendar"];
 const isActive = (href: string) =>
-	(href === "/home" ? EVENT_VIEWS : [href]).some((p) =>
+	(href === "/events" ? EVENT_VIEWS : [href]).some((p) =>
 		page.url.pathname.startsWith(p),
 	);
 // エリアの絞り込みは、イベントの各ページとハコの一覧で同じ位置（ナビのすぐ下）に出す。絞る対象はそのページのデータ

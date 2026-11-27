@@ -7,7 +7,7 @@ const s = (path: string, method = "GET") =>
 
 describe("strategy", () => {
 	it("ページと公開 JSON は、まず回線へ。だめなら前に見たもの", () => {
-		for (const path of ["/", "/home", "/e/abc", "/@eden", "/api/events?to=x"])
+		for (const path of ["/", "/events", "/e/abc", "/@eden", "/api/events?to=x"])
 			expect(s(path)).toBe("network-first");
 	});
 	it("名前に中身のハッシュが入ったファイルは、持っていればそれを使う", () => {

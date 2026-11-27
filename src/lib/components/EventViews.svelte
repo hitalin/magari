@@ -4,7 +4,7 @@ import { page } from "$app/state";
 // イベントの見せ方の切り替え。一覧・フライヤー・カレンダーは同じイベントの別の見せ方で、それぞれ URL を持つ。
 // ナビの「イベント」の現在地（+layout.svelte の EVENT_VIEWS）と揃える
 const views = [
-	{ href: "/home", label: "一覧" },
+	{ href: "/events", label: "一覧" },
 	{ href: "/wall", label: "フライヤー" },
 	{ href: "/calendar", label: "カレンダー" },
 ];

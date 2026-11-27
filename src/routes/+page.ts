@@ -6,7 +6,7 @@ import type { PageLoad } from "./$types";
 
 // トップは紹介のランディング。ログインしていても同じものを出す（図像を押せばいつでも戻れる）
 export const load: PageLoad = async ({ fetch, setHeaders }) => {
-	// /home・/spaces と同じ問い合わせにして、続けて開いたときに使い回す
+	// /events・/spaces と同じ問い合わせにして、続けて開いたときに使い回す
 	const [upcoming, spaces] = await Promise.all([
 		fetch(
 			`/api/events?${new URLSearchParams({ to: weekAhead().toISOString() })}`,

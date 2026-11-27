@@ -120,7 +120,7 @@ const checks = [];
 const check = (name, fn) => checks.push([name, fn]);
 
 check("公開ページは公開の応答で、書き込みで消せる札が付く", async () => {
-	for (const path of ["/", "/home", "/calendar", "/wall", "/spaces"]) {
+	for (const path of ["/", "/events", "/calendar", "/wall", "/spaces"]) {
 		const res = await get(path);
 		assert.equal(res.status, 200, path);
 		assert.match(cacheControl(res), /public/, path);
@@ -128,6 +128,15 @@ check("公開ページは公開の応答で、書き込みで消せる札が付�
 		assert.equal(res.headers.get("set-cookie"), null, path);
 		assert.equal(res.headers.get("x-content-type-options"), "nosniff", path);
 	}
+});
+
+check("前の一覧の URL（/home）は /events へ送る", async () => {
+	const res = await get("/home?area=東京都");
+	assert.equal(res.status, 301);
+	assert.equal(
+		res.headers.get("location"),
+		`/events?area=${encodeURIComponent("東京都")}`,
+	);
 });
 
 check("公開と書いていない応答は、キャッシュに載せない", async () => {
@@ -187,7 +196,7 @@ check("間のページは公開で、繰り返しの決まりと先の回が付�
 });
 
 check("公開ページの HTML は、だれが見ても同じ", async () => {
-	for (const path of ["/home", `/e/${first}`, "/@smoke_test"]) {
+	for (const path of ["/events", `/e/${first}`, "/@smoke_test"]) {
 		const anonymous = await get(path);
 		const loggedIn = await get(path, { cookie: SESSION });
 		assert.match(cacheControl(loggedIn), /public/, path);

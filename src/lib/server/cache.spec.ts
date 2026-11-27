@@ -41,8 +41,8 @@ describe("cacheHeaders", () => {
 
 describe("shouldPurge", () => {
 	it("読むだけの要求では消さない", () => {
-		expect(shouldPurge("GET", 200, "/home", true)).toBe(false);
-		expect(shouldPurge("HEAD", 200, "/home", true)).toBe(false);
+		expect(shouldPurge("GET", 200, "/events", true)).toBe(false);
+		expect(shouldPurge("HEAD", 200, "/events", true)).toBe(false);
 	});
 	it("ログイン中の人の書き込みが通ったら消す（form action は 200 か 303）", () => {
 		expect(shouldPurge("POST", 303, "/new", true)).toBe(true);
