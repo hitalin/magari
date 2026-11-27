@@ -595,7 +595,7 @@ function toggle() {
 
 <svelte:window onkeydown={(e) => e.key === 'Escape' && holding && toggle()} />
 
-<div class="ground" aria-hidden="true"><canvas bind:this={canvas}></canvas></div>
+<div class="ground" class:holding aria-hidden="true"><canvas bind:this={canvas}></canvas></div>
 
 {#if holding}
 	<!-- チョークを持っている間だけ、画面全体で指やマウスを受ける（ヘッダーはこの上にあるので、持ったままページを移れる） -->
@@ -673,6 +673,13 @@ function toggle() {
 		width: 100%;
 		mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='m'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' seed='11' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  2 0 0 0 -0.1'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23m)'/%3E%3C/svg%3E");
 		mask-size: 240px;
+		/* 読む間は、絵を地面に馴染んだ跡まで薄くする（原色のままだと、上に載る本文の字が読めない）。
+		   チョークを持っている間だけ、描いている色のまま見せる */
+		opacity: 0.4;
+		transition: opacity 0.2s;
+	}
+	.ground.holding canvas {
+		opacity: 1;
 	}
 	.catch {
 		position: fixed;
